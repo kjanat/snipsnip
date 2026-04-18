@@ -55,7 +55,7 @@ function createBrowserEnvironment() {
     TurndownService: dom.window.TurndownService,
     turndownPluginGfm: dom.window.turndownPluginGfm,
     Readability: dom.window.Readability,
-    ReadabilityRecovery: dom.window.MarkSnipReadabilityRecovery
+    ReadabilityRecovery: dom.window.SnipSnipReadabilityRecovery
   };
 }
 

@@ -403,7 +403,7 @@ Link to [about page](https://example.com/about).
         <head>
           <title>Test Article</title>
           <meta name="author" content="John Doe">
-          <meta name="description" content="A test article for MarkSnip">
+          <meta name="description" content="A test article for SnipSnip">
           <meta name="keywords" content="test, markdown, clipper">
           <meta property="og:title" content="Test Article - OG">
           <meta property="article:published_time" content="2024-01-15T10:00:00Z">
@@ -419,7 +419,7 @@ Link to [about page](https://example.com/about).
     metadata: {
       title: 'Test Article',
       author: 'John Doe',
-      description: 'A test article for MarkSnip',
+      description: 'A test article for SnipSnip',
       keywords: ['test', 'markdown', 'clipper'],
       publishedTime: '2024-01-15T10:00:00Z'
     }

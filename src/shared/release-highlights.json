@@ -7,7 +7,7 @@
       "A new OpenAI special theme joins the extension, and the popup can show a one-click light/dark theme toggle in the header.",
       "Settings are easier to navigate with a reorganized Exports & Integrations area, grouped popup behavior controls, and cleaner code-block settings.",
       "Clipping now fails more gracefully on restricted browser pages, with clearer popup messaging instead of CSP-related errors.",
-      "Permissions and privacy guidance is more complete across the guide and settings, with clearer explanations of what MarkSnip can access and why."
+      "Permissions and privacy guidance is more complete across the guide and settings, with clearer explanations of what SnipSnip can access and why."
     ],
     "4.4.0": [
       "Popup exports now support Markdown, plain text, HTML, PDF, and Print, with a configurable default format.",
@@ -17,8 +17,8 @@
       "The popup and settings now include shortcut help, live template previews, better search feedback, and reading-time counts."
     ],
     "4.3.0": [
-      "The popup now has a Markdown Preview toggle, so you can switch from editing to a rendered preview without leaving MarkSnip.",
-      "MarkSnip now includes special Claude, Perplexity, Avatar: The Last Airbender, and Ben 10 themes across the popup, settings, and guide.",
+      "The popup now has a Markdown Preview toggle, so you can switch from editing to a rendered preview without leaving SnipSnip.",
+      "SnipSnip now includes special Claude, Perplexity, Avatar: The Last Airbender, and Ben 10 themes across the popup, settings, and guide.",
       "The Library feels more polished, with skeleton loading, smoother transitions, richer clip metadata, delete animations, and more export options.",
       "Clipping is more reliable on tricky pages, including wrapped FAQ layouts, repeated-section docs, and ARIA-based tables that previously lost structure.",
       "Agent Bridge setup is smoother in Chrome: native messaging is requested only when you enable the feature, with a one-time reload when Chrome needs it."
@@ -30,14 +30,14 @@
       "The popup starts faster by deferring heavy editor theme assets, notification loading, and non-critical startup work."
     ],
     "4.2.0": [
-      "MarkSnip now includes a local Library in the popup so you can keep saved clips in the browser and revisit them later.",
+      "SnipSnip now includes a local Library in the popup so you can keep saved clips in the browser and revisit them later.",
       "The new Library can save clips automatically when the popup opens or manually on demand, and it can export all saved clips as a ZIP.",
-      "A new Agent Bridge lets local tools pull markdown from your current tab through the MarkSnip companion CLI instead of downloads.",
+      "A new Agent Bridge lets local tools pull markdown from your current tab through the SnipSnip companion CLI instead of downloads.",
       "Settings are easier to navigate with a refreshed sidebar, clearer category grouping, and dedicated sections for Library and Agent Bridge controls.",
       "Popup actions are clearer, with better Library visibility, improved manual-save messaging, and cleaner header controls."
     ],
     "4.1.4": [
-      "MarkSnip now includes a built-in User Guide, so help is available directly inside the extension.",
+      "SnipSnip now includes a built-in User Guide, so help is available directly inside the extension.",
       "Settings search is more consistent and easier to reuse across the extension's help and configuration experiences.",
       "Clipping and markdown export behavior are more consistent behind the scenes, especially around selections, templates, URLs, and code blocks.",
       "Download handling is more reliable when resolving tracked exports and filename conflicts.",
@@ -48,7 +48,7 @@
       "Clipping is more reliable on some documentation pages with repeated section headings."
     ],
     "4.1.2": [
-      "MarkSnip can now show update and support notifications inside the extension.",
+      "SnipSnip can now show update and support notifications inside the extension.",
       "Settings are easier to search, reset, and understand.",
       "Batch exports are easier to manage with a better link picker, progress overlay, and cancel control.",
       "Clipping is more reliable on difficult pages.",
@@ -103,7 +103,7 @@
     ],
     "4.0.0": [
       "The popup got a full redesign with a more modern layout.",
-      "MarkSnip can now send clipped content directly to Obsidian.",
+      "SnipSnip can now send clipped content directly to Obsidian.",
       "Batch URL processing was added, with progress feedback during export.",
       "Batch URLs now stay saved between popup sessions.",
       "Markdown conversion and Obsidian sending are more reliable."
@@ -125,7 +125,7 @@
       "Added \"Copy\" buttons to batch processing UI and improved batch UI layout"
     ],
     "3.5.0": [
-      "Rebranded extension from MarkDownload to MarkSnip with updated name, icons, and options",
+      "Rebranded extension from MarkDownload to SnipSnip with updated name, icons, and options",
       "Migrated extension to Manifest V3 (service worker, offscreen document, updated permissions)",
       "Fixed multiple issues introduced by the MV2 → MV3 migration (context menus, scripting API, clipboard)",
       "Refactored script execution and content retrieval to use service worker messaging",

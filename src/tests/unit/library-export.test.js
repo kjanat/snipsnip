@@ -6,7 +6,7 @@ describe('library-export helpers', () => {
       new Date(2026, 2, 21, 9, 8, 7)
     );
 
-    expect(zipFilename).toBe('MarkSnip-library-20260321-090807.zip');
+    expect(zipFilename).toBe('SnipSnip-library-20260321-090807.zip');
   });
 
   test('builds unique sanitized markdown entries for library exports', () => {

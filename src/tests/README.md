@@ -1,4 +1,4 @@
-# MarkSnip Tests
+# SnipSnip Tests
 
 All test commands run from `src/`.
 

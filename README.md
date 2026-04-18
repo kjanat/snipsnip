@@ -1,14 +1,14 @@
-# MarkSnip
+# SnipSnip
 
 Markdown web clipper for Chrome and Firefox. Save pages as clean Markdown, copy content to clipboard, or send notes directly to Obsidian.
 
 [Chrome Web Store](https://chromewebstore.google.com/detail/marksnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm?hl=en) | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/marksnip-markdown-web-clipper/) | [User Guide](docs/guides/user-guide.md) | [Agent Bridge Walkthrough](docs/guides/agent-bridge.md) | [Changelog](CHANGELOG.md) | [Privacy Policy](PRIVACY.md)
 
-[![MarkSnip Promo](media/marksnip_promo.gif)](https://www.youtube.com/watch?v=IO6PjI79drY)
+[![SnipSnip Promo](media/marksnip_promo.gif)](https://www.youtube.com/watch?v=IO6PjI79drY)
 
-## Why MarkSnip
+## Why SnipSnip
 
-MarkSnip is a Manifest V3 fork of [MarkDownload](https://github.com/deathau/markdownload/) focused on reliable markdown conversion, batch workflows, and browser-store compatibility.
+SnipSnip is a Manifest V3 fork of [MarkDownload](https://github.com/deathau/markdownload/) focused on reliable markdown conversion, batch workflows, and browser-store compatibility.
 
 Core pipeline:
 
@@ -71,7 +71,7 @@ Agent Bridge:
 
    Windows: `.\marksnip.exe install-host`
    macOS/Linux: `./marksnip install-host`
-3. Enable **Agent Bridge** in MarkSnip Settings and approve the native messaging prompt if it appears.
+3. Enable **Agent Bridge** in SnipSnip Settings and approve the native messaging prompt if it appears.
 4. Run the clip command for your OS:
 
    Windows: `.\marksnip.exe clip`
@@ -215,7 +215,7 @@ git push origin v4.0.4
 
 ## Privacy
 
-MarkSnip does not send clipped page content to external servers. See [PRIVACY.md](PRIVACY.md) for details.
+SnipSnip does not send clipped page content to external servers. See [PRIVACY.md](PRIVACY.md) for details.
 
 ## Credits
 

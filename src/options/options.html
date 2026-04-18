@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarkSnip Options</title>
+    <title>SnipSnip Options</title>
     <link rel="stylesheet" href="../shared/fonts.css">
     <link rel="stylesheet" type="text/css" href="options.css" media="screen">
 </head>
@@ -15,8 +15,8 @@
         <!-- ═══ Header ═══ -->
         <header class="options-header">
             <div class="header-brand">
-                <img src="../icons/favicon-32x32.png" alt="MarkSnip" class="header-logo">
-                <h1 class="header-title">MarkSnip</h1>
+                <img src="../icons/favicon-32x32.png" alt="SnipSnip" class="header-logo">
+                <h1 class="header-title">SnipSnip</h1>
             </div>
             <span class="header-subtitle">Options</span>
             <!-- Appa mascot – visible only with ATLA theme -->
@@ -209,7 +209,7 @@
                     </span>
                     <span class="sidebar-action-label">Leave a Review</span>
                 </a>
-                <a href="https://github.com/DhruvParikh1/markdownload-extension-updated/issues"
+                <a href="https://github.com/kjanat/snipsnip/issues"
                     target="_blank" rel="noopener noreferrer" class="sidebar-action-btn sidebar-action--issue">
                     <span class="sidebar-action-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -383,7 +383,7 @@
                  ──────────────────────────────────────────── -->
             <div class="section" id="section-appearance" data-section-label="Appearance" role="tabpanel" tabindex="0" aria-labelledby="tab-appearance">
                 <h2 class="section-title">Appearance</h2>
-                <p class="section-desc">Customize the look of the MarkSnip popup.</p>
+                <p class="section-desc">Customize the look of the SnipSnip popup.</p>
 
                 <!-- Color Mode -->
                 <div class="setting-card" id="popupThemeGroup" data-setting-key="popupTheme,showThemeToggleInPopup" data-search-keywords="theme toggle,dark mode toggle,light mode toggle,popup header theme button,appearance">
@@ -719,7 +719,7 @@
                     <div class="setting-card" id="mdClipsFolder" data-setting-key="mdClipsFolder">
                         <h3 class="card-title">Clips folder</h3>
                         <div class="input-group">
-                            <label class="input-label" for="mdClipsFolder">Folder inside <code>Downloads/</code> to store MarkSnip clips</label>
+                            <label class="input-label" for="mdClipsFolder">Folder inside <code>Downloads/</code> to store SnipSnip clips</label>
                             <input type="text" name="mdClipsFolder" class="text-input" role="textbox" />
                         </div>
                     </div>
@@ -729,7 +729,7 @@
                     data-search-keywords="default assistant target,send to target,chatgpt,claude,perplexity,custom assistant,custom url"
                     data-setting-key="defaultSendToTarget">
                     <h3 class="card-title">Default Assistant Target</h3>
-                    <p class="card-desc">Used when the popup's main action is set to Send to Assistant. If a selected custom target is removed, MarkSnip falls back to ChatGPT.</p>
+                    <p class="card-desc">Used when the popup's main action is set to Send to Assistant. If a selected custom target is removed, SnipSnip falls back to ChatGPT.</p>
                     <div class="radio-group" id="defaultSendToTargetOptions">
                         <div class="radio-pill">
                             <input type="radio" name="defaultSendToTarget" id="send-to-target-chatgpt" value="chatgpt" />
@@ -771,7 +771,7 @@
                     data-search-keywords="assistant url length,max url length,clipboard fallback,query string,send to assistant,chatgpt,claude,perplexity"
                     data-setting-key="sendToMaxUrlLength">
                     <h3 class="card-title">Assistant URL Length Cap</h3>
-                    <p class="card-desc">Advanced setting for Send to Assistant links. If a generated assistant URL exceeds this value, MarkSnip copies the Markdown to your clipboard and opens the assistant landing page instead. Default: <strong>3600</strong>. Changing this is not recommended.</p>
+                    <p class="card-desc">Advanced setting for Send to Assistant links. If a generated assistant URL exceeds this value, SnipSnip copies the Markdown to your clipboard and opens the assistant landing page instead. Default: <strong>3600</strong>. Changing this is not recommended.</p>
                     <div class="input-group">
                         <label class="input-label" for="sendToMaxUrlLength">Maximum URL Length</label>
                         <input type="number" id="sendToMaxUrlLength" name="sendToMaxUrlLength" class="text-input" role="spinbutton" min="1" step="100" inputmode="numeric" />
@@ -817,12 +817,12 @@
                     data-bridge-state="disabled"
                     data-permission-state="idle">
                     <h3 class="card-title">Agent Bridge</h3>
-                    <p class="card-desc">Install the local MarkSnip companion once, then let local tools pull the current page's Markdown directly without using downloads.</p>
+                    <p class="card-desc">Install the local SnipSnip companion once, then let local tools pull the current page's Markdown directly without using downloads.</p>
 
                     <div class="toggle-row">
                         <div class="toggle-info">
                             <label class="toggle-label-text" for="agentBridgeEnabled">Enable Agent Bridge</label>
-                            <p class="toggle-hint" id="agentBridgeToggleHint">When off, MarkSnip will not open a local companion connection.</p>
+                            <p class="toggle-hint" id="agentBridgeToggleHint">When off, SnipSnip will not open a local companion connection.</p>
                         </div>
                         <label class="toggle-switch">
                             <input name="agentBridgeEnabled" id="agentBridgeEnabled" type="checkbox" />
@@ -841,7 +841,7 @@
                                 </svg>
                                 Enable local companion access?
                             </h4>
-                            <p class="permission-panel-desc">MarkSnip is about to ask the browser for permission to talk to the local MarkSnip companion.</p>
+                            <p class="permission-panel-desc">SnipSnip is about to ask the browser for permission to talk to the local SnipSnip companion.</p>
                             <ul class="permission-panel-bullets">
                                 <li>Only for Agent Bridge</li>
                                 <li>Local machine only</li>
@@ -871,7 +871,7 @@
                                 <span class="agent-bridge-status-dot" aria-hidden="true"></span>
                                 <strong id="agentBridgeStatusText" class="agent-bridge-status-text">Disabled</strong>
                             </div>
-                            <p id="agentBridgeStatusHint" class="option-note">Enable the Agent Bridge to let MarkSnip connect to the local companion.</p>
+                            <p id="agentBridgeStatusHint" class="option-note">Enable the Agent Bridge to let SnipSnip connect to the local companion.</p>
                             <span id="agentBridgeHostVersion" class="agent-bridge-version-tag" hidden></span>
                         </div>
                         <button id="refreshAgentBridgeStatus" class="btn btn-secondary btn-sm" type="button" aria-label="Check Agent Bridge connection status">Check Connection</button>
@@ -880,9 +880,9 @@
                     <details class="info-panel agent-bridge-setup-guide" id="agentBridgeSetupGuide">
                         <summary>Setup guide</summary>
                         <div class="info-panel-content">
-                            <p>To connect MarkSnip to local CLI tools, follow these steps:</p>
+                            <p>To connect SnipSnip to local CLI tools, follow these steps:</p>
                             <ol>
-                                <li>Download the companion archive for your OS from the <a href="https://github.com/DhruvParikh1/markdownload-extension-updated/releases" target="_blank" rel="noopener noreferrer">Releases page</a>.</li>
+                                <li>Download the companion archive for your OS from the <a href="https://github.com/kjanat/snipsnip/releases" target="_blank" rel="noopener noreferrer">Releases page</a>.</li>
                                 <li>Run the install command to register the native messaging host:</li>
                             </ol>
                             <div class="agent-bridge-terminal">
@@ -891,7 +891,7 @@
                                 <button id="copyAgentBridgeCommand" class="btn btn-sm agent-bridge-copy-btn" type="button" aria-label="Copy install command to clipboard">Copy</button>
                             </div>
                             <ol start="3">
-                                <li>Enable the toggle above and MarkSnip will connect automatically.</li>
+                                <li>Enable the toggle above and SnipSnip will connect automatically.</li>
                             </ol>
                             <p class="option-note" style="margin-top: var(--space-3)">Local-only feature. Bridge settings are not exported and do not sync between machines.</p>
                         </div>
@@ -1648,7 +1648,7 @@ const helloWorld = () => {
                         </svg>
                         Permissions &amp; Privacy
                     </h3>
-                    <p class="card-desc">MarkSnip processes pages locally and only accesses page content when you trigger a clip.</p>
+                    <p class="card-desc">SnipSnip processes pages locally and only accesses page content when you trigger a clip.</p>
 
                     <details class="permission-row" id="permissionRowSiteAccess">
                         <summary class="permission-row-header">
@@ -1657,7 +1657,7 @@ const helloWorld = () => {
                         </summary>
                         <div class="permission-row-body">
                             <ul class="permission-explainer-list">
-                                <li>Needed so MarkSnip can clip any page you ask it to clip.</li>
+                                <li>Needed so SnipSnip can clip any page you ask it to clip.</li>
                                 <li>Not used for passive browsing monitoring.</li>
                                 <li>Page content is not sent to external servers.</li>
                                 <li>This is managed by the browser as part of the extension install.</li>
@@ -1673,7 +1673,7 @@ const helloWorld = () => {
                         <div class="permission-row-body">
                             <ul class="permission-explainer-list">
                                 <li>Only used for Agent Bridge.</li>
-                                <li>Only talks to the local MarkSnip companion installed on this machine.</li>
+                                <li>Only talks to the local SnipSnip companion installed on this machine.</li>
                                 <li>Regular clipping works without it.</li>
                                 <li>Can be stopped by turning Agent Bridge off.</li>
                             </ul>

@@ -1,12 +1,12 @@
-# MarkSnip Agent Bridge Walkthrough
+# SnipSnip Agent Bridge Walkthrough
 
 This guide is for a regular desktop user who wants to pull Markdown from the current browser tab into local tools without downloading a `.md` file first.
 
 ## What The Agent Bridge Does
 
-MarkSnip normally gives you Markdown in the popup, through the clipboard, or as a download.
+SnipSnip normally gives you Markdown in the popup, through the clipboard, or as a download.
 
-The Agent Bridge adds a local CLI so other tools can ask MarkSnip for the current page directly.
+The Agent Bridge adds a local CLI so other tools can ask SnipSnip for the current page directly.
 
 Typical examples:
 
@@ -18,8 +18,8 @@ Typical examples:
 
 You need:
 
-- MarkSnip installed in Chrome or Firefox
-- the Agent Bridge companion for your OS downloaded from the MarkSnip releases page
+- SnipSnip installed in Chrome or Firefox
+- the Agent Bridge companion for your OS downloaded from the SnipSnip releases page
 - the browser open while you use the CLI
 
 The CLI only talks to the local browser on your machine. Nothing is sent to a remote service by the bridge itself.
@@ -42,10 +42,10 @@ The CLI only talks to the local browser on your machine. Nothing is sent to a re
 ./marksnip install-host
 ```
 
-4. Open MarkSnip Settings.
+4. Open SnipSnip Settings.
 5. Open the **Downloads** section.
 6. Turn on **Agent Bridge**.
-7. If MarkSnip asks for native messaging permission, approve it. The extension may reload.
+7. If SnipSnip asks for native messaging permission, approve it. The extension may reload.
 8. Go back to options and navigate to the Agent Bridge section to verify it's on.
 9. Wait for the status line to show that the bridge is connected.
 
@@ -102,9 +102,9 @@ What each command does:
 - `clip --json` returns Markdown plus metadata like title, URL, source, and timestamp
 - `clip --fresh` ignores any cached popup edit and captures the page again
 
-## How MarkSnip Chooses What To Return
+## How SnipSnip Chooses What To Return
 
-By default, MarkSnip prefers your popup-edited version when both of these are true:
+By default, SnipSnip prefers your popup-edited version when both of these are true:
 
 - you already opened the popup for that page
 - the active tab still matches that page URL
@@ -176,16 +176,16 @@ Example fresh JSON capture on macOS/Linux:
 
 The bridge does not open the popup for a fresh capture.
 
-Fresh capture happens in the background through MarkSnip's service worker and offscreen document.
+Fresh capture happens in the background through SnipSnip's service worker and offscreen document.
 
-The popup is only relevant when you want MarkSnip to reuse the last edited popup snapshot.
+The popup is only relevant when you want SnipSnip to reuse the last edited popup snapshot.
 
 ## Troubleshooting
 
 If `status` says nothing is connected:
 
 - make sure the browser is open
-- make sure **Agent Bridge** is enabled in MarkSnip Settings
+- make sure **Agent Bridge** is enabled in SnipSnip Settings
 - if Settings shows **Permission needed**, click **Grant Permission**
 - rerun the install command from the extracted companion folder
 
@@ -213,7 +213,7 @@ If you are on macOS or Linux, or if the script does not find a match, use the ma
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
-3. Find your unpacked MarkSnip entry
+3. Find your unpacked SnipSnip entry
 4. Copy the **ID**
 
 ### Exact local install command
@@ -239,7 +239,7 @@ If the unpacked extension ID changes later, run the same command again with the 
 ### Quick validation
 
 1. Reload the unpacked extension in `chrome://extensions`
-2. Open MarkSnip Settings
+2. Open SnipSnip Settings
 3. Open **Downloads**
 4. Turn on **Agent Bridge**
 5. Confirm the status shows connected

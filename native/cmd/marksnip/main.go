@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/DhruvParikh1/markdownload-extension-updated/native/internal/bridge"
+	"github.com/kjanat/snipsnip/native/internal/bridge"
 )
 
 type clipResponse struct {
@@ -47,7 +47,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		fmt.Println("Removed MarkSnip native host registration.")
+		fmt.Println("Removed SnipSnip native host registration.")
 	default:
 		usage()
 		os.Exit(1)
@@ -78,7 +78,7 @@ func runInstallHost(args []string) error {
 		return err
 	}
 
-	fmt.Println("Installed MarkSnip native host manifests.")
+	fmt.Println("Installed SnipSnip native host manifests.")
 	fmt.Printf("Chrome manifest: %s\n", result.ChromeManifestPath)
 	fmt.Printf("Firefox manifest: %s\n", result.FirefoxManifestPath)
 	return nil
@@ -91,7 +91,7 @@ func runStatus() error {
 	}
 
 	if len(status.Sessions) == 0 {
-		return errors.New("no MarkSnip bridge session is connected; open Chrome or Firefox with Agent Bridge enabled")
+		return errors.New("no SnipSnip bridge session is connected; open Chrome or Firefox with Agent Bridge enabled")
 	}
 
 	for _, browserName := range []string{string(bridge.BrowserChrome), string(bridge.BrowserFirefox)} {
@@ -142,12 +142,12 @@ func runClip(args []string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-MarkSnip-Token", session.Token)
+	req.Header.Set("X-SnipSnip-Token", session.Token)
 
 	client := &http.Client{Timeout: 35 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to contact MarkSnip native host: %w", err)
+		return fmt.Errorf("failed to contact SnipSnip native host: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -170,7 +170,7 @@ func runClip(args []string) error {
 		return errors.New(parsed.Error)
 	}
 	if parsed.Result == nil {
-		return errors.New("MarkSnip bridge returned no clip result")
+		return errors.New("SnipSnip bridge returned no clip result")
 	}
 
 	if *jsonOutput {

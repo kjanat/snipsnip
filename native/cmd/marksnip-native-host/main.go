@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DhruvParikh1/markdownload-extension-updated/native/internal/bridge"
+	"github.com/kjanat/snipsnip/native/internal/bridge"
 )
 
 type clipRequest struct {
@@ -145,7 +145,7 @@ func (s *hostServer) routes() http.Handler {
 }
 
 func (s *hostServer) authenticate(w http.ResponseWriter, r *http.Request) bool {
-	if r.Header.Get("X-MarkSnip-Token") != s.token {
+	if r.Header.Get("X-SnipSnip-Token") != s.token {
 		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 		s.debugf("http unauthorized path=%s", r.URL.Path)
 		return false
@@ -212,7 +212,7 @@ func (s *hostServer) handleClip(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, clipReply{Result: reply.result})
 	case <-time.After(35 * time.Second):
 		s.debugf("http clip timeout requestId=%s", requestID)
-		writeJSON(w, http.StatusGatewayTimeout, clipReply{Error: "timed out waiting for MarkSnip bridge response"})
+		writeJSON(w, http.StatusGatewayTimeout, clipReply{Error: "timed out waiting for SnipSnip bridge response"})
 	}
 }
 
@@ -232,7 +232,7 @@ func buildDebugLogger() func(string, ...any) {
 		return func(string, ...any) {}
 	}
 
-	logDir := filepath.Join(configDir, "MarkSnip", "agent-bridge")
+	logDir := filepath.Join(configDir, "SnipSnip", "agent-bridge")
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return func(string, ...any) {}
 	}

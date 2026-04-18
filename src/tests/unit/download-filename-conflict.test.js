@@ -595,7 +595,7 @@ describe('Extension Conflict Prevention', () => {
     });
   });
 
-  test('should only handle MarkSnip downloads', () => {
+  test('should only handle SnipSnip downloads', () => {
     const tracker = createDownloadTracker();
     const trackerState = tracker.getState();
 

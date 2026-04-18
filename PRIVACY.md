@@ -1,7 +1,7 @@
 # Privacy Policy
 
 This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone
-using the MarkSnip browser extension (the Service).
+using the SnipSnip browser extension (the Service).
 
 tl;dr: We don't collect anything. Any information we clip from websites remains on your machine.
 
@@ -14,9 +14,9 @@ machine and none of it is collected by me.
 
 The settings of the extension get stored in the browser's local storage and likewise are never collected or transmitted by me.
 
-If you enable the optional Agent Bridge feature, MarkSnip may also send the current page's converted Markdown, title, and URL to a
+If you enable the optional Agent Bridge feature, SnipSnip may also send the current page's converted Markdown, title, and URL to a
 native messaging host running on your own machine so the local `marksnip.exe` CLI can read it. This bridge is local-only, opt-in,
-and is not used to send your data to me or to any remote MarkSnip service.
+and is not used to send your data to me or to any remote SnipSnip service.
 
 ## Changes to This Privacy Policy
 I may update this Privacy Policy from time to time, for example if new features are developed which require data collection.

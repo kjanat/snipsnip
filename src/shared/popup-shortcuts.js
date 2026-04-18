@@ -1,6 +1,6 @@
 (function (root) {
   const COMMAND_LABELS = {
-    '_execute_action':                    'Open MarkSnip popup',
+    '_execute_action':                    'Open SnipSnip popup',
     'download_tab_as_markdown':           'Download tab as Markdown',
     'copy_tab_as_markdown':               'Copy tab as Markdown',
     'copy_tab_as_markdown_link':          'Copy tab URL as Markdown link',

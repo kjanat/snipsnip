@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a new feature or improvement for MarkSnip
+about: Suggest a new feature or improvement for SnipSnip
 title: "[Feature]: "
 labels: ''
 assignees: ''
@@ -8,10 +8,10 @@ assignees: ''
 ---
 
 **Summary**
-A clear and concise description of the feature or improvement you'd like to see in MarkSnip.
+A clear and concise description of the feature or improvement you'd like to see in SnipSnip.
 
 **Feature category**
-Which area of MarkSnip does this relate to? (check all that apply)
+Which area of SnipSnip does this relate to? (check all that apply)
 - [ ] Page clipping / article extraction
 - [ ] Markdown conversion (formatting, tables, code blocks, math)
 - [ ] Image handling

@@ -889,7 +889,7 @@
     stripStructuralAnchorsFromHtml
   };
 
-  global.MarkSnipReadabilityRecovery = api;
+  global.SnipSnipReadabilityRecovery = api;
 
   if (typeof module === 'object' && module.exports) {
     module.exports = api;

@@ -198,7 +198,7 @@
     return normalized;
   }
 
-  function buildExportFilename(date = new Date(), prefix = 'MarkSnip-export') {
+  function buildExportFilename(date = new Date(), prefix = 'SnipSnip-export') {
     const safeDate = date instanceof Date ? date : new Date(date);
     const timestamp = Number.isNaN(safeDate.getTime()) ? new Date() : safeDate;
     const year = timestamp.getFullYear();

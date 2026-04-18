@@ -1,5 +1,5 @@
 /**
- * End-to-End Tests for MarkSnip Extension
+ * End-to-End Tests for SnipSnip Extension
  * Tests the extension in a real browser environment using Playwright
  */
 
@@ -104,7 +104,7 @@ async function getLibraryExportHarnessState(serviceWorker) {
   ));
 }
 
-test.describe('MarkSnip Extension E2E', () => {
+test.describe('SnipSnip Extension E2E', () => {
   let browser;
   let context;
   let serviceWorker;
@@ -677,7 +677,7 @@ test.describe('MarkSnip Extension E2E', () => {
       expect(harnessState.zipCalls).toHaveLength(1);
 
       const latestCall = harnessState.zipCalls[0];
-      expect(latestCall.zipFilename).toMatch(/^MarkSnip-library-\d{8}-\d{6}\.zip$/);
+      expect(latestCall.zipFilename).toMatch(/^SnipSnip-library-\d{8}-\d{6}\.zip$/);
       expect(latestCall.files).toEqual([
         { filename: 'Alpha.md', content: '# Alpha' },
         { filename: 'Alpha (2).md', content: '# Beta' },
@@ -1281,7 +1281,7 @@ test.describe('MarkSnip Extension E2E', () => {
 
       await expect(popupPage.locator('#shortcutsModal')).toBeVisible();
       await expect(popupPage.locator('#shortcutsModalBody kbd').first()).toBeVisible();
-      await expect(popupPage.locator('#shortcutsModalBody')).toContainText('Open MarkSnip popup');
+      await expect(popupPage.locator('#shortcutsModalBody')).toContainText('Open SnipSnip popup');
       await expect(popupPage.locator('#shortcutsModalBody')).toContainText('Download tab as Markdown');
       await expect(popupPage.locator('#shortcutsModalBody')).toContainText('Copy selection as Markdown');
       await expect(popupPage.locator('.shortcuts-section-label')).toBeVisible();

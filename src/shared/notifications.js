@@ -7,7 +7,7 @@
   root.markSnipNotifications = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   const SUPPORT_NOTIFICATION_THRESHOLDS = Object.freeze([25, 100, 500, 1000, 2500, 5000, 10000]);
-  const RELEASES_URL = 'https://github.com/DhruvParikh1/markdownload-extension-updated/releases';
+  const RELEASES_URL = 'https://github.com/kjanat/snipsnip/releases';
   const BUY_ME_A_COFFEE_URL = 'https://buymeacoffee.com/dhruvparikh';
   const STORAGE_DEFAULTS = Object.freeze({
     lastInstalledVersion: null,
@@ -204,10 +204,10 @@
       id: `version-update:${currentVersion}`,
       type: 'version-update',
       createdAt: Date.now(),
-      title: `MarkSnip updated to v${currentVersion}`,
+      title: `SnipSnip updated to v${currentVersion}`,
       message: previousVersion
         ? `Updated from v${previousVersion} to v${currentVersion}.`
-        : `MarkSnip updated to v${currentVersion}.`,
+        : `SnipSnip updated to v${currentVersion}.`,
       previousVersion,
       currentVersion,
       highlights: sanitizeHighlights(config?.highlights),
@@ -231,7 +231,7 @@
       type: 'support-milestone',
       createdAt: Date.now(),
       title: `${formattedMilestone} pages exported`,
-      message: `MarkSnip has helped export over ${formattedMilestone} pages. If it has been useful, support ongoing development.`,
+      message: `SnipSnip has helped export over ${formattedMilestone} pages. If it has been useful, support ongoing development.`,
       milestone,
       primaryAction: {
         label: 'Buy Me a Coffee',

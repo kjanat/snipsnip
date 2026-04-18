@@ -1,6 +1,6 @@
-# MarkSnip Agent Bridge
+# SnipSnip Agent Bridge
 
-Desktop companion binaries for the MarkSnip browser extension.
+Desktop companion binaries for the SnipSnip browser extension.
 
 Files:
 

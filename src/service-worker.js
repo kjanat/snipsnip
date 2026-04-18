@@ -615,21 +615,21 @@ function createBatchCancellationSignal() {
 const downloadTrackerApi = globalThis.markSnipDownloadTracker || {
   createDownloadTracker: (options = {}) => {
     const localActiveDownloads = options.activeDownloads || new Map();
-    const localMarkSnipDownloads = new Map();
-    const localMarkSnipUrls = new Map();
-    const localMarkSnipBlobUrls = new Set();
+    const localSnipSnipDownloads = new Map();
+    const localSnipSnipUrls = new Map();
+    const localSnipSnipBlobUrls = new Set();
 
     return {
       getState: () => ({
         activeDownloads: localActiveDownloads,
-        markSnipDownloads: localMarkSnipDownloads,
-        markSnipUrls: localMarkSnipUrls,
-        markSnipBlobUrls: localMarkSnipBlobUrls
+        markSnipDownloads: localSnipSnipDownloads,
+        markSnipUrls: localSnipSnipUrls,
+        markSnipBlobUrls: localSnipSnipBlobUrls
       }),
       trackUrl: (url, info) => {
         if (!url) return;
-        localMarkSnipUrls.set(url, { ...(info || {}) });
-        if (url.startsWith('blob:')) localMarkSnipBlobUrls.add(url);
+        localSnipSnipUrls.set(url, { ...(info || {}) });
+        if (url.startsWith('blob:')) localSnipSnipBlobUrls.add(url);
       },
       setActiveDownload: (downloadId, url) => {
         localActiveDownloads.set(downloadId, url);
@@ -637,10 +637,10 @@ const downloadTrackerApi = globalThis.markSnipDownloadTracker || {
       handleDownloadComplete: ({ downloadId, url } = {}) => {
         if (!downloadId || !url) return;
         localActiveDownloads.set(downloadId, url);
-        if (localMarkSnipUrls.has(url)) {
-          const urlInfo = localMarkSnipUrls.get(url);
-          localMarkSnipDownloads.set(downloadId, { ...urlInfo, url });
-          localMarkSnipUrls.delete(url);
+        if (localSnipSnipUrls.has(url)) {
+          const urlInfo = localSnipSnipUrls.get(url);
+          localSnipSnipDownloads.set(downloadId, { ...urlInfo, url });
+          localSnipSnipUrls.delete(url);
         }
       },
       cleanupTrackedDownload: (downloadId, url, downloadInfo) => {
@@ -648,29 +648,29 @@ const downloadTrackerApi = globalThis.markSnipDownloadTracker || {
           options.sendCleanupBlobUrl?.(url);
         }
         localActiveDownloads.delete(downloadId);
-        localMarkSnipDownloads.delete(downloadId);
-        if (url) localMarkSnipBlobUrls.delete(url);
-        if (downloadInfo?.url && localMarkSnipUrls.has(downloadInfo.url)) {
-          localMarkSnipUrls.delete(downloadInfo.url);
-        } else if (url && localMarkSnipUrls.has(url)) {
-          localMarkSnipUrls.delete(url);
+        localSnipSnipDownloads.delete(downloadId);
+        if (url) localSnipSnipBlobUrls.delete(url);
+        if (downloadInfo?.url && localSnipSnipUrls.has(downloadInfo.url)) {
+          localSnipSnipUrls.delete(downloadInfo.url);
+        } else if (url && localSnipSnipUrls.has(url)) {
+          localSnipSnipUrls.delete(url);
         }
       },
       handleDownloadChange: async (delta, deps = {}) => {
         if (!delta?.state) return;
-        const downloadInfo = localMarkSnipDownloads.get(delta.id);
+        const downloadInfo = localSnipSnipDownloads.get(delta.id);
         const url = localActiveDownloads.get(delta.id) || downloadInfo?.url || null;
         const cleanup = () => {
           if (url && url.startsWith('blob:chrome-extension://')) {
             options.sendCleanupBlobUrl?.(url);
           }
           localActiveDownloads.delete(delta.id);
-          localMarkSnipDownloads.delete(delta.id);
-          if (url) localMarkSnipBlobUrls.delete(url);
-          if (downloadInfo?.url && localMarkSnipUrls.has(downloadInfo.url)) {
-            localMarkSnipUrls.delete(downloadInfo.url);
-          } else if (url && localMarkSnipUrls.has(url)) {
-            localMarkSnipUrls.delete(url);
+          localSnipSnipDownloads.delete(delta.id);
+          if (url) localSnipSnipBlobUrls.delete(url);
+          if (downloadInfo?.url && localSnipSnipUrls.has(downloadInfo.url)) {
+            localSnipSnipUrls.delete(downloadInfo.url);
+          } else if (url && localSnipSnipUrls.has(url)) {
+            localSnipSnipUrls.delete(url);
           }
         };
         if (delta.state.current === 'complete') {
@@ -691,13 +691,13 @@ const downloadTrackerApi = globalThis.markSnipDownloadTracker || {
         }
       },
       handleFilenameConflict: (downloadItem, suggest) => {
-        const trackedById = localMarkSnipDownloads.has(downloadItem.id);
-        const trackedByUrl = downloadItem.url && localMarkSnipUrls.has(downloadItem.url);
-        const isOurBlobUrl = downloadItem.url && localMarkSnipBlobUrls.has(downloadItem.url);
+        const trackedById = localSnipSnipDownloads.has(downloadItem.id);
+        const trackedByUrl = downloadItem.url && localSnipSnipUrls.has(downloadItem.url);
+        const isOurBlobUrl = downloadItem.url && localSnipSnipBlobUrls.has(downloadItem.url);
         if (!trackedById && !trackedByUrl && !isOurBlobUrl) return false;
         const filename = trackedById
-          ? localMarkSnipDownloads.get(downloadItem.id)?.filename
-          : localMarkSnipUrls.get(downloadItem.url)?.filename;
+          ? localSnipSnipDownloads.get(downloadItem.id)?.filename
+          : localSnipSnipUrls.get(downloadItem.url)?.filename;
         if (!filename) return false;
         suggest({ filename, conflictAction: 'uniquify' });
         return true;
@@ -1016,7 +1016,7 @@ function ensureUniqueBatchEntryPath(filePath, usedPaths) {
 }
 
 function createBatchZipFilename() {
-  return `MarkSnip-batch-${moment().format('YYYYMMDD-HHmmss')}.zip`;
+  return `SnipSnip-batch-${moment().format('YYYYMMDD-HHmmss')}.zip`;
 }
 
 function getLibraryExportApi() {
@@ -1082,7 +1082,7 @@ async function handleLibraryExportRequest(message, sender) {
     }));
   const zipFilename = libraryExportApi?.createLibraryExportZipFilename
     ? libraryExportApi.createLibraryExportZipFilename()
-    : `MarkSnip-library-${moment().format('YYYYMMDD-HHmmss')}.zip`;
+    : `SnipSnip-library-${moment().format('YYYYMMDD-HHmmss')}.zip`;
   const fallbackTabId = await resolveLibraryExportTabId(message, sender);
 
   await triggerBatchZipDownload(files, options, fallbackTabId, zipFilename);
@@ -1217,7 +1217,7 @@ async function injectBatchProgressOverlay(tabId, current, total, url, pageTitle,
         const panel = document.createElement('div');
         panel.id = 'marksnip-batch-overlay';
         panel.innerHTML = `
-          <div class="marksnip-bo-title">MarkSnip — Batch Processing</div>
+          <div class="marksnip-bo-title">SnipSnip — Batch Processing</div>
           <div class="marksnip-bo-count">${current} / ${total}</div>
           <div class="marksnip-bo-url" title="${url}">${displayText}</div>
           <div class="marksnip-bo-bar-bg"><div class="marksnip-bo-bar" style="width:${pct}%"></div></div>
@@ -1253,7 +1253,7 @@ async function updateBatchProgressOverlay(tabId, current, total, url, pageTitle,
         if (countEl) countEl.textContent = `${current} / ${total}`;
         if (urlEl) { urlEl.textContent = pageTitle || url; urlEl.title = url; }
         if (barEl) barEl.style.width = `${pct}%`;
-        if (titleEl && statusText) titleEl.textContent = `MarkSnip — ${statusText}`;
+        if (titleEl && statusText) titleEl.textContent = `SnipSnip — ${statusText}`;
       },
       args: [current, total, url, pageTitle, statusText]
     });
@@ -2027,11 +2027,11 @@ async function getAgentBridgeActiveTab() {
 
   const tab = tabs?.[0] || null;
   if (!tab?.id) {
-    throw new Error('No active browser tab is available for MarkSnip');
+    throw new Error('No active browser tab is available for SnipSnip');
   }
 
   if (isRestrictedTabUrl(tab.url || '')) {
-    throw new Error(`MarkSnip cannot clip this page: ${tab.url}`);
+    throw new Error(`SnipSnip cannot clip this page: ${tab.url}`);
   }
 
   return tab;
@@ -2064,7 +2064,7 @@ async function captureTabForAgentBridge(tabId) {
     browser.runtime.onMessage.addListener(messageListener);
     timeoutHandle = setTimeout(() => {
       browser.runtime.onMessage.removeListener(messageListener);
-      reject(new Error('Timeout waiting for MarkSnip bridge capture'));
+      reject(new Error('Timeout waiting for SnipSnip bridge capture'));
     }, 30000);
   });
 
@@ -2127,7 +2127,7 @@ async function handleAgentBridgeClipRequest(message = {}) {
     postAgentBridgeMessage({
       type: 'bridge.error',
       requestId,
-      error: getAgentBridgeErrorMessage(error) || 'MarkSnip bridge clip failed'
+      error: getAgentBridgeErrorMessage(error) || 'SnipSnip bridge clip failed'
     });
   }
 }
@@ -2153,7 +2153,7 @@ function handleAgentBridgeNativeMessage(message = {}) {
           postAgentBridgeMessage({
             type: 'bridge.error',
             requestId: String(message?.requestId || '').trim(),
-            error: getAgentBridgeErrorMessage(error) || 'MarkSnip bridge clip failed'
+            error: getAgentBridgeErrorMessage(error) || 'SnipSnip bridge clip failed'
           });
         });
       }, 0);
@@ -2183,7 +2183,7 @@ async function initializeAgentBridge(forceReconnect = false) {
   if (!isNativeMessagingApiAvailable()) {
     await disconnectAgentBridge({
       lastError: usesOptionalNativeMessagingPermission()
-        ? 'Native messaging permission was granted, but MarkSnip needs one extension reload before Agent Bridge can connect.'
+        ? 'Native messaging permission was granted, but SnipSnip needs one extension reload before Agent Bridge can connect.'
         : 'Native messaging is unavailable in this browser context',
       hostInstalled: agentBridgeSuccessfulConnect
     });
@@ -2248,7 +2248,7 @@ async function initializeAgentBridge(forceReconnect = false) {
       return port;
     } catch (error) {
       agentBridgePort = null;
-      const message = getAgentBridgeErrorMessage(error) || 'Failed to connect to MarkSnip native host';
+      const message = getAgentBridgeErrorMessage(error) || 'Failed to connect to SnipSnip native host';
       const hostMissing = /native messaging host|Specified native messaging host not found|not found/i.test(message);
       await saveAgentBridgeStatus({
         connecting: false,

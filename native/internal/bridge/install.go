@@ -30,7 +30,7 @@ type installEnvironment struct {
 func BuildChromeManifest(hostPath, extensionID string) map[string]any {
 	return map[string]any{
 		"name":            HostName,
-		"description":     "MarkSnip native host",
+		"description":     "SnipSnip native host",
 		"path":            hostPath,
 		"type":            "stdio",
 		"allowed_origins": []string{fmt.Sprintf("chrome-extension://%s/", extensionID)},
@@ -40,7 +40,7 @@ func BuildChromeManifest(hostPath, extensionID string) map[string]any {
 func BuildFirefoxManifest(hostPath string) map[string]any {
 	return map[string]any{
 		"name":               HostName,
-		"description":        "MarkSnip native host",
+		"description":        "SnipSnip native host",
 		"path":               hostPath,
 		"type":               "stdio",
 		"allowed_extensions": []string{DefaultFirefoxID},
@@ -125,7 +125,7 @@ func manifestPath(env installEnvironment, browser Browser) (string, error) {
 		if configDir == "" {
 			return "", errors.New("user config directory is empty")
 		}
-		return filepath.Join(configDir, "MarkSnip", "NativeMessagingHosts", string(browser), HostName+".json"), nil
+		return filepath.Join(configDir, "SnipSnip", "NativeMessagingHosts", string(browser), HostName+".json"), nil
 	case "darwin":
 		configDir, err := env.userConfigDir()
 		if err != nil {
@@ -163,7 +163,7 @@ func manifestPath(env installEnvironment, browser Browser) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("MarkSnip native host install is not supported on %s", env.goos)
+	return "", fmt.Errorf("SnipSnip native host install is not supported on %s", env.goos)
 }
 
 func writeManifest(browser Browser, payload map[string]any, env installEnvironment) (string, error) {

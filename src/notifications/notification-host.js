@@ -407,7 +407,7 @@
 
       const eyebrow = document.createElement('div');
       eyebrow.className = 'eyebrow';
-      eyebrow.textContent = isVersionUpdate ? 'MarkSnip Update' : 'Milestone';
+      eyebrow.textContent = isVersionUpdate ? 'SnipSnip Update' : 'Milestone';
 
       const close = document.createElement('button');
       close.className = 'close';
@@ -465,7 +465,7 @@
       // ── Title ──
       const title = document.createElement('h2');
       title.className = 'title';
-      title.textContent = this.notification.title || 'MarkSnip notification';
+      title.textContent = this.notification.title || 'SnipSnip notification';
       body.appendChild(title);
 
       // ── Version badge (version-update only) ──

@@ -30,7 +30,7 @@
     return String(value).padStart(2, '0');
   }
 
-  function createLibraryExportZipFilename(date = new Date(), prefix = 'MarkSnip-library') {
+  function createLibraryExportZipFilename(date = new Date(), prefix = 'SnipSnip-library') {
     return [
       prefix,
       `${date.getFullYear()}${padNumber(date.getMonth() + 1)}${padNumber(date.getDate())}-${padNumber(date.getHours())}${padNumber(date.getMinutes())}${padNumber(date.getSeconds())}`

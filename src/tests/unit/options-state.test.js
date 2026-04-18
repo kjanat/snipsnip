@@ -22,9 +22,9 @@ const defaultOptions = {
   }
 };
 
-  test('buildExportFilename returns deterministic MarkSnip filename', () => {
+  test('buildExportFilename returns deterministic SnipSnip filename', () => {
     const filename = optionsState.buildExportFilename(new Date('2026-03-17T10:15:00Z'));
-    expect(filename).toBe('MarkSnip-export-2026-03-17.json');
+    expect(filename).toBe('SnipSnip-export-2026-03-17.json');
   });
 
   test('normalizeImportedOptions merges defaults and nested tableFormatting', () => {

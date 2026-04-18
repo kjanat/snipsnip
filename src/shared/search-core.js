@@ -1,5 +1,5 @@
 /**
- * MarkSnip — Shared Fuzzy Search Core
+ * SnipSnip — Shared Fuzzy Search Core
  *
  * Extracted from options-search.js so both the Settings page and
  * the User Guide can share the same scoring / normalization engine.

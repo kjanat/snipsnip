@@ -1073,7 +1073,7 @@ async function reloadExtensionForAgentBridgePermissionGrant() {
         statusText.textContent = 'Reloading extension';
     }
     if (statusHint) {
-        statusHint.textContent = 'Permission granted. MarkSnip is reloading once to finish enabling the Agent Bridge.';
+        statusHint.textContent = 'Permission granted. SnipSnip is reloading once to finish enabling the Agent Bridge.';
     }
     if (refreshBtn) {
         refreshBtn.disabled = true;
@@ -1282,7 +1282,7 @@ function buildExportFilenameState(date) {
 
     const d = date instanceof Date ? date : new Date(date);
     const datestring = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
-    return `MarkSnip-export-${datestring}.json`;
+    return `SnipSnip-export-${datestring}.json`;
 }
 
 function buildExportPayload() {
@@ -1779,16 +1779,16 @@ const setCurrentAgentBridgeChoice = (settingsResult, statusResult = agentBridgeS
     const versionEl = document.getElementById('agentBridgeHostVersion');
 
     let text = 'Disabled';
-    let hint = 'Enable the Agent Bridge to let MarkSnip connect to the local companion.';
+    let hint = 'Enable the Agent Bridge to let SnipSnip connect to the local companion.';
     let state = 'disabled';
 
     if (usesOptionalNativeMessagingPermission() && agentBridgeSettings.enabled && !agentBridgeStatus.permissionGranted) {
         text = 'Permission needed';
-        hint = 'Grant native messaging permission to let MarkSnip connect to the local companion.';
+        hint = 'Grant native messaging permission to let SnipSnip connect to the local companion.';
         state = 'permission-needed';
     } else if (agentBridgeSettings.enabled && agentBridgeStatus.connecting) {
         text = 'Checking connection';
-        hint = 'MarkSnip is waiting for the local companion to respond.';
+        hint = 'SnipSnip is waiting for the local companion to respond.';
         state = 'starting';
     } else if (agentBridgeSettings.enabled && agentBridgeStatus.connected) {
         text = `Connected${agentBridgeStatus.browser ? ` via ${agentBridgeStatus.browser}` : ''}`;
@@ -1800,11 +1800,11 @@ const setCurrentAgentBridgeChoice = (settingsResult, statusResult = agentBridgeS
         state = 'waiting';
     } else if (agentBridgeSettings.enabled) {
         text = 'Starting';
-        hint = 'MarkSnip is trying to connect to the local companion.';
+        hint = 'SnipSnip is trying to connect to the local companion.';
         state = 'starting';
     } else if (!agentBridgeSettings.enabled && agentBridgeStatus.permissionGranted) {
         // Disabled after prior grant
-        hint = 'MarkSnip will not use the local connection while disabled, even if the browser-level permission remains granted.';
+        hint = 'SnipSnip will not use the local connection while disabled, even if the browser-level permission remains granted.';
     }
 
     if (container) {
@@ -1822,9 +1822,9 @@ const setCurrentAgentBridgeChoice = (settingsResult, statusResult = agentBridgeS
     // Update toggle hint based on enabled state
     if (toggleHint) {
         if (agentBridgeSettings.enabled) {
-            toggleHint.textContent = 'MarkSnip opens a native messaging connection while this toggle is on.';
+            toggleHint.textContent = 'SnipSnip opens a native messaging connection while this toggle is on.';
         } else {
-            toggleHint.textContent = 'When off, MarkSnip will not open a local companion connection.';
+            toggleHint.textContent = 'When off, SnipSnip will not open a local companion connection.';
         }
     }
 

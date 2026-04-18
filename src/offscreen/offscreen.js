@@ -11,7 +11,7 @@ browser.runtime.sendMessage({ type: 'offscreen-ready' });
  * Initialize offscreen document
  */
 function initOffscreen() {
-  console.log('MarkSnip offscreen document initialized');
+  console.log('SnipSnip offscreen document initialized');
   console.log('🔧 Browser downloads API available:', !!browser.downloads);
   console.log('🔧 Chrome downloads API available:', !!(typeof chrome !== 'undefined' && chrome.downloads));
   TurndownService.prototype.defaultEscape = TurndownService.prototype.escape;
@@ -1281,7 +1281,7 @@ function resolveArticleUrl(domBaseUri, pageUrl) {
 }
 
 function getReadabilityRecoveryApi() {
-  return globalThis.MarkSnipReadabilityRecovery || {
+  return globalThis.SnipSnipReadabilityRecovery || {
     anchorAttribute: 'data-marksnip-node-id',
     annotateStructuralAnchors: () => 0,
     analyzeNarrowExtraction: () => null,
@@ -2458,7 +2458,7 @@ async function downloadBatchZip(message) {
     }
 
     const options = message.options || defaultOptions;
-    const zipFilename = message.zipFilename || `MarkSnip-batch-${Date.now()}.zip`;
+    const zipFilename = message.zipFilename || `SnipSnip-batch-${Date.now()}.zip`;
     const zipBlob = createStoredZipBlob(files);
     console.log(`[Offscreen] ZIP blob created (${zipBlob.size} bytes) for ${files.length} files`);
 

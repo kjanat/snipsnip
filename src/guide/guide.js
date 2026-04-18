@@ -1,5 +1,5 @@
 /**
- * MarkSnip — User Guide Page
+ * SnipSnip — User Guide Page
  *
  * Handles:
  *  - Theme + accent sync from stored settings

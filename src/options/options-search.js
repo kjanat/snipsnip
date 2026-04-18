@@ -1,5 +1,5 @@
 /**
- * MarkSnip — Options Search (adapter over shared search-core)
+ * SnipSnip — Options Search (adapter over shared search-core)
  *
  * Builds a search index from the options DOM and delegates scoring
  * to the shared fuzzy engine in search-core.js.

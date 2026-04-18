@@ -1584,10 +1584,10 @@ function isRestrictedTabUrl(url) {
 
 function getRestrictedPageMessage(url) {
     if (!url) {
-        return 'MarkSnip cannot clip this page.';
+        return 'SnipSnip cannot clip this page.';
     }
 
-    return `MarkSnip cannot clip this page: ${url}`;
+    return `SnipSnip cannot clip this page: ${url}`;
 }
 
 async function resolveClipTargetTab(id) {
@@ -3526,7 +3526,7 @@ async function initializePopup() {
         }
 
         const clipPromise = ensureContentScriptInjected(activeTab.id).then(() => {
-            console.info("Successfully injected MarkSnip content script");
+            console.info("Successfully injected SnipSnip content script");
             return clipSite(activeTab.id);
         });
 

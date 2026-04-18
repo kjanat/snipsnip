@@ -1,8 +1,8 @@
-# MarkSnip User Guide
+# SnipSnip User Guide
 
 ## Basic Usage
 
-Click the MarkSnip icon in the browser toolbar to open the popup. The current page is run through Mozilla Readability to extract the main content, then converted to Markdown with Turndown. You can edit the result in the built-in CodeMirror editor before saving.
+Click the SnipSnip icon in the browser toolbar to open the popup. The current page is run through Mozilla Readability to extract the main content, then converted to Markdown with Turndown. You can edit the result in the built-in CodeMirror editor before saving.
 
 ### Quick Settings
 
@@ -78,7 +78,7 @@ Click **Convert All URLs** to start processing. A progress bar shows the current
 
 ## Context Menu
 
-Right-click on a page to access MarkSnip actions under the context menu. These options are available when **Enable Context Menus** is turned on in settings.
+Right-click on a page to access SnipSnip actions under the context menu. These options are available when **Enable Context Menus** is turned on in settings.
 
 ### Download Actions
 
@@ -121,7 +121,7 @@ Default shortcuts (customizable in your browser's extension shortcut settings):
 
 | Shortcut                                     | Action                                |
 | -------------------------------------------- | ------------------------------------- |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> | Open the MarkSnip popup               |
+| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> | Open the SnipSnip popup               |
 | <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> | Download current tab as Markdown      |
 | <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Copy current tab as Markdown          |
 | <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> | Copy current tab URL as Markdown link |
@@ -137,7 +137,7 @@ Additional commands are available but have no default shortcut. You can assign y
 
 ## Extension Options
 
-Open the options page by clicking the gear icon (⚙️) in the popup header, or by right-clicking the MarkSnip icon and selecting **Options**.
+Open the options page by clicking the gear icon (⚙️) in the popup header, or by right-clicking the SnipSnip icon and selecting **Options**.
 
 ### Title Template
 

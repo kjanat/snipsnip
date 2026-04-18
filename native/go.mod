@@ -1,3 +1,3 @@
-module github.com/DhruvParikh1/markdownload-extension-updated/native
+module github.com/kjanat/snipsnip/native
 
 go 1.22

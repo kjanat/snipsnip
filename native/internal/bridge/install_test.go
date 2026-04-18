@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuildChromeManifest(t *testing.T) {
-	manifest := BuildChromeManifest(`C:\MarkSnip\marksnip-native-host.exe`, DefaultChromeID)
+	manifest := BuildChromeManifest(`C:\SnipSnip\marksnip-native-host.exe`, DefaultChromeID)
 	origins := manifest["allowed_origins"].([]string)
 	if len(origins) != 1 || origins[0] != "chrome-extension://"+DefaultChromeID+"/" {
 		t.Fatalf("unexpected allowed origins: %#v", origins)
@@ -32,13 +32,13 @@ func TestManifestPathByPlatform(t *testing.T) {
 			name:    "windows chrome",
 			goos:    "windows",
 			browser: BrowserChrome,
-			want:    filepath.Join(configDir, "MarkSnip", "NativeMessagingHosts", "chrome", HostName+".json"),
+			want:    filepath.Join(configDir, "SnipSnip", "NativeMessagingHosts", "chrome", HostName+".json"),
 		},
 		{
 			name:    "windows firefox",
 			goos:    "windows",
 			browser: BrowserFirefox,
-			want:    filepath.Join(configDir, "MarkSnip", "NativeMessagingHosts", "firefox", HostName+".json"),
+			want:    filepath.Join(configDir, "SnipSnip", "NativeMessagingHosts", "firefox", HostName+".json"),
 		},
 		{
 			name:    "darwin chrome",

@@ -1,4 +1,4 @@
-# MarkSnip - Extension Permissions
+# SnipSnip - Extension Permissions
 
 This document explains every permission declared in `src/manifest.json`, why it is needed, and what the extension would lose without it.
 
@@ -7,7 +7,7 @@ This document explains every permission declared in `src/manifest.json`, why it 
 ## Core Permissions
 
 ### `activeTab`
-**Why it's needed:** Grants temporary access to the currently active tab when the user clicks the MarkSnip icon or triggers a keyboard shortcut. This allows the extension to read the page's URL, title, and content for conversion.
+**Why it's needed:** Grants temporary access to the currently active tab when the user clicks the SnipSnip icon or triggers a keyboard shortcut. This allows the extension to read the page's URL, title, and content for conversion.
 
 **Without it:** The extension could not read the current page to convert it to Markdown.
 
@@ -30,7 +30,7 @@ This document explains every permission declared in `src/manifest.json`, why it 
 ---
 
 ### `contextMenus`
-**Why it's needed:** Adds MarkSnip actions to the right-click context menu for pages, selected text, links, images, and browser tabs, letting users clip content without opening the popup.
+**Why it's needed:** Adds SnipSnip actions to the right-click context menu for pages, selected text, links, images, and browser tabs, letting users clip content without opening the popup.
 
 **Without it:** Context menu entries (for example, "Copy selection as Markdown") would not appear.
 
@@ -48,7 +48,7 @@ This document explains every permission declared in `src/manifest.json`, why it 
 ### `nativeMessaging`
 **Why it's needed:** Enables communication with the optional **Agent Bridge CLI**, a locally installed helper program that lets AI agents and automation scripts request Markdown clipping programmatically. The CLI runs entirely on the user's own machine; no data leaves the device.
 
-**How it's granted:** MarkSnip requests this permission only when the user turns on **Agent Bridge** in Settings.
+**How it's granted:** SnipSnip requests this permission only when the user turns on **Agent Bridge** in Settings.
 
 **Without it:** The Agent Bridge feature (programmatic/API access for AI agents) would not function. All other clipping features remain unaffected.
 
@@ -75,7 +75,7 @@ This document explains every permission declared in `src/manifest.json`, why it 
 ## Host Permissions
 
 ### `<all_urls>`
-**Why it's needed:** Allows MarkSnip to clip pages across arbitrary sites instead of a fixed allowlist. This also covers user-triggered workflows that operate beyond a single popup click, such as keyboard shortcuts, context-menu actions, clipping multiple highlighted tabs, and batch processing URLs in newly opened tabs.
+**Why it's needed:** Allows SnipSnip to clip pages across arbitrary sites instead of a fixed allowlist. This also covers user-triggered workflows that operate beyond a single popup click, such as keyboard shortcuts, context-menu actions, clipping multiple highlighted tabs, and batch processing URLs in newly opened tabs.
 
 **Without it:** The extension could only clip content from sites explicitly listed in the manifest, and multi-tab or batch workflows would fail on pages that had not granted temporary access.
 
@@ -107,4 +107,4 @@ The in-extension guide/help page. It is opened directly with the extension's own
 | `offscreen` | No | Yes |
 | `<all_urls>` | No | Yes |
 
-All content processing happens locally on your device. MarkSnip does not transmit page content, clipboard data, or browsing history to any external server.
+All content processing happens locally on your device. SnipSnip does not transmit page content, clipboard data, or browsing history to any external server.

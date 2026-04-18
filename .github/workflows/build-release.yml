@@ -259,9 +259,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get-tag.outputs.tag }}
-          name: MarkSnip ${{ steps.get-tag.outputs.tag }}
+          name: SnipSnip ${{ steps.get-tag.outputs.tag }}
           body: |
-            ## MarkSnip ${{ steps.get-tag.outputs.tag }}
+            ## SnipSnip ${{ steps.get-tag.outputs.tag }}
 
             ### Installation
 

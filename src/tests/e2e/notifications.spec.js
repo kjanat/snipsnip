@@ -53,7 +53,7 @@ async function loadExtensionContext() {
 
   serviceWorker = serviceWorker || context.serviceWorkers()[0];
   if (!serviceWorker) {
-    throw new Error('Failed to load MarkSnip service worker for notifications E2E');
+    throw new Error('Failed to load SnipSnip service worker for notifications E2E');
   }
 
   const extensionId = new URL(serviceWorker.url()).host;
@@ -152,7 +152,7 @@ test.describe('Notifications E2E', () => {
 
     try {
       await expect(guidePage.locator('#welcome-banner')).toBeVisible();
-      await expect(guidePage.getByText('Welcome to MarkSnip!')).toBeVisible();
+      await expect(guidePage.getByText('Welcome to SnipSnip!')).toBeVisible();
 
       await guidePage.getByLabel('Dismiss welcome message').click();
       await expect(guidePage.locator('#welcome-banner')).toBeHidden();
@@ -294,7 +294,7 @@ test.describe('Notifications E2E', () => {
 
       await recordMetrics(serviceWorker, { copies: 1, exports: 0 }, pageTabId);
 
-      await expect(page.getByText(`MarkSnip updated to v${currentVersion}`)).toBeVisible({ timeout: 15000 });
+      await expect(page.getByText(`SnipSnip updated to v${currentVersion}`)).toBeVisible({ timeout: 15000 });
       await expect(page.getByText(`Updated from v${previousVersion} to v${currentVersion}.`)).toBeVisible();
       await expect(page.getByText(pendingUpdate.highlights[0])).toBeVisible();
       await expect(page.getByRole('link', { name: 'Buy Me a Coffee' })).toBeVisible();

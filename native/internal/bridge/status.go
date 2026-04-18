@@ -15,7 +15,7 @@ func baseDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(configDir, "MarkSnip", "agent-bridge"), nil
+	return filepath.Join(configDir, "SnipSnip", "agent-bridge"), nil
 }
 
 func StatusPath() (string, error) {
@@ -129,24 +129,24 @@ func RandomToken() (string, error) {
 
 func SelectSession(status StatusFile, requested Browser) (SessionStatus, error) {
 	if len(status.Sessions) == 0 {
-		return SessionStatus{}, errors.New("no MarkSnip bridge session is connected; open Chrome or Firefox with Agent Bridge enabled")
+		return SessionStatus{}, errors.New("no SnipSnip bridge session is connected; open Chrome or Firefox with Agent Bridge enabled")
 	}
 
 	if requested != "" {
 		session, ok := status.Sessions[string(requested)]
 		if !ok {
-			return SessionStatus{}, fmt.Errorf("no active MarkSnip bridge session for %s", requested)
+			return SessionStatus{}, fmt.Errorf("no active SnipSnip bridge session for %s", requested)
 		}
 		return session, nil
 	}
 
 	if len(status.Sessions) > 1 {
-		return SessionStatus{}, errors.New("multiple MarkSnip bridge sessions are connected; rerun with --browser chrome or --browser firefox")
+		return SessionStatus{}, errors.New("multiple SnipSnip bridge sessions are connected; rerun with --browser chrome or --browser firefox")
 	}
 
 	for _, session := range status.Sessions {
 		return session, nil
 	}
 
-	return SessionStatus{}, errors.New("no MarkSnip bridge session is connected")
+	return SessionStatus{}, errors.New("no SnipSnip bridge session is connected")
 }
