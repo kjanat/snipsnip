@@ -34,7 +34,7 @@
 			"source": {
 				"recommended": true,
 				"noDuplicateClasses": "on",
-				"organizeImports": "on",
+				"organizeImports": "off",
 				"useSortedProperties": "on"
 			}
 		}

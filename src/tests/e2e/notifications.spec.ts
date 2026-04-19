@@ -3,7 +3,7 @@
  * Validates that queued notifications render only after successful extension use.
  */
 
-import { getExtensionLaunchArgs } from '@/tests/helpers/extension-target';
+import { getExtensionLaunchArgs } from '@/tests/helpers/extension-target.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { type BrowserContext, chromium, expect, test, type Worker } from 'playwright/test';
@@ -11,7 +11,7 @@ import { type BrowserContext, chromium, expect, test, type Worker } from 'playwr
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const notificationHostPath = '/notifications/host.html';
 const notificationHostUrl = `${fixtureHost}${notificationHostPath}`;
-const notificationHostFixture = path.join(__dirname, '../fixtures/e2e-pages/notifications/host.html');
+const notificationHostFixture = path.join(import.meta.dirname, '../fixtures/e2e-pages/notifications/host.html');
 
 async function installFixtureRoutes(context: BrowserContext) {
 	await context.route(`${fixtureHost}/**`, async (route) => {

@@ -14,15 +14,15 @@ await import('@/options/options-search');
 const optionsSearch = globalThis.snipSnipOptionsSearch;
 
 const optionsHtml = fs.readFileSync(
-	path.join(__dirname, '../../options/options.html'),
+	path.join(import.meta.dirname, '../../options/options.html'),
 	'utf8',
 );
 const optionsSearchSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options-search.js'),
+	path.join(import.meta.dirname, '../../options/options-search.js'),
 	'utf8',
 );
 const optionsSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options.js'),
+	path.join(import.meta.dirname, '../../options/options.js'),
 	'utf8',
 );
 const moment = (value: Date | number | string | null = new Date()) => ({

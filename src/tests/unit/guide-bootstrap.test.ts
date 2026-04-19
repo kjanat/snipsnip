@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 
-import { bootGuideRuntime, resetGuideRuntimeBootstrapState } from '@/lib/guide/bootstrap';
+import { bootGuideRuntime, resetGuideRuntimeBootstrapState } from '@/lib/guide/bootstrap.ts';
 
-const { JSDOM } = require('@/tests/helpers/jsdom-shim');
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
 
 const originalWindow = globalThis.window;
 const originalDocument = globalThis.document;

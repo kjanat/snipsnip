@@ -11,7 +11,7 @@ import { chromium, expect, test } from 'playwright/test';
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixtureFiles = {
 	'/extension/deterministic-article.html': path.join(
-		__dirname,
+		import.meta.dirname,
 		'../fixtures/e2e-pages/extension/deterministic-article.html',
 	),
 };

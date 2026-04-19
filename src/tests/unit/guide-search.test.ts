@@ -1,16 +1,17 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { JSDOM } = require('@/tests/helpers/jsdom-shim');
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
+import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-const searchCore = require('@/shared/search-core');
+import searchCore from '@/shared/search-core.ts';
 
-const guideHtml = fs.readFileSync(
-	path.join(__dirname, '../../guide/guide.html'),
+const guideHtml = readFileSync(
+	path.join(import.meta.dirname, '../../guide/guide.html'),
 	'utf8',
 );
 
-const guideSource = fs.readFileSync(
-	path.join(__dirname, '../../guide/guide.js'),
+const guideSource = readFileSync(
+	path.join(import.meta.dirname, '../../guide/guide.js'),
 	'utf8',
 );
 
@@ -79,7 +80,8 @@ function getMatchIds(index, query) {
 }
 
 describe('Guide search index', () => {
-	let dom, index;
+	let dom: ReturnType<typeof loadGuideDom>;
+	let index: ReturnType<typeof buildGuideIndex>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -99,7 +101,8 @@ describe('Guide search index', () => {
 });
 
 describe('Guide search — exact queries', () => {
-	let dom, index;
+	let dom: ReturnType<typeof loadGuideDom>;
+	let index: ReturnType<typeof buildGuideIndex>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -132,7 +135,8 @@ describe('Guide search — exact queries', () => {
 });
 
 describe('Guide search — alias queries', () => {
-	let dom, index;
+	let dom: ReturnType<typeof loadGuideDom>;
+	let index: ReturnType<typeof buildGuideIndex>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -163,7 +167,8 @@ describe('Guide search — alias queries', () => {
 });
 
 describe('Guide search — acronym and typo tolerance', () => {
-	let dom, index;
+	let dom: ReturnType<typeof loadGuideDom>;
+	let index: ReturnType<typeof buildGuideIndex>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -182,7 +187,8 @@ describe('Guide search — acronym and typo tolerance', () => {
 });
 
 describe('Guide search — fallback behavior', () => {
-	let dom, index;
+	let dom: ReturnType<typeof loadGuideDom>;
+	let index: ReturnType<typeof buildGuideIndex>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -198,7 +204,7 @@ describe('Guide search — fallback behavior', () => {
 });
 
 describe('Guide DOM structure', () => {
-	let dom;
+  let dom: ReturnType<typeof loadGuideDom>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -255,7 +261,7 @@ describe('Guide DOM structure', () => {
 });
 
 describe('Guide keyboard shortcuts', () => {
-	let dom;
+  let dom: ReturnType<typeof loadGuideDom>;
 
 	beforeEach(() => {
 		dom = new JSDOM(guideHtml, {

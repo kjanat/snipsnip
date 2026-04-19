@@ -2,16 +2,16 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { JSDOM } from '@/tests/helpers/jsdom-shim';
-import { buildExpectedManifest } from '@/tests/helpers/manifest';
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
+import { buildExpectedManifest } from '@/tests/helpers/manifest.ts';
 
 const popupHtml = fs.readFileSync(
-	path.join(__dirname, '../../popup/popup.html'),
+	path.join(import.meta.dirname, '../../popup/popup.html'),
 	'utf8',
 );
 
 const optionsHtml = fs.readFileSync(
-	path.join(__dirname, '../../options/options.html'),
+	path.join(import.meta.dirname, '../../options/options.html'),
 	'utf8',
 );
 
@@ -107,7 +107,7 @@ describe('Guide discoverability — manifest', () => {
 		const manifest = await buildExpectedManifest('chrome');
 		const resources = (manifest.web_accessible_resources ?? []) as readonly ResourceEntry[];
 		const pageContextResource = resources.find((r) =>
-			r.resources?.some((res) => /page-context\.js$/.test(res)) ?? false
+			r.resources?.some((res) => res.endsWith('page-context.js')) ?? false
 		);
 
 		expect(pageContextResource).toBeDefined();

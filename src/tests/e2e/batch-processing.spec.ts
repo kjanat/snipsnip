@@ -3,21 +3,21 @@
  * Uses routed fixture pages so CI does not depend on external websites.
  */
 
-import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target.ts';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
 
 const fixturePathMap = {
-	'/batch/alpha.html': path.join(__dirname, '../fixtures/e2e-pages/batch/alpha.html'),
-	'/batch/beta.html': path.join(__dirname, '../fixtures/e2e-pages/batch/beta.html'),
-	'/batch/obsidian-links.html': path.join(__dirname, '../fixtures/e2e-pages/batch/obsidian-links.html'),
-	'/batch/download-images.html': path.join(__dirname, '../fixtures/e2e-pages/batch/download-images.html'),
-	'/batch/repeated-sections.html': path.join(__dirname, '../fixtures/e2e-pages/batch/repeated-sections.html'),
-	'/batch/snapshot-one.html': path.join(__dirname, '../fixtures/e2e-pages/batch/snapshot-one.html'),
-	'/batch/snapshot-two.html': path.join(__dirname, '../fixtures/e2e-pages/batch/snapshot-two.html'),
-	'/batch/snapshot-three.html': path.join(__dirname, '../fixtures/e2e-pages/batch/snapshot-three.html'),
+	'/batch/alpha.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/alpha.html'),
+	'/batch/beta.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/beta.html'),
+	'/batch/obsidian-links.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/obsidian-links.html'),
+	'/batch/download-images.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/download-images.html'),
+	'/batch/repeated-sections.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/repeated-sections.html'),
+	'/batch/snapshot-one.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/snapshot-one.html'),
+	'/batch/snapshot-two.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/snapshot-two.html'),
+	'/batch/snapshot-three.html': path.join(import.meta.dirname, '../fixtures/e2e-pages/batch/snapshot-three.html'),
 };
 
 const deterministicCases = [
@@ -38,7 +38,7 @@ const deterministicCases = [
 	},
 ];
 
-const MARKDOWN_FIXTURE_DIR = path.join(__dirname, '../fixtures/e2e-markdown/batch');
+const MARKDOWN_FIXTURE_DIR = path.join(import.meta.dirname, '../fixtures/e2e-markdown/batch');
 
 function loadSnapshotFixture(name) {
 	return fs.readFileSync(path.join(MARKDOWN_FIXTURE_DIR, name), 'utf8')

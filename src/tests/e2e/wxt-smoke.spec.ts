@@ -1,4 +1,4 @@
-import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target.ts';
 import { type BrowserContext, chromium, expect, test } from 'playwright/test';
 
 test.describe('WXT smoke', () => {

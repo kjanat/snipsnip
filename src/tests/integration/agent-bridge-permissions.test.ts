@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { buildExpectedManifest } from '@/tests/helpers/manifest';
+import { buildExpectedManifest } from '@/tests/helpers/manifest.ts';
 
 describe('Agent Bridge manifest permissions', () => {
 	test('nativeMessaging is requested optionally instead of at install time', async () => {

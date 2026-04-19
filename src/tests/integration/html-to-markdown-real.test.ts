@@ -3,19 +3,10 @@
  * Tests actual conversion using Turndown.js library
  */
 
-import { createTurndownService } from '@/tests/helpers/browser-env';
+import { createTurndownService } from '@/tests/helpers/browser-env.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('Real HTML to Markdown Conversion', () => {
-	/**
-	 * Helper to normalize markdown for comparison
-	 */
-	function _normalizeMarkdown(markdown) {
-		return markdown
-			.trim()
-			.replace(/\r\n/g, '\n')
-			.replace(/[ \t]+$/gm, ''); // Remove trailing spaces
-	}
-
 	describe('Basic HTML Elements', () => {
 		test('should convert headings to markdown', () => {
 			const { service } = createTurndownService();

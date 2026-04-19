@@ -3,7 +3,8 @@
  * Tests actual article extraction using Mozilla's Readability.js
  */
 
-const { parseArticle } = require('@/tests/helpers/browser-env');
+import { parseArticle } from '@/tests/helpers/browser-env.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('Real Readability Integration', () => {
 	describe('Article Extraction', () => {
@@ -298,8 +299,6 @@ function hello() {
           </body>
         </html>
       `;
-
-			const { article } = parseArticle(html);
 
 			// Readability might not extract very short content
 			// But it shouldn't crash

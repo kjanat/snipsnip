@@ -6,7 +6,7 @@
 import turndownFactory from '@/shared/turndown-factory.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { JSDOM } from './jsdom-shim';
+import { JSDOM } from './jsdom-shim.ts';
 
 /**
  * Create a browser-like environment with required libraries loaded

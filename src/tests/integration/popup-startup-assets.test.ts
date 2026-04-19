@@ -1,11 +1,12 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { JSDOM } = require('@/tests/helpers/jsdom-shim');
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
+import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 describe('Popup startup assets', () => {
 	test('popup HTML no longer eagerly loads all CodeMirror theme styles or the notification host', () => {
-		const popupHtml = fs.readFileSync(
-			path.join(__dirname, '../../popup/popup.html'),
+		const popupHtml = readFileSync(
+			join(import.meta.dirname, '../../popup/popup.html'),
 			'utf8',
 		);
 		const dom = new JSDOM(popupHtml, {
@@ -54,7 +55,8 @@ describe('Popup startup assets', () => {
 		expect(document.getElementById('ddText')).not.toBeNull();
 		expect(document.getElementById('ddHtml')).not.toBeNull();
 		expect(document.getElementById('ddPrint')).not.toBeNull();
-		expect(document.getElementById('ddPdf')).not.toBeNull();
+    expect(document.getElementById('ddPdf')).not.toBeNull();
+		// @ts-ignore
 		expect(document.getElementById('splitDropdown').hasAttribute('hidden')).toBe(true);
 	});
 });

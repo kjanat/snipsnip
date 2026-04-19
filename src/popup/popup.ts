@@ -3,7 +3,8 @@
 // implicit-any diagnostics are resolved. Touch sites under migration get
 // explicit types via the imported wrapper; the rest is still untyped JS.
 import { createEditor } from '@/popup/lib/editor';
-import { EditorView } from '@codemirror/view';
+import defaultEditorTheme from '@/popup/lib/themes/default.ts';
+import { loadTheme } from '@/popup/lib/themes/registry.ts';
 
 const browser = globalThis.browser;
 
@@ -1076,7 +1077,7 @@ function initializeEditor() {
 		cm = createEditor({
 			parent: editorParent,
 			initialValue,
-			theme: EditorView.theme({}),
+			theme: defaultEditorTheme,
 			syncTextarea: dom.editorTextarea ?? null,
 		});
 		globalThis.cm = cm;
@@ -1722,10 +1723,18 @@ function applyThemeSettings(options) {
 	if (shouldAnimateThemeChange) {
 		beginThemeTransition(lastResolvedThemeName !== themeName);
 	}
-	// TODO(task-9): wire theme registry — cm.reconfigureTheme(await loadTheme(themeName))
-	// ensureEditorThemeStylesheet is a no-op until CSS themes are removed (task-10)
+	// ensureEditorThemeStylesheet remains a no-op for themes already ported to CM6.
+	// It still handles any themes whose CM6 port is pending (falls back to link injection).
 	ensureEditorThemeStylesheet(themeName);
-	void cm;
+	if (cm) {
+		loadTheme(themeName)
+			.then((themeExtension) => {
+				cm?.reconfigureTheme(themeExtension);
+			})
+			.catch((error) => {
+				console.error(`Failed to load editor theme "${themeName}":`, error);
+			});
+	}
 
 	updateThemeToggleButton(options);
 

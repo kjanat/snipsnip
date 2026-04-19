@@ -14,7 +14,7 @@ describe('Content Script DOM Capture', () => {
 			mathJaxSyncRequestEventName: 'snipsnip:mathjax-sync-request',
 		};
 
-		const scriptPath = path.join(__dirname, '../../contentScript/contentScript.js');
+		const scriptPath = path.join(import.meta.dirname, '../../contentScript/contentScript.js');
 		const scriptSource = fs.readFileSync(scriptPath, 'utf8');
 		window.eval(scriptSource);
 	});

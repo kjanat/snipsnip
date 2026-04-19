@@ -3,9 +3,10 @@
  * Tests for actual bugs found in production use
  */
 
-const { JSDOM } = require('@/tests/helpers/jsdom-shim');
-const { createBrowserEnvironment, createTurndownService, parseArticle } = require('@/tests/helpers/browser-env');
-const htmlSamples = require('@/tests/fixtures/html-samples');
+import htmlSamples from '@/tests/fixtures/html-samples.ts';
+import { createBrowserEnvironment, createTurndownService, parseArticle } from '@/tests/helpers/browser-env.ts';
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
+import { describe, expect, test } from 'bun:test';
 
 function prepareDocumentForRecoveryTest(document, recoveryApi) {
 	document.querySelectorAll('a')?.forEach(anchor => {
@@ -550,7 +551,7 @@ if (!verification.valid) {
 			prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
 
 			const sourceTable = dom.window.document.querySelector('table');
-			const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
+			const tableAnchorId = sourceTable?.getAttribute(env.ReadabilityRecovery.anchorAttribute);
 			const extractedHtml = `
         <div role="table" data-snipsnip-node-id="${tableAnchorId}">
           <div role="row">
@@ -599,7 +600,7 @@ if (!verification.valid) {
 			prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
 
 			const sourceTable = dom.window.document.querySelector('[role="table"]');
-			const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
+			const tableAnchorId = sourceTable?.getAttribute(env.ReadabilityRecovery.anchorAttribute);
 			const extractedHtml = `
         <div role="table" data-snipsnip-node-id="${tableAnchorId}">
           <div role="row">

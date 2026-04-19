@@ -1,4 +1,4 @@
-import wxtConfig from '@@/wxt.config';
+import wxtConfig from '@@/wxt.config.ts';
 
 type Browser = 'chrome' | 'firefox';
 

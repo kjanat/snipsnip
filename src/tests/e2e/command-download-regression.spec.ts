@@ -10,7 +10,7 @@ import { chromium, expect, test } from 'playwright/test';
 
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixturePath = '/command-download/host.html';
-const fixtureFile = path.join(__dirname, '../fixtures/e2e-pages/command-download/host.html');
+const fixtureFile = path.join(import.meta.dirname, '../fixtures/e2e-pages/command-download/host.html');
 
 async function installFixtureRoutes(context) {
 	await context.route(`${fixtureHost}/**`, async (route) => {
