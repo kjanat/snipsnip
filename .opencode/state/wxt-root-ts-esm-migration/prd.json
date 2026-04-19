@@ -37,7 +37,7 @@
 			"description": "Introduce typed core domain models for extension options, article/content payloads, download tracking state, library state, and agent bridge state. Acceptance: shared runtime code can import concrete TS types instead of ad hoc object shapes and new type definitions compile cleanly.",
 			"depends": ["manifest-parity-config"],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "convert-pure-shared-mods",

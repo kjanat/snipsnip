@@ -18,6 +18,7 @@ Started: 2026-04-19
 - For early WXT phases, explicit imports like `import { defineBackground } from 'wxt/utils/define-background'` avoid depending on generated auto-import magic.
 - WXT Firefox builds must be forced to MV3 explicitly with `--mv3`; default Firefox builds otherwise drift to MV2.
 - When a legacy web-accessible resource path must stay stable, putting the file in `public/` is simpler than forcing WXT entrypoint naming to match it.
+- During TS migration, keep domain models in one importable TS module and let `src/global.d.ts` bridge legacy global runtime APIs back to those types.
 
 ---
 
@@ -79,3 +80,25 @@ Started: 2026-04-19
 - Learnings:
   - Browser-specific manifest parity is easiest in WXT through a single manifest callback with small per-browser branches.
   - Static legacy assets that must keep exact output paths fit naturally in `public/` during pre-migration parity phases.
+
+## Task - [define-core-extension-types]
+
+- Added a central importable type module at `src/lib/types/extension.ts` for core extension domain models.
+- Defined concrete TS shapes for:
+  - extension options
+  - article/content payloads
+  - download tracking metadata/state
+  - library items/settings
+  - agent bridge settings/status/latest clip
+- Added runtime API interfaces for the current global library-state, agent-bridge-state, and download-tracker modules so upcoming JS-to-TS conversions have stable targets.
+- Added `src/lib/types/index.ts` barrel exports for a simple future import path.
+- Updated `src/global.d.ts` to expose typed ambient globals for the existing runtime APIs while preserving Bun test globals.
+- Files changed:
+  - `src/lib/types/extension.ts`
+  - `src/lib/types/index.ts`
+  - `src/global.d.ts`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - A typed hub plus ambient bridges is the least-disruptive way to prepare legacy global JS modules for later TS/ESM conversion.
+  - Modeling browser/runtime state separately from API wrappers keeps future refactors smaller and more composable.
