@@ -28,7 +28,7 @@
 			"description": "Translate the raw manifest and browser-specific build differences into WXT config, preserving permissions, commands, icons, popup/options paths, and web accessible resources. Acceptance: WXT emits Chrome and Firefox manifests with parity to current behavior, including explicit Firefox handling and page-context WAR output.",
 			"depends": ["add-wxt-scaffold"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "define-core-extension-types",

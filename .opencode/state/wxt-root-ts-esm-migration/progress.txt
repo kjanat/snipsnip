@@ -16,6 +16,8 @@ Started: 2026-04-19
 - Root typecheck is temporarily TS-file scoped via `tsconfig.typecheck.json` until the JS-to-TS migration tasks land.
 - Initial WXT scaffold can stay honest with `srcDir: 'src'` plus a minimal `src/entrypoints/background.ts`; this lets WXT build successfully before manifest parity work starts.
 - For early WXT phases, explicit imports like `import { defineBackground } from 'wxt/utils/define-background'` avoid depending on generated auto-import magic.
+- WXT Firefox builds must be forced to MV3 explicitly with `--mv3`; default Firefox builds otherwise drift to MV2.
+- When a legacy web-accessible resource path must stay stable, putting the file in `public/` is simpler than forcing WXT entrypoint naming to match it.
 
 ---
 
@@ -58,3 +60,22 @@ Started: 2026-04-19
 - Learnings:
   - WXT can be introduced safely before manifest parity if it has one minimal real entrypoint to build.
   - Root-owned WXT scripts are useful immediately, even while legacy build scripts remain the primary release path.
+
+## Task - [manifest-parity-config]
+
+- Recreated the current manifest structure in `wxt.config.ts` using a browser-aware manifest callback.
+- Preserved core manifest fields in WXT: name, description, author, icons, permissions, optional permissions, host permissions, action config, options UI config, commands, and page-context web accessible resources.
+- Added explicit Chrome/Firefox permission branching so `offscreen` stays Chrome-only in WXT builds.
+- Added Firefox gecko settings in WXT config, including extension ID, minimum version, and data collection permissions.
+- Switched Firefox WXT scripts to explicit MV3 builds so WXT does not fall back to Firefox MV2.
+- Added a real `public/contentScript/pageContext.js` asset so WXT emits the current WAR path at `contentScript/pageContext.js` in both Chrome and Firefox builds.
+- Verified generated manifests for both browsers match the intended parity shape and that both WXT builds emit the page-context asset.
+- Files changed:
+  - `package.json`
+  - `wxt.config.ts`
+  - `public/contentScript/pageContext.js`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Browser-specific manifest parity is easiest in WXT through a single manifest callback with small per-browser branches.
+  - Static legacy assets that must keep exact output paths fit naturally in `public/` during pre-migration parity phases.
