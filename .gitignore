@@ -4,6 +4,8 @@ xcode/MarkDownload - Markdown Web Clipper/MarkDownload - Markdown Web Clipper.xc
 xcode/MarkDownload - Markdown Web Clipper/MarkDownload - Markdown Web Clipper.xcodeproj/xcuserdata
 .DS_Store
 node_modules
+.output/
+.wxt/
 things.md
 .claude/
 src/test-artifacts/

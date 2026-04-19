@@ -19,7 +19,7 @@
 			"description": "Add WXT to the root toolchain, create wxt.config.ts, and establish the initial root-managed WXT project shape while keeping src as the temporary source root. Acceptance: WXT config exists, root scripts can invoke WXT, and the repo has a stable root-managed extension scaffold.",
 			"depends": ["flatten-root-package"],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "manifest-parity-config",

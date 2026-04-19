@@ -1,5 +1,6 @@
 {
 	"name": "snipsnip",
+	"version": "4.5.0",
 	"private": true,
 	"scripts": {
 		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.js",
@@ -7,8 +8,13 @@
 		"build:all": "bun run build && bun run build:chrome",
 		"build:chrome": "cd src/.build/chrome && zip -r ../../../dist/snipsnip-chrome-$(node -p \"require('../../manifest.json').version\").zip . -x '*.DS_Store'",
 		"build:manifests": "bun run generate:release-highlights && bun src/scripts/generate-browser-manifests.js",
+		"build:wxt": "wxt build",
+		"build:wxt:firefox": "wxt build -b firefox",
+		"dev:wxt": "wxt",
+		"dev:wxt:firefox": "wxt -b firefox",
 		"fmt": "dprint fmt",
 		"generate:release-highlights": "bun src/scripts/generate-release-highlights.js",
+		"postinstall": "wxt prepare",
 		"lint:js": "eslint --config src/.eslintrc.json --ignore-pattern 'src/background/**' --ignore-pattern 'src/browser-polyfill.min.js' --ignore-pattern 'src/highlight.min.js' --ignore-pattern 'src/popup/lib/**' src",
 		"start:androidwin11": "adb connect 127.0.0.1:58526 && web-ext run -s src -t firefox-android --adb-device 127.0.0.1:58526 --firefox-apk org.mozilla.fenix",
 		"start:chromedevwin": "web-ext run -s src -t chromium --chromium-binary 'C:\\Program Files\\Google\\Chrome Dev\\Application\\chrome.exe' -u 'https://en.wikipedia.org/wiki/Special:Random' --bc",
@@ -33,7 +39,8 @@
 		"eslint-config-prettier": "^10.1.8",
 		"happy-dom": "latest",
 		"typescript": ">=5,<6",
-		"web-ext": "^7.4.0"
+		"web-ext": "^7.4.0",
+		"wxt": "^0.20.20"
 	},
 	"packageManager": "bun@1.3.12"
 }

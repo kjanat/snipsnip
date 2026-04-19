@@ -14,6 +14,8 @@ Started: 2026-04-19
 - Bun `catalog:` dependency refs were workspace-era plumbing; a true single-package root must inline concrete versions.
 - Root linting must explicitly ignore vendored/minified browser assets; otherwise first-party lint gets swamped by third-party code.
 - Root typecheck is temporarily TS-file scoped via `tsconfig.typecheck.json` until the JS-to-TS migration tasks land.
+- Initial WXT scaffold can stay honest with `srcDir: 'src'` plus a minimal `src/entrypoints/background.ts`; this lets WXT build successfully before manifest parity work starts.
+- For early WXT phases, explicit imports like `import { defineBackground } from 'wxt/utils/define-background'` avoid depending on generated auto-import magic.
 
 ---
 
@@ -34,3 +36,25 @@ Started: 2026-04-19
 - Learnings:
   - Workspace-era Bun dependency patterns (`catalog:`) block single-package installs and must be removed immediately.
   - Pre-migration repo feedback loops need scoped lint/typecheck targets or vendored legacy JS will drown signal.
+
+## Task - [add-wxt-scaffold]
+
+- Added WXT as a root dev dependency and wired root scripts for WXT dev/build workflows.
+- Added `postinstall: wxt prepare` so generated WXT types stay available after dependency installs.
+- Created `wxt.config.ts` with `srcDir: 'src'` and Chrome/Firefox target scaffolding.
+- Added a minimal `src/entrypoints/background.ts` so WXT can produce a real extension build immediately.
+- Added WXT output directories to root `.gitignore` and seeded `public/` for the incoming WXT asset layout.
+- Set root package version to the current extension version so WXT builds stop defaulting to `0.0.0`.
+- Verified both `bun run build:wxt` and `bun run build:wxt:firefox` succeed with the scaffold.
+- Files changed:
+  - `package.json`
+  - `.gitignore`
+  - `wxt.config.ts`
+  - `src/entrypoints/background.ts`
+  - `public/.gitkeep`
+  - `tsconfig.typecheck.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - WXT can be introduced safely before manifest parity if it has one minimal real entrypoint to build.
+  - Root-owned WXT scripts are useful immediately, even while legacy build scripts remain the primary release path.
