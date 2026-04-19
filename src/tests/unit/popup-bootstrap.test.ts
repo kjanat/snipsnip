@@ -107,7 +107,7 @@ describe('popup runtime bootstrap', () => {
 		expect(globalThis.snipSnipOptionsState).toBeDefined();
 		expect(globalThis.snipSnipPagePaths).toEqual({ guide: 'guide.html', options: 'options.html' });
 		expect(Reflect.get(globalThis, 'snipSnipPopupBatchUtils')).toBeDefined();
-		expect(typeof globalThis.snipSnipPopupAssets?.['lib/marked.min.js']).toBe('string');
+		expect(globalThis.snipSnipPopupAssets?.['lib/marked.min.js']).toBeUndefined();
 		expect(typeof globalThis.snipSnipPopupAssets?.['popup/lib/github-markdown.css']).toBe('string');
 		expect(typeof globalThis.snipSnipPopupAssets?.['print/print.css']).toBe('string');
 		expect(typeof globalThis.snipSnipPopupAssets?.['../notifications/notification-host.js']).toBe('string');

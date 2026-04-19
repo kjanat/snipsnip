@@ -4,7 +4,7 @@ import siteRules from '@/shared/site-rules.ts';
 import templateUtils from '@/shared/template-utils.ts';
 import urlUtils from '@/shared/url-utils.ts';
 
-import '@/background/apache-mime-types.js';
+import '@/background/apache-mime-types.ts';
 import '@/shared/code-block-utils.ts';
 import '@/shared/hashtag-utils.ts';
 import '@/shared/readability-recovery.ts';

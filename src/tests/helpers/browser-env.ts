@@ -4,15 +4,17 @@
  */
 
 import turndownFactory from '@/shared/turndown-factory.ts';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { Readability } from '@mozilla/readability';
+import TurndownService from 'turndown';
+import { gfm, highlightedCodeBlock, strikethrough, tables, taskListItems } from 'turndown-plugin-gfm';
 import { JSDOM } from './jsdom-shim.ts';
+
+const turndownPluginGfm = { gfm, highlightedCodeBlock, strikethrough, tables, taskListItems };
 
 /**
  * Create a browser-like environment with required libraries loaded
  */
 function createBrowserEnvironment() {
-	// Create JSDOM instance
 	const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
 		url: 'https://example.com',
 		contentType: 'text/html',
@@ -23,37 +25,19 @@ function createBrowserEnvironment() {
 	const { window } = dom;
 	const { document } = window;
 
-	// Load Turndown library
-	const turndownPath = join(import.meta.dirname, '../../background/turndown.js');
-	const turndownCode = readFileSync(turndownPath, 'utf8');
-
-	// Load Turndown GFM plugin
-	const gfmPath = join(import.meta.dirname, '../../background/turndown-plugin-gfm.js');
-	const gfmCode = readFileSync(gfmPath, 'utf8');
-
-	// Load Readability library
-	const readabilityPath = join(import.meta.dirname, '../../background/Readability.js');
-	const readabilityCode = readFileSync(readabilityPath, 'utf8');
-
-	// Load shared readability recovery helpers
-	const readabilityRecoveryPath = join(import.meta.dirname, '../../shared/readability-recovery.js');
-	const readabilityRecoveryCode = readFileSync(readabilityRecoveryPath, 'utf8');
-
-	// Execute library sources directly inside the test window.
-	dom.window.eval(`
-		${turndownCode}
-		${gfmCode}
-		${readabilityCode}
-		${readabilityRecoveryCode}
-	`);
+	// Expose npm-loaded libraries onto the JSDOM window so code under test
+	// that reads `window.TurndownService` / `window.Readability` still resolves.
+	Reflect.set(window, 'TurndownService', TurndownService);
+	Reflect.set(window, 'turndownPluginGfm', turndownPluginGfm);
+	Reflect.set(window, 'Readability', Readability);
 
 	return {
 		window,
 		document,
-		TurndownService: dom.window.TurndownService,
-		turndownPluginGfm: dom.window.turndownPluginGfm,
-		Readability: dom.window.Readability,
-		ReadabilityRecovery: dom.window.SnipSnipReadabilityRecovery,
+		TurndownService,
+		turndownPluginGfm,
+		Readability,
+		ReadabilityRecovery: Reflect.get(window, 'SnipSnipReadabilityRecovery'),
 	};
 }
 

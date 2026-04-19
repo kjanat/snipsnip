@@ -1216,7 +1216,9 @@ function ensureMarkedLoaded() {
 	}
 
 	markedLoadPromise = Promise.all([
-		loadScriptOnce('lib/marked.min.js', 'marked-script'),
+		import('marked').then((mod) => {
+			globalThis.marked = mod;
+		}),
 		loadStylesheetOnce('lib/github-markdown.css', 'github-markdown-css'),
 	]).then(() => {
 		if (typeof marked === 'undefined' || !marked.parse) {
