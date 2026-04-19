@@ -55,7 +55,7 @@
 			"description": "Convert shared modules with current require/global fallbacks such as template-utils, url-utils, library-export, options-state, library-state, agent-bridge-state, and markdown-options by replacing implicit runtime lookups with explicit imports or injected dependencies. Acceptance: these modules no longer rely on globalThis.snipSnip* for normal operation and continue to satisfy existing tests.",
 			"depends": ["convert-pure-shared-mods"],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "wrap-vendored-runtime-libs",

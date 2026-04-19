@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, afterEach, mock } = require('bun:test');
+const { describe, test, expect, beforeEach, mock } = require('bun:test');
 
 const {
 	safeParseUrl,
@@ -52,17 +52,10 @@ describe('URL utils', () => {
 	});
 
 	describe('getImageFilename', () => {
-		const realTemplateUtils = global.snipSnipTemplateUtils;
-		const actualTemplateUtils = require('../../shared/template-utils');
+		let generateValidFileName;
 
 		beforeEach(() => {
-			global.snipSnipTemplateUtils = {
-				generateValidFileName: mock((value) => value.replace(/\s+/g, '-')),
-			};
-		});
-
-		afterEach(() => {
-			global.snipSnipTemplateUtils = realTemplateUtils;
+			generateValidFileName = mock((value) => value.replace(/\s+/g, '-'));
 		});
 
 		test('prefixes filename using title segments and options', () => {
@@ -71,10 +64,12 @@ describe('URL utils', () => {
 				imagePrefix: 'gallery/',
 				disallowedChars: '#[]',
 			};
-			const filename = getImageFilename('https://example.com/path/image.png?foo=1', options);
+			const filename = getImageFilename('https://example.com/path/image.png?foo=1', options, true, {
+				generateValidFileName,
+			});
 
 			expect(filename).toContain('Repo/gallery/');
-			expect(global.snipSnipTemplateUtils.generateValidFileName).toHaveBeenCalled();
+			expect(generateValidFileName).toHaveBeenCalled();
 			expect(filename).toMatch(/image\.png$/);
 		});
 
@@ -91,10 +86,12 @@ describe('URL utils', () => {
 				title: 'Notes',
 				imagePrefix: 'pics/',
 			};
-			const filename = getImageFilename('https://example.com/photo.jpg', options, false);
+			const filename = getImageFilename('https://example.com/photo.jpg', options, false, {
+				generateValidFileName,
+			});
 
 			expect(filename).toBe('pics/photo.jpg');
-			expect(global.snipSnipTemplateUtils.generateValidFileName).toHaveBeenCalledWith('photo.jpg', undefined);
+			expect(generateValidFileName).toHaveBeenCalledWith('photo.jpg', null);
 		});
 
 		test('adds fallback extension when the source lacks a dot', () => {
@@ -105,8 +102,6 @@ describe('URL utils', () => {
 		});
 
 		test('falls back to the bundled template utils when no runtime helper is present', () => {
-			delete global.snipSnipTemplateUtils;
-
 			const filename = getImageFilename('https://example.com/path/image.png', {
 				title: 'Docs',
 				imagePrefix: 'gallery/',
@@ -115,22 +110,20 @@ describe('URL utils', () => {
 			expect(filename).toBe('Docs/gallery/image.png');
 		});
 
-		test('falls back to identity sanitizers when template utils cannot be required', () => {
-			const previousTemplateUtils = global.snipSnipTemplateUtils;
-			delete global.snipSnipTemplateUtils;
-			mock.module('../../shared/template-utils', () => ({}));
-
-			try {
-				const filename = getImageFilename('https://example.com/path/image', {
+		test('supports injected sanitizers when callers want custom filename handling', () => {
+			const filename = getImageFilename(
+				'https://example.com/path/image',
+				{
 					title: 'Docs',
 					imagePrefix: 'gallery/',
-				});
+				},
+				true,
+				{
+					generateValidFileName: (value) => String(value).replace(/image/g, 'asset'),
+				},
+			);
 
-				expect(filename).toBe('Docs/gallery/image.idunno');
-			} finally {
-				mock.module('../../shared/template-utils', () => actualTemplateUtils);
-				global.snipSnipTemplateUtils = previousTemplateUtils;
-			}
+			expect(filename).toBe('Docs/gallery/asset.idunno');
 		});
 	});
 });

@@ -20,6 +20,7 @@ Started: 2026-04-19
 - When a legacy web-accessible resource path must stay stable, putting the file in `public/` is simpler than forcing WXT entrypoint naming to match it.
 - During TS migration, keep domain models in one importable TS module and let `src/global.d.ts` bridge legacy global runtime APIs back to those types.
 - For classic-script migration phases, keep `.ts` as the canonical shared-module source and generate committed `.js` facades that preserve `globalThis.snipSnip*` and `module.exports` until runtime entrypoints are migrated.
+- For stateful shared helpers, prefer direct TS imports plus small optional dependency-arg bags on the few functions that need runtime overrides; it is leaner than module factories and keeps tests decoupled from legacy globals.
 
 ---
 
@@ -140,3 +141,45 @@ Started: 2026-04-19
 - Learnings:
   - Generated classic-script facades are safer than hand-maintaining duplicate JS and TS implementations during phased module migration.
   - In generated code that will be formatter-touched, regex-based newline splits are safer than string-literal newline separators, which can be rewritten into value-changing multiline template literals.
+
+## Task - [convert-stateful-shared-mods]
+
+- Converted the stateful shared helpers to canonical TypeScript ESM modules:
+  - `template-utils`
+  - `url-utils`
+  - `library-export`
+  - `options-state`
+  - `library-state`
+  - `agent-bridge-state`
+  - `markdown-options`
+- Replaced legacy implicit `snipSnip*` dependency lookups inside those modules with explicit TS imports and narrow optional dependency args where caller overrides were still useful.
+- Expanded the legacy shared-facade generator so the new stateful modules also emit committed compatibility `.js` files for the current classic-script runtime.
+- Extended typed global declarations and shared API interfaces so the converted modules still expose accurate legacy globals during the phased migration.
+- Updated unit coverage to exercise the new injection paths instead of stubbing `globalThis.snipSnip*` internals.
+- Expanded the TS smoke test to cover all converted stateful modules.
+- Files changed:
+  - `src/lib/types/extension.ts`
+  - `src/global.d.ts`
+  - `src/shared/template-utils.ts`
+  - `src/shared/url-utils.ts`
+  - `src/shared/library-export.ts`
+  - `src/shared/options-state.ts`
+  - `src/shared/library-state.ts`
+  - `src/shared/agent-bridge-state.ts`
+  - `src/shared/markdown-options.ts`
+  - `src/shared/template-utils.js`
+  - `src/shared/url-utils.js`
+  - `src/shared/library-export.js`
+  - `src/shared/options-state.js`
+  - `src/shared/library-state.js`
+  - `src/shared/agent-bridge-state.js`
+  - `src/shared/markdown-options.js`
+  - `src/scripts/generate-legacy-shared-mods.js`
+  - `src/tests/unit/url-utils.test.js`
+  - `src/tests/unit/offscreen-option-handling.test.js`
+  - `src/tests/unit/shared-ts-esm.test.ts`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Optional dependency args are the sweet spot for shared helpers that occasionally need runtime overrides but do not own mutable state.
+  - Preserving legacy falsy-edge behavior in helpers like `generateValidFileName(null)` matters because old tests and callers sometimes depend on those quirks.

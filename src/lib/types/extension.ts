@@ -216,12 +216,120 @@ export interface ExtensionStorageArea {
 	remove?(keys: string | string[]): Promise<void>;
 }
 
+export interface ExtensionBrowserApi {
+	storage?: {
+		local?: ExtensionStorageArea;
+		sync?: ExtensionStorageArea;
+	};
+}
+
+export interface SnipSnipTemplateUtilsApi {
+	textReplace(template: string, article: Record<string, unknown>, disallowedChars?: string | null): string;
+	generateValidFileName(title: unknown, disallowedChars?: string | null): string | null;
+}
+
+export interface SnipSnipUrlUtilsApi {
+	safeParseUrl(urlString: string): URL | null;
+	resolveArticleUrl(domBaseUri: string, pageUrl?: string): URL | null;
+	validateUri(href: string, baseURI: string): string;
+	getImageFilename(
+		src: string,
+		options?: Partial<ExtensionOptions> & Record<string, unknown>,
+		prependFilePath?: boolean,
+	): string;
+}
+
+export interface LibraryExportFile {
+	filename: string;
+	content: string;
+}
+
+export interface SnipSnipLibraryExportApi {
+	createLibraryExportZipFilename(date?: Date, prefix?: string): string;
+	ensureUniqueLibraryExportPath(filePath: string, usedPaths?: Set<string>): string;
+	createLibraryExportFiles(
+		items?: Array<Partial<LibraryItem>>,
+		options?: {
+			generateValidFileName?: (value: unknown, disallowedChars?: string | null) => string | null;
+			ensureUniquePath?: (filePath: string, usedPaths?: Set<string>) => string;
+			usedPaths?: Set<string>;
+			disallowedChars?: string | null;
+		},
+	): LibraryExportFile[];
+}
+
+export interface SendToUrlTemplateValidation {
+	valid: boolean;
+	normalizedValue: string;
+	error: string;
+}
+
+export interface CustomSendToTargetInput {
+	id?: string;
+	name?: string;
+	urlTemplate?: string;
+	url?: string;
+}
+
+export interface OptionsResetResult {
+	options: Record<string, unknown>;
+	contextMenuAction: 'none' | 'create' | 'remove';
+}
+
+export interface SnipSnipOptionsStateApi {
+	buildExportFilename(date?: Date | string, prefix?: string): string;
+	normalizeImportedOptions(
+		importedOptions?: Record<string, unknown>,
+		defaultOptions?: Record<string, unknown>,
+	): Record<string, unknown>;
+	getContextMenuTransition(
+		previousOptions?: Record<string, unknown>,
+		nextOptions?: Record<string, unknown>,
+	): 'none' | 'create' | 'remove';
+	resetOptionKeys(
+		currentOptions?: Record<string, unknown>,
+		defaultOptions?: Record<string, unknown>,
+		keys?: string[] | string,
+	): OptionsResetResult;
+	resetAllOptions(
+		currentOptions?: Record<string, unknown>,
+		defaultOptions?: Record<string, unknown>,
+	): OptionsResetResult;
+	validateSendToUrlTemplate(value?: string): SendToUrlTemplateValidation;
+	normalizeCustomSendToTargets(targets?: CustomSendToTargetInput[]): SendToCustomTarget[];
+	normalizeDefaultSendToTarget(
+		targetValue?: string,
+		customTargets?: SendToCustomTarget[],
+		fallbackValue?: string,
+	): string;
+	normalizeSendToMaxUrlLength(value?: unknown, fallbackValue?: unknown): number;
+}
+
+export interface EffectiveMarkdownOptions extends Record<string, unknown> {
+	frontmatter: string;
+	backmatter: string;
+	imagePrefix: string;
+	disallowedChars: string;
+	tableFormatting?: TableFormattingOptions | Partial<TableFormattingOptions>;
+	includeTemplate?: boolean;
+	downloadImages?: boolean;
+}
+
+export interface SnipSnipMarkdownOptionsApi {
+	createEffectiveMarkdownOptions(
+		article: Record<string, unknown>,
+		providedOptions?: Partial<ExtensionOptions> | Record<string, unknown> | null,
+		downloadImages?: boolean | null,
+	): EffectiveMarkdownOptions;
+}
+
 export interface SnipSnipLibraryStateApi {
 	STORAGE_KEYS: Readonly<{
 		SETTINGS: string;
 		ITEMS: string;
 	}>;
 	DEFAULT_LIBRARY_SETTINGS: Readonly<LibrarySettings>;
+	sanitizeItemsToKeep(value?: unknown, fallback?: number): number;
 	normalizeLibrarySettings(settings?: Partial<LibrarySettings>): LibrarySettings;
 	normalizePageUrl(url?: string): string;
 	buildPreviewText(markdown?: string, maxLength?: number): string;

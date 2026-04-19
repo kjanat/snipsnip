@@ -1,12 +1,19 @@
 import { describe, expect, test } from 'bun:test';
 
+import agentBridgeState from '../../shared/agent-bridge-state.ts';
 import countUtils from '../../shared/count-utils.ts';
 import downloadTracker from '../../shared/download-tracker.ts';
+import libraryExport from '../../shared/library-export.ts';
+import libraryState from '../../shared/library-state.ts';
+import markdownOptions from '../../shared/markdown-options.ts';
 import notifications from '../../shared/notifications.ts';
 import obsidianUtils from '../../shared/obsidian-utils.ts';
+import optionsState from '../../shared/options-state.ts';
 import popupBatchUtils from '../../shared/popup-batch-utils.ts';
 import searchCore from '../../shared/search-core.ts';
 import siteRules from '../../shared/site-rules.ts';
+import templateUtils from '../../shared/template-utils.ts';
+import urlUtils from '../../shared/url-utils.ts';
 
 describe('shared TS ESM modules', () => {
 	test('count-utils exports canonical API', () => {
@@ -39,5 +46,34 @@ describe('shared TS ESM modules', () => {
 	test('download-tracker exports canonical API', () => {
 		const tracker = downloadTracker.createDownloadTracker();
 		expect(tracker.getState().snipSnipDownloads.size).toBe(0);
+	});
+
+	test('template-utils exports canonical API', () => {
+		expect(templateUtils.generateValidFileName('Clip [One]', '[]')).toBe('Clip One');
+	});
+
+	test('url-utils exports canonical API', () => {
+		expect(urlUtils.getImageFilename('https://example.com/image.png', { title: 'Docs' }, false)).toBe('image.png');
+	});
+
+	test('library-export exports canonical API', () => {
+		expect(libraryExport.createLibraryExportFiles([{ title: 'Doc', markdown: '# hi' }])[0]?.filename).toBe('Doc.md');
+	});
+
+	test('options-state exports canonical API', () => {
+		expect(optionsState.buildExportFilename(new Date('2026-03-17T10:15:00Z'))).toBe('SnipSnip-export-2026-03-17.json');
+	});
+
+	test('library-state exports canonical API', () => {
+		expect(libraryState.normalizeLibrarySettings().itemsToKeep).toBe(10);
+	});
+
+	test('agent-bridge-state exports canonical API', () => {
+		expect(agentBridgeState.normalizeSettings({ enabled: true })).toEqual({ enabled: true });
+	});
+
+	test('markdown-options exports canonical API', () => {
+		const options = markdownOptions.createEffectiveMarkdownOptions({ title: 'Doc' }, { imagePrefix: '{title}/assets' });
+		expect(options.imagePrefix).toBe('Doc/assets');
 	});
 });

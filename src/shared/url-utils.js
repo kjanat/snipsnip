@@ -1,99 +1,141 @@
-(function(root, factory) {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipUrlUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
-	function getTemplateUtils() {
-		if (root.snipSnipTemplateUtils) {
-			return root.snipSnipTemplateUtils;
+// GENERATED from url-utils.ts. Edit the TypeScript source only.
+(function(root) {
+	const exported = (() => {
+		const module = { exports: {} };
+		var __defProp = Object.defineProperty;
+		var __getOwnPropNames = Object.getOwnPropertyNames;
+		var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+		var __hasOwnProp = Object.prototype.hasOwnProperty;
+		function __accessProp(key) {
+			return this[key];
 		}
-
-		if (typeof require === 'function') {
-			try {
-				const templateUtils = require('./template-utils');
-				if (templateUtils && typeof templateUtils.generateValidFileName === 'function') {
-					return templateUtils;
+		var __toCommonJS = (from) => {
+			var entry = (__moduleCache ??= new WeakMap()).get(from), desc;
+			if (entry) {
+				return entry;
+			}
+			entry = __defProp({}, '__esModule', { value: true });
+			if (from && typeof from === 'object' || typeof from === 'function') {
+				for (var key of __getOwnPropNames(from)) {
+					if (!__hasOwnProp.call(entry, key)) {
+						__defProp(entry, key, {
+							get: __accessProp.bind(from, key),
+							enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+						});
+					}
 				}
-			} catch {
 			}
-		}
-
-		return {
-			generateValidFileName: (value) => value,
+			__moduleCache.set(from, entry);
+			return entry;
 		};
-	}
-
-	function safeParseUrl(urlString) {
-		try {
-			return new URL(urlString);
-		} catch {
-			return null;
+		var __moduleCache;
+		var __returnValue = (v) => v;
+		function __exportSetter(name, newValue) {
+			this[name] = __returnValue.bind(null, newValue);
 		}
-	}
+		var __export = (target, all) => {
+			for (var name in all) {
+				__defProp(target, name, {
+					get: all[name],
+					enumerable: true,
+					configurable: true,
+					set: __exportSetter.bind(all, name),
+				});
+			}
+		};
 
-	function resolveArticleUrl(domBaseUri, pageUrl) {
-		const normalizedPageUrl = typeof pageUrl === 'string' ? pageUrl.trim() : '';
-		const preferredUrl = normalizedPageUrl ? safeParseUrl(normalizedPageUrl) : null;
-		if (preferredUrl) {
-			return preferredUrl;
+		// src/shared/url-utils.ts
+		var exports_url_utils = {};
+		__export(exports_url_utils, {
+			validateUri: () => validateUri,
+			safeParseUrl: () => safeParseUrl,
+			resolveArticleUrl: () => resolveArticleUrl,
+			getImageFilename: () => getImageFilename,
+			default: () => url_utils_default,
+		});
+		module.exports = __toCommonJS(exports_url_utils);
+
+		// src/shared/template-utils.ts
+		function generateValidFileName(title, disallowedChars = null) {
+			if (!title) {
+				return title === null ? null : String(title ?? '');
+			}
+			let normalizedTitle = String(title);
+			const illegalCharacters = /[\/\?<>\\:\*\|":]/g;
+			let name = normalizedTitle.replace(illegalCharacters, '').replace(/\u00A0/g, ' ');
+			if (disallowedChars !== null && disallowedChars !== '') {
+				for (const character of disallowedChars) {
+					const escapedCharacter = `[\\^$.|?*+()`.includes(character) ? `\\${character}` : character;
+					name = name.replace(new RegExp(escapedCharacter, 'g'), '');
+				}
+			}
+			return name;
 		}
-		return safeParseUrl(domBaseUri);
-	}
 
-	function validateUri(href, baseURI) {
-		try {
-			new URL(href);
-		} catch {
-			const baseUri = new URL(baseURI);
-
-			if (href.startsWith('/')) {
-				href = baseUri.origin + href;
-			} else {
-				href = baseUri.href + (baseUri.href.endsWith('/') ? '' : '/') + href;
+		// src/shared/url-utils.ts
+		function safeParseUrl(urlString) {
+			try {
+				return new URL(urlString);
+			} catch {
+				return null;
 			}
 		}
-		return href;
+		function resolveArticleUrl(domBaseUri, pageUrl = '') {
+			const normalizedPageUrl = pageUrl.trim();
+			const preferredUrl = normalizedPageUrl === '' ? null : safeParseUrl(normalizedPageUrl);
+			if (preferredUrl !== null) {
+				return preferredUrl;
+			}
+			return safeParseUrl(domBaseUri);
+		}
+		function validateUri(href, baseURI) {
+			try {
+				new URL(href);
+				return href;
+			} catch {
+				const baseUrl = new URL(baseURI);
+				if (href.startsWith('/')) {
+					return `${baseUrl.origin}${href}`;
+				}
+				return `${baseUrl.href}${baseUrl.href.endsWith('/') ? '' : '/'}${href}`;
+			}
+		}
+		function getImageFilename(src, options = {}, prependFilePath = true, deps = {}) {
+			const sanitizeFilename = deps.generateValidFileName ?? generateValidFileName;
+			const slashPosition = src.lastIndexOf('/');
+			const queryPosition = src.indexOf('?');
+			let filename = src.substring(slashPosition + 1, queryPosition > 0 ? queryPosition : src.length);
+			let imagePrefix = String(options.imagePrefix ?? '');
+			const title = String(options.title ?? '');
+			if (prependFilePath && title.includes('/')) {
+				imagePrefix = `${title.substring(0, title.lastIndexOf('/') + 1)}${imagePrefix}`;
+			} else if (prependFilePath) {
+				imagePrefix = `${title}${imagePrefix.startsWith('/') ? '' : '/'}${imagePrefix}`;
+			}
+			if (filename.includes(';base64,')) {
+				filename = `image.${filename.substring(0, filename.indexOf(';'))}`;
+			}
+			const extension = filename.substring(filename.lastIndexOf('.'));
+			if (extension === filename) {
+				filename = `${filename}.idunno`;
+			}
+			return `${imagePrefix}${
+				sanitizeFilename(filename, typeof options.disallowedChars === 'string' ? options.disallowedChars : null)
+			}`;
+		}
+		var urlUtils = {
+			safeParseUrl,
+			resolveArticleUrl,
+			validateUri,
+			getImageFilename,
+		};
+		var url_utils_default = urlUtils;
+
+		return module.exports;
+	})();
+	const api = exported.default ?? exported;
+	root.snipSnipUrlUtils = api;
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = api;
 	}
-
-	function getImageFilename(src, options, prependFilePath = true) {
-		const templateUtils = getTemplateUtils();
-		const generateValidFileName = templateUtils.generateValidFileName;
-		const effectiveOptions = options || {};
-
-		const slashPos = src.lastIndexOf('/');
-		const queryPos = src.indexOf('?');
-		let filename = src.substring(slashPos + 1, queryPos > 0 ? queryPos : src.length);
-
-		let imagePrefix = effectiveOptions.imagePrefix || '';
-		const title = String(effectiveOptions.title || '');
-
-		if (prependFilePath && title.includes('/')) {
-			imagePrefix = title.substring(0, title.lastIndexOf('/') + 1) + imagePrefix;
-		} else if (prependFilePath) {
-			imagePrefix = title + (imagePrefix.startsWith('/') ? '' : '/') + imagePrefix;
-		}
-
-		if (filename.includes(';base64,')) {
-			filename = 'image.' + filename.substring(0, filename.indexOf(';'));
-		}
-
-		const extension = filename.substring(filename.lastIndexOf('.'));
-		if (extension === filename) {
-			filename = filename + '.idunno';
-		}
-
-		filename = generateValidFileName(filename, effectiveOptions.disallowedChars);
-
-		return imagePrefix + filename;
-	}
-
-	return {
-		safeParseUrl,
-		resolveArticleUrl,
-		validateUri,
-		getImageFilename,
-	};
-});
+})(typeof globalThis !== 'undefined' ? globalThis : this);

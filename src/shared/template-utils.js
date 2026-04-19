@@ -1,112 +1,155 @@
-(function(root, factory) {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipTemplateUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
-	function getMomentLibrary() {
-		if (typeof root.moment === 'function') {
-			return root.moment;
+// GENERATED from template-utils.ts. Edit the TypeScript source only.
+(function(root) {
+	const exported = (() => {
+		const module = { exports: {} };
+		var __defProp = Object.defineProperty;
+		var __getOwnPropNames = Object.getOwnPropertyNames;
+		var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+		var __hasOwnProp = Object.prototype.hasOwnProperty;
+		function __accessProp(key) {
+			return this[key];
 		}
-
-		if (typeof require === 'function') {
-			try {
-				return require('../background/moment.min.js');
-			} catch {
-				return null;
+		var __toCommonJS = (from) => {
+			var entry = (__moduleCache ??= new WeakMap()).get(from), desc;
+			if (entry) {
+				return entry;
 			}
-		}
-
-		return null;
-	}
-
-	function formatDate(now, format) {
-		const momentLib = getMomentLibrary();
-		if (typeof momentLib === 'function') {
-			return momentLib(now).format(format);
-		}
-
-		if (format === 'YYYY-MM-DD') {
-			const year = now.getFullYear();
-			const month = String(now.getMonth() + 1).padStart(2, '0');
-			const day = String(now.getDate()).padStart(2, '0');
-			return `${year}-${month}-${day}`;
-		}
-
-		return now.toISOString();
-	}
-
-	function generateValidFileName(title, disallowedChars = null) {
-		if (!title) return title;
-		title = title + '';
-
-		const illegalRe = /[\/\?<>\\:\*\|":]/g;
-		let name = title.replace(illegalRe, '').replace(new RegExp('\u00A0', 'g'), ' ');
-
-		if (disallowedChars) {
-			for (let c of disallowedChars) {
-				if (`[\\^$.|?*+()`.includes(c)) c = `\\${c}`;
-				name = name.replace(new RegExp(c, 'g'), '');
+			entry = __defProp({}, '__esModule', { value: true });
+			if (from && typeof from === 'object' || typeof from === 'function') {
+				for (var key of __getOwnPropNames(from)) {
+					if (!__hasOwnProp.call(entry, key)) {
+						__defProp(entry, key, {
+							get: __accessProp.bind(from, key),
+							enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+						});
+					}
+				}
 			}
+			__moduleCache.set(from, entry);
+			return entry;
+		};
+		var __moduleCache;
+		var __returnValue = (v) => v;
+		function __exportSetter(name, newValue) {
+			this[name] = __returnValue.bind(null, newValue);
 		}
-
-		return name;
-	}
-
-	function textReplace(string, article, disallowedChars = null) {
-		for (const key in article) {
-			if (Object.prototype.hasOwnProperty.call(article, key) && key !== 'content') {
-				let s = (article[key] || '') + '';
-				if (s && disallowedChars) s = generateValidFileName(s, disallowedChars);
-
-				string = string.replace(new RegExp('{' + key + '}', 'g'), s)
-					.replace(new RegExp('{' + key + ':kebab}', 'g'), s.replace(/ /g, '-').toLowerCase())
-					.replace(new RegExp('{' + key + ':snake}', 'g'), s.replace(/ /g, '_').toLowerCase())
-					.replace(
-						new RegExp('{' + key + ':camel}', 'g'),
-						s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toLowerCase()),
-					)
-					.replace(
-						new RegExp('{' + key + ':pascal}', 'g'),
-						s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toUpperCase()),
-					);
+		var __export = (target, all) => {
+			for (var name in all) {
+				__defProp(target, name, {
+					get: all[name],
+					enumerable: true,
+					configurable: true,
+					set: __exportSetter.bind(all, name),
+				});
 			}
+		};
+
+		// src/shared/template-utils.ts
+		var exports_template_utils = {};
+		__export(exports_template_utils, {
+			textReplace: () => textReplace,
+			generateValidFileName: () => generateValidFileName,
+			formatDate: () => formatDate,
+			default: () => template_utils_default,
+		});
+		module.exports = __toCommonJS(exports_template_utils);
+		function getMomentLibrary(deps = {}) {
+			if (typeof deps.moment === 'function') {
+				return deps.moment;
+			}
+			if (typeof globalThis.moment === 'function') {
+				return globalThis.moment;
+			}
+			return null;
 		}
-
-		const now = new Date();
-		const dateRegex = /{date:(.+?)}/g;
-		const matches = string.match(dateRegex);
-		if (matches && matches.forEach) {
-			matches.forEach((match) => {
-				const format = match.substring(6, match.length - 1);
-				const dateString = formatDate(now, format);
-				string = string.replaceAll(match, dateString);
-			});
+		function formatDate(now, format, deps = {}) {
+			const momentLibrary = getMomentLibrary(deps);
+			if (typeof momentLibrary === 'function') {
+				return momentLibrary(now).format(format);
+			}
+			if (format === 'YYYY-MM-DD') {
+				const year = now.getFullYear();
+				const month = String(now.getMonth() + 1).padStart(2, '0');
+				const day = String(now.getDate()).padStart(2, '0');
+				return `${year}-${month}-${day}`;
+			}
+			return now.toISOString();
 		}
-
-		const keywordRegex = /{keywords:?(.*)?}/g;
-		const keywordMatches = string.match(keywordRegex);
-		if (keywordMatches && keywordMatches.forEach) {
-			keywordMatches.forEach((match) => {
-				let separator = match.substring(10, match.length - 1);
-				try {
-					separator = JSON.parse(JSON.stringify(separator).replace(/\\\\/g, '\\'));
-				} catch {}
-				const keywordsString = (article.keywords || []).join(separator);
-				string = string.replace(new RegExp(match.replace(/\\/g, '\\\\'), 'g'), keywordsString);
-			});
+		function generateValidFileName(title, disallowedChars = null) {
+			if (!title) {
+				return title === null ? null : String(title ?? '');
+			}
+			let normalizedTitle = String(title);
+			const illegalCharacters = /[\/\?<>\\:\*\|":]/g;
+			let name = normalizedTitle.replace(illegalCharacters, '').replace(/\u00A0/g, ' ');
+			if (disallowedChars !== null && disallowedChars !== '') {
+				for (const character of disallowedChars) {
+					const escapedCharacter = `[\\^$.|?*+()`.includes(character) ? `\\${character}` : character;
+					name = name.replace(new RegExp(escapedCharacter, 'g'), '');
+				}
+			}
+			return name;
 		}
+		function textReplace(value, article, disallowedChars = null, deps = {}) {
+			let nextValue = String(value ?? '');
+			for (const key in article) {
+				if (!Object.prototype.hasOwnProperty.call(article, key) || key === 'content') {
+					continue;
+				}
+				let replacement = String(article[key] ?? '');
+				if (replacement !== '' && disallowedChars !== null && disallowedChars !== '') {
+					replacement = generateValidFileName(replacement, disallowedChars) ?? '';
+				}
+				nextValue = nextValue.replace(new RegExp(`{${key}}`, 'g'), replacement).replace(
+					new RegExp(`{${key}:kebab}`, 'g'),
+					replacement.replace(/ /g, '-').toLowerCase(),
+				).replace(new RegExp(`{${key}:snake}`, 'g'), replacement.replace(/ /g, '_').toLowerCase()).replace(
+					new RegExp(`{${key}:camel}`, 'g'),
+					replacement.replace(/ ./g, (segment) => segment.trim().toUpperCase()).replace(
+						/^./,
+						(segment) => segment.toLowerCase(),
+					),
+				).replace(
+					new RegExp(`{${key}:pascal}`, 'g'),
+					replacement.replace(/ ./g, (segment) => segment.trim().toUpperCase()).replace(
+						/^./,
+						(segment) => segment.toUpperCase(),
+					),
+				);
+			}
+			const now = new Date();
+			const dateMatches = nextValue.match(/{date:(.+?)}/g);
+			if (Array.isArray(dateMatches)) {
+				dateMatches.forEach((match) => {
+					const format = match.substring(6, match.length - 1);
+					nextValue = nextValue.replaceAll(match, formatDate(now, format, deps));
+				});
+			}
+			const keywordMatches = nextValue.match(/{keywords:?(.*)?}/g);
+			if (Array.isArray(keywordMatches)) {
+				keywordMatches.forEach((match) => {
+					let separator = match.substring(10, match.length - 1);
+					try {
+						separator = JSON.parse(JSON.stringify(separator).replace(/\\\\/g, '\\'));
+					} catch {}
+					const keywordsSource = Array.isArray(article.keywords) ? article.keywords : [];
+					const keywords = keywordsSource.map((keyword) => String(keyword ?? ''));
+					nextValue = nextValue.replace(new RegExp(match.replace(/\\/g, '\\\\'), 'g'), keywords.join(separator));
+				});
+			}
+			return nextValue.replace(/{(.*?)}/g, '');
+		}
+		var templateUtils = {
+			textReplace,
+			generateValidFileName,
+		};
+		var template_utils_default = templateUtils;
 
-		const defaultRegex = /{(.*?)}/g;
-		string = string.replace(defaultRegex, '');
-
-		return string;
+		return module.exports;
+	})();
+	const api = exported.default ?? exported;
+	root.snipSnipTemplateUtils = api;
+	if (typeof module !== 'undefined' && module.exports) {
+		module.exports = api;
 	}
-
-	return {
-		textReplace,
-		generateValidFileName,
-	};
-});
+})(typeof globalThis !== 'undefined' ? globalThis : this);

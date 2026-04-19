@@ -8,6 +8,13 @@ const SHARED_MODULES = [
 	{ baseName: 'notifications', globalName: 'snipSnipNotifications' },
 	{ baseName: 'obsidian-utils', globalName: 'snipSnipObsidian' },
 	{ baseName: 'download-tracker', globalName: 'snipSnipDownloadTracker' },
+	{ baseName: 'template-utils', globalName: 'snipSnipTemplateUtils' },
+	{ baseName: 'url-utils', globalName: 'snipSnipUrlUtils' },
+	{ baseName: 'library-export', globalName: 'snipSnipLibraryExport' },
+	{ baseName: 'options-state', globalName: 'snipSnipOptionsState' },
+	{ baseName: 'library-state', globalName: 'snipSnipLibraryState' },
+	{ baseName: 'agent-bridge-state', globalName: 'snipSnipAgentBridgeState' },
+	{ baseName: 'markdown-options', globalName: 'snipSnipMarkdownOptions' },
 ];
 
 const sharedDir = path.resolve(__dirname, '../shared');

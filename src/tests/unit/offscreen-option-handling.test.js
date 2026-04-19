@@ -101,27 +101,28 @@ describe('Offscreen markdown option handling', () => {
 		spy.mockRestore();
 	});
 
-	test('prefers runtime template utils when the helper is predefined before module loads', () => {
-		const originalHelper = global.snipSnipTemplateUtils;
-		global.snipSnipTemplateUtils = {
-			textReplace: mock((value) => String(value || '').replace('{title}', 'Preloaded')),
-			generateValidFileName: mock((value) => value),
-		};
+	test('supports injected template helpers for callers that want custom replacements', () => {
+		const injectedTextReplace = mock((value) => String(value || '').replace('{title}', 'Preloaded'));
+		const injectedGenerateValidFileName = mock((value) => value);
 
-		try {
-			const derived = createEffectiveMarkdownOptions(article, {
+		const derived = createEffectiveMarkdownOptions(
+			article,
+			{
 				includeTemplate: true,
 				frontmatter: 'title: {title}',
 				backmatter: '',
 				imagePrefix: '{title}/assets',
 				disallowedChars: '',
-			}, null);
+			},
+			null,
+			{
+				textReplace: injectedTextReplace,
+				generateValidFileName: injectedGenerateValidFileName,
+			},
+		);
 
-			expect(global.snipSnipTemplateUtils.textReplace).toHaveBeenCalled();
-			expect(derived.imagePrefix).toBe('Preloaded/assets');
-		} finally {
-			global.snipSnipTemplateUtils = originalHelper;
-		}
+		expect(injectedTextReplace).toHaveBeenCalled();
+		expect(derived.imagePrefix).toBe('Preloaded/assets');
 	});
 
 	test('handles missing tableFormatting without throwing', () => {
@@ -171,10 +172,7 @@ describe('Offscreen markdown option handling', () => {
 		}
 	});
 
-	test('uses fallback template utils when the runtime helper is missing', () => {
-		const originalHelper = global.snipSnipTemplateUtils;
-		delete global.snipSnipTemplateUtils;
-
+	test('uses bundled template utils when no injected helper is provided', () => {
 		const fallbackArticle = {
 			title: 'Fallback Title',
 			pageURL: 'https://fallback.test/page',
@@ -192,59 +190,54 @@ describe('Offscreen markdown option handling', () => {
 
 		expect(derived.frontmatter).toBe('title: Fallback Title\n');
 		expect(derived.imagePrefix).toContain('Fallback Title/assets');
-
-		global.snipSnipTemplateUtils = originalHelper;
 	});
 
-	test('uses runtime template utils when the global helper is present', () => {
-		const originalHelper = global.snipSnipTemplateUtils;
-		const actualTemplateUtils = require('../../shared/template-utils');
-		global.snipSnipTemplateUtils = {
-			textReplace: mock((value) => String(value || '').replace('{pageTitle}', 'Injected Title')),
-			generateValidFileName: mock((value) => value),
-		};
+	test('uses injected helpers when callers provide them', () => {
+		const injectedTextReplace = mock((value) => String(value || '').replace('{pageTitle}', 'Injected Title'));
+		const injectedGenerateValidFileName = mock((value) => value);
 
-		try {
-			const derived = createEffectiveMarkdownOptions(article, {
+		const derived = createEffectiveMarkdownOptions(
+			article,
+			{
 				includeTemplate: true,
 				frontmatter: 'title: {pageTitle}',
 				backmatter: 'source: {pageTitle}',
 				imagePrefix: '{pageTitle}/images',
 				disallowedChars: '',
 				tableFormatting: {},
-			});
+			},
+			null,
+			{
+				textReplace: injectedTextReplace,
+				generateValidFileName: injectedGenerateValidFileName,
+			},
+		);
 
-			expect(global.snipSnipTemplateUtils.textReplace).toHaveBeenCalled();
-			expect(derived.frontmatter).toBe('title: Injected Title\n');
-			expect(derived.imagePrefix).toBe('Injected Title/images');
-		} finally {
-			global.snipSnipTemplateUtils = originalHelper;
-			mock.module('../../shared/template-utils', () => actualTemplateUtils);
-		}
+		expect(injectedTextReplace).toHaveBeenCalled();
+		expect(derived.frontmatter).toBe('title: Injected Title\n');
+		expect(derived.imagePrefix).toBe('Injected Title/images');
 	});
 
-	test('falls back to inert helpers when template utils cannot be required', () => {
-		const originalHelper = global.snipSnipTemplateUtils;
-		const actualTemplateUtils = require('../../shared/template-utils');
-		delete global.snipSnipTemplateUtils;
-		mock.module('../../shared/template-utils', () => ({}));
-
-		try {
-			const derived = createEffectiveMarkdownOptions(article, {
+	test('supports inert injected helpers for callers that want no-op transforms', () => {
+		const derived = createEffectiveMarkdownOptions(
+			article,
+			{
 				includeTemplate: true,
 				frontmatter: 'front',
 				backmatter: 'back',
 				imagePrefix: 'images/',
 				disallowedChars: '',
 				tableFormatting: {},
-			});
+			},
+			null,
+			{
+				textReplace: (value) => String(value || ''),
+				generateValidFileName: (value) => String(value || ''),
+			},
+		);
 
-			expect(derived.frontmatter).toBe('front\n');
-			expect(derived.backmatter).toBe('\nback');
-			expect(derived.imagePrefix).toBe('images/');
-		} finally {
-			global.snipSnipTemplateUtils = originalHelper;
-			mock.module('../../shared/template-utils', () => actualTemplateUtils);
-		}
+		expect(derived.frontmatter).toBe('front\n');
+		expect(derived.backmatter).toBe('\nback');
+		expect(derived.imagePrefix).toBe('images/');
 	});
 });
