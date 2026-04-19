@@ -1,3 +1,8 @@
+const browser = globalThis.browser;
+const createMenus = Reflect.get(globalThis, 'createMenus');
+const defaultOptions = globalThis.defaultOptions || {};
+const moment = globalThis.moment;
+
 let options = defaultOptions;
 let librarySettings = {
 	enabled: true,

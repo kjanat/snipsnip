@@ -12,16 +12,16 @@ import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '../pa
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
 const codeMirrorCssUrl = new URL('../../popup/lib/codemirror.css', import.meta.url).href;
 const popupCssUrl = new URL('../../popup/popup.css', import.meta.url).href;
-const themeBootstrapScriptUrl = new URL('../../popup/theme-bootstrap.js', import.meta.url).href;
 const codeMirrorScriptUrl = new URL('../../popup/lib/codemirror.js', import.meta.url).href;
 const markdownModeScriptUrl = new URL('../../popup/lib/modes/markdown/markdown.js', import.meta.url).href;
-const popupShortcutsScriptUrl = new URL('../../shared/popup-shortcuts.js', import.meta.url).href;
-const popupRuntimeScriptUrl = new URL('../../popup/popup.js', import.meta.url).href;
 const notificationHostScriptUrl = new URL('../../notifications/notification-host.js', import.meta.url).href;
 
 let popupRuntimeLoadPromise: Promise<void> | null = null;
 
 export interface PopupRuntimeBootstrapOptions {
+	importPopupShortcutsModule?: () => Promise<unknown>;
+	importPopupRuntimeModule?: () => Promise<unknown>;
+	importThemeBootstrapModule?: () => Promise<unknown>;
 	loadScript?: (src: string, id?: string) => Promise<unknown>;
 	loadTemplate?: () => string;
 }
@@ -175,12 +175,18 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			installPopupShell(options.loadTemplate ?? (() => popupTemplate));
 			syncPopupPageLinks();
 
+			const importThemeBootstrapModule = options.importThemeBootstrapModule
+				?? (() => import('../../popup/theme-bootstrap.js'));
+			const importPopupShortcutsModule = options.importPopupShortcutsModule
+				?? (() => import('../../shared/popup-shortcuts.js'));
+			const importPopupRuntimeModule = options.importPopupRuntimeModule
+				?? (() => import('../../popup/popup.js'));
 			const loadScript = options.loadScript ?? loadClassicScript;
-			await loadScript(themeBootstrapScriptUrl, 'popup-theme-bootstrap');
+			await importThemeBootstrapModule();
 			await loadScript(codeMirrorScriptUrl, 'popup-codemirror-script');
 			await loadScript(markdownModeScriptUrl, 'popup-codemirror-markdown-script');
-			await loadScript(popupShortcutsScriptUrl, 'popup-shortcuts-script');
-			await loadScript(popupRuntimeScriptUrl, 'popup-runtime-script');
+			await importPopupShortcutsModule();
+			await importPopupRuntimeModule();
 		})();
 	}
 

@@ -1,3 +1,11 @@
+const Readability = globalThis.Readability;
+const TurndownService = globalThis.TurndownService;
+const browser = globalThis.browser;
+const defaultOptions = globalThis.defaultOptions || {};
+const hljs = globalThis.hljs;
+const moment = globalThis.moment;
+const turndownPluginGfm = globalThis.turndownPluginGfm;
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);
 

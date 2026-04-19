@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 describe('guide runtime bootstrap', () => {
-	test('installs guide shell, globals, and dedupes script loading', async () => {
+	test('installs guide shell, globals, and dedupes module loading', async () => {
 		const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
 			url: 'https://example.com/guide.html',
 		});
@@ -59,11 +59,11 @@ describe('guide runtime bootstrap', () => {
 		globalThis.snipSnipPagePaths = undefined;
 		Reflect.deleteProperty(globalThis, 'snipSnipSearchCore');
 
-		const loadScript = mock(async () => ({}));
+		const importModule = mock(async () => ({}));
 
 		await Promise.all([
-			bootGuideRuntime({ loadScript }),
-			bootGuideRuntime({ loadScript }),
+			bootGuideRuntime({ importModule }),
+			bootGuideRuntime({ importModule }),
 		]);
 
 		expect(document.title).toBe('SnipSnip User Guide');
@@ -80,6 +80,6 @@ describe('guide runtime bootstrap', () => {
 		expect(Reflect.get(pagePaths, 'guide')).toBe('guide.html');
 		expect(Reflect.get(pagePaths, 'options')).toBe('options.html');
 		expect(Reflect.get(globalThis, 'snipSnipSearchCore')).toBeDefined();
-		expect(loadScript).toHaveBeenCalledTimes(1);
+		expect(importModule).toHaveBeenCalledTimes(1);
 	});
 });

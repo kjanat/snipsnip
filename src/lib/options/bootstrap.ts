@@ -10,17 +10,17 @@ import templateUtils from '../../shared/template-utils.ts';
 import { createMenus } from '../background/context-menus-runtime.js';
 import { defaultOptions } from '../background/default-options-runtime.js';
 import { getGuidePageHref, installWxtPagePaths } from '../page-paths.ts';
+import { loadMomentApi } from '../vendors/moment.ts';
 
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
-const momentScriptUrl = new URL('../../background/moment.min.js', import.meta.url).href;
 const optionsCssUrl = new URL('../../options/options.css', import.meta.url).href;
-const optionsSearchScriptUrl = new URL('../../options/options-search.js', import.meta.url).href;
-const optionsRuntimeScriptUrl = new URL('../../options/options.js', import.meta.url).href;
 
 let optionsRuntimeLoadPromise: Promise<void> | null = null;
 
 export interface OptionsRuntimeBootstrapOptions {
-	loadScript?: (src: string, id?: string) => Promise<unknown>;
+	importOptionsRuntimeModule?: () => Promise<unknown>;
+	importOptionsSearchModule?: () => Promise<unknown>;
+	loadMoment?: () => Promise<unknown>;
 	loadTemplate?: () => string;
 }
 
@@ -74,34 +74,6 @@ function syncGuideLinks(): void {
 	});
 }
 
-function loadClassicScript(src: string, id?: string): Promise<HTMLScriptElement> {
-	if (id != null) {
-		const existingById = document.getElementById(id);
-		if (existingById instanceof HTMLScriptElement) {
-			return Promise.resolve(existingById);
-		}
-	}
-
-	const existing = Array.from(document.querySelectorAll('script[src]')).find((script) =>
-		script.getAttribute('src') === src
-	);
-	if (existing instanceof HTMLScriptElement) {
-		return Promise.resolve(existing);
-	}
-
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.type = 'application/javascript';
-		script.src = src;
-		if (id != null) {
-			script.id = id;
-		}
-		script.addEventListener('load', () => resolve(script), { once: true });
-		script.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
-		document.body.appendChild(script);
-	});
-}
-
 export function resetOptionsRuntimeBootstrapState(): void {
 	optionsRuntimeLoadPromise = null;
 }
@@ -114,10 +86,15 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 			installOptionsShell(options.loadTemplate ?? (() => optionsTemplate));
 			syncGuideLinks();
 
-			const loadScript = options.loadScript ?? loadClassicScript;
-			await loadScript(momentScriptUrl, 'options-moment-script');
-			await loadScript(optionsSearchScriptUrl, 'options-search-script');
-			await loadScript(optionsRuntimeScriptUrl, 'options-runtime-script');
+			const loadMoment = options.loadMoment ?? loadMomentApi;
+			const importOptionsSearchModule = options.importOptionsSearchModule
+				?? (() => import('../../options/options-search.js'));
+			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
+				?? (() => import('../../options/options.js'));
+
+			await loadMoment();
+			await importOptionsSearchModule();
+			await importOptionsRuntimeModule();
 		})();
 	}
 

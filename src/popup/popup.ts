@@ -1,4 +1,6 @@
 // default variables
+const browser = globalThis.browser;
+
 var imageList = null;
 var sourceImageMap = null;
 var mdClipsFolder = '';

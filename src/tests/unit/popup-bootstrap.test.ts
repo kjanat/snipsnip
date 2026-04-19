@@ -53,7 +53,7 @@ afterEach(() => {
 });
 
 describe('popup runtime bootstrap', () => {
-	test('installs popup shell, globals, assets, and dedupes script loading', async () => {
+	test('installs popup shell, globals, assets, and dedupes runtime loading', async () => {
 		const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
 			url: 'https://example.com/popup.html',
 		});
@@ -73,10 +73,12 @@ describe('popup runtime bootstrap', () => {
 		Reflect.deleteProperty(globalThis, 'snipSnipPopupBatchUtils');
 
 		const loadScript = mock(async () => ({}));
+		const importThemeBootstrapModule = mock(async () => ({}));
+		const importPopupShortcutsModule = mock(async () => ({}));
 
 		await Promise.all([
-			bootPopupRuntime({ loadScript }),
-			bootPopupRuntime({ loadScript }),
+			bootPopupRuntime({ loadScript, importThemeBootstrapModule, importPopupShortcutsModule }),
+			bootPopupRuntime({ loadScript, importThemeBootstrapModule, importPopupShortcutsModule }),
 		]);
 
 		expect(document.title).toBe('SnipSnip');
@@ -103,6 +105,8 @@ describe('popup runtime bootstrap', () => {
 		expect(typeof globalThis.snipSnipPopupAssets?.['popup/lib/github-markdown.css']).toBe('string');
 		expect(typeof globalThis.snipSnipPopupAssets?.['print/print.css']).toBe('string');
 		expect(typeof globalThis.snipSnipPopupAssets?.['../notifications/notification-host.js']).toBe('string');
-		expect(loadScript).toHaveBeenCalledTimes(5);
+		expect(importThemeBootstrapModule).toHaveBeenCalledTimes(1);
+		expect(importPopupShortcutsModule).toHaveBeenCalledTimes(1);
+		expect(loadScript).toHaveBeenCalledTimes(3);
 	});
 });

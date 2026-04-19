@@ -10,6 +10,8 @@
  */
 (function() {
 	'use strict';
+	const browser = globalThis.browser;
+	const defaultOptions = globalThis.defaultOptions || {};
 
 	const core = globalThis.snipSnipSearchCore;
 	const SPECIAL_THEME_CLASS_NAMES = [

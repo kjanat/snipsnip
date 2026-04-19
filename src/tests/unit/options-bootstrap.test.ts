@@ -63,7 +63,7 @@ afterEach(() => {
 });
 
 describe('options runtime bootstrap', () => {
-	test('installs options shell, globals, guide links, and dedupes script loading', async () => {
+	test('installs options shell, globals, guide links, and dedupes module loading', async () => {
 		const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
 			url: 'https://example.com/options.html',
 		});
@@ -75,7 +75,6 @@ describe('options runtime bootstrap', () => {
 		setReadonlyGlobal('HTMLScriptElement', dom.window.HTMLScriptElement);
 		globalThis.browser = undefined;
 		globalThis.defaultOptions = undefined;
-		globalThis.moment = undefined;
 		globalThis.snipSnipAgentBridgeState = undefined;
 		globalThis.snipSnipLibraryState = undefined;
 		globalThis.snipSnipOptionsState = undefined;
@@ -85,11 +84,15 @@ describe('options runtime bootstrap', () => {
 		Reflect.deleteProperty(globalThis, 'snipSnipSearchCore');
 		Reflect.deleteProperty(globalThis, 'createMenus');
 
-		const loadScript = mock(async () => ({}));
+		const loadMoment = mock(async () => {
+			globalThis.moment = originalMoment ?? (() => ({ format: () => '' }));
+		});
+		const importOptionsSearchModule = mock(async () => ({}));
+		const importOptionsRuntimeModule = mock(async () => ({}));
 
 		await Promise.all([
-			bootOptionsRuntime({ loadScript }),
-			bootOptionsRuntime({ loadScript }),
+			bootOptionsRuntime({ loadMoment, importOptionsSearchModule, importOptionsRuntimeModule }),
+			bootOptionsRuntime({ loadMoment, importOptionsSearchModule, importOptionsRuntimeModule }),
 		]);
 
 		expect(document.title).toBe('SnipSnip Options');
@@ -118,6 +121,8 @@ describe('options runtime bootstrap', () => {
 		expect(
 			(document.querySelector('#search-no-results a') as HTMLAnchorElement | null)?.getAttribute('href'),
 		).toBe('/guide.html');
-		expect(loadScript).toHaveBeenCalledTimes(3);
+		expect(loadMoment).toHaveBeenCalledTimes(1);
+		expect(importOptionsSearchModule).toHaveBeenCalledTimes(1);
+		expect(importOptionsRuntimeModule).toHaveBeenCalledTimes(1);
 	});
 });

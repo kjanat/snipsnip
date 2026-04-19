@@ -7,12 +7,10 @@ import { installWxtPagePaths } from '../page-paths.ts';
 
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
 const guideCssUrl = new URL('../../guide/guide.css', import.meta.url).href;
-const guideRuntimeScriptUrl = new URL('../../guide/guide.js', import.meta.url).href;
-
 let guideRuntimeLoadPromise: Promise<void> | null = null;
 
 export interface GuideRuntimeBootstrapOptions {
-	loadScript?: (src: string, id?: string) => Promise<unknown>;
+	importModule?: () => Promise<unknown>;
 	loadTemplate?: () => string;
 }
 
@@ -52,34 +50,6 @@ function installGuideShell(loadTemplate: () => string): void {
 	);
 }
 
-function loadClassicScript(src: string, id?: string): Promise<HTMLScriptElement> {
-	if (id != null) {
-		const existingById = document.getElementById(id);
-		if (existingById instanceof HTMLScriptElement) {
-			return Promise.resolve(existingById);
-		}
-	}
-
-	const existing = Array.from(document.querySelectorAll('script[src]')).find((script) =>
-		script.getAttribute('src') === src
-	);
-	if (existing instanceof HTMLScriptElement) {
-		return Promise.resolve(existing);
-	}
-
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.type = 'application/javascript';
-		script.src = src;
-		if (id != null) {
-			script.id = id;
-		}
-		script.addEventListener('load', () => resolve(script), { once: true });
-		script.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
-		document.body.appendChild(script);
-	});
-}
-
 export function resetGuideRuntimeBootstrapState(): void {
 	guideRuntimeLoadPromise = null;
 }
@@ -91,8 +61,8 @@ export async function bootGuideRuntime(options: GuideRuntimeBootstrapOptions = {
 			installGuideStyles();
 			installGuideShell(options.loadTemplate ?? (() => guideTemplate));
 
-			const loadScript = options.loadScript ?? loadClassicScript;
-			await loadScript(guideRuntimeScriptUrl, 'guide-runtime-script');
+			const importModule = options.importModule ?? (() => import('../../guide/guide.js'));
+			await importModule();
 		})();
 	}
 
