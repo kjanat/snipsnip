@@ -19,6 +19,7 @@ Started: 2026-04-19
 - WXT Firefox builds must be forced to MV3 explicitly with `--mv3`; default Firefox builds otherwise drift to MV2.
 - When a legacy web-accessible resource path must stay stable, putting the file in `public/` is simpler than forcing WXT entrypoint naming to match it.
 - During TS migration, keep domain models in one importable TS module and let `src/global.d.ts` bridge legacy global runtime APIs back to those types.
+- For classic-script migration phases, keep `.ts` as the canonical shared-module source and generate committed `.js` facades that preserve `globalThis.snipSnip*` and `module.exports` until runtime entrypoints are migrated.
 
 ---
 
@@ -102,3 +103,40 @@ Started: 2026-04-19
 - Learnings:
   - A typed hub plus ambient bridges is the least-disruptive way to prepare legacy global JS modules for later TS/ESM conversion.
   - Modeling browser/runtime state separately from API wrappers keeps future refactors smaller and more composable.
+
+## Task - [convert-pure-shared-mods]
+
+- Converted the pure shared helpers to canonical TypeScript ESM modules:
+  - `count-utils`
+  - `search-core`
+  - `site-rules`
+  - `popup-batch-utils`
+  - `notifications`
+  - `obsidian-utils`
+  - `download-tracker`
+- Added `src/scripts/generate-legacy-shared-mods.js` and root script `generate:legacy-shared` to emit compatibility `.js` facades from the new `.ts` sources.
+- Regenerated the legacy `.js` shared modules so current classic-script runtime paths still expose the same `globalThis.snipSnip*` globals and CommonJS test imports.
+- Added `src/tests/unit/shared-ts-esm.test.ts` to smoke-test direct TS/ESM imports alongside the existing compatibility coverage.
+- Files changed:
+  - `package.json`
+  - `src/shared/count-utils.ts`
+  - `src/shared/search-core.ts`
+  - `src/shared/site-rules.ts`
+  - `src/shared/popup-batch-utils.ts`
+  - `src/shared/notifications.ts`
+  - `src/shared/obsidian-utils.ts`
+  - `src/shared/download-tracker.ts`
+  - `src/shared/count-utils.js`
+  - `src/shared/search-core.js`
+  - `src/shared/site-rules.js`
+  - `src/shared/popup-batch-utils.js`
+  - `src/shared/notifications.js`
+  - `src/shared/obsidian-utils.js`
+  - `src/shared/download-tracker.js`
+  - `src/scripts/generate-legacy-shared-mods.js`
+  - `src/tests/unit/shared-ts-esm.test.ts`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Generated classic-script facades are safer than hand-maintaining duplicate JS and TS implementations during phased module migration.
+  - In generated code that will be formatter-touched, regex-based newline splits are safer than string-literal newline separators, which can be rewritten into value-changing multiline template literals.

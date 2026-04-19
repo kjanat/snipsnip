@@ -13,6 +13,7 @@
 		"dev:wxt": "wxt",
 		"dev:wxt:firefox": "wxt -b firefox --mv3",
 		"fmt": "dprint fmt",
+		"generate:legacy-shared": "bun src/scripts/generate-legacy-shared-mods.js",
 		"generate:release-highlights": "bun src/scripts/generate-release-highlights.js",
 		"postinstall": "wxt prepare",
 		"lint:js": "eslint --config src/.eslintrc.json --ignore-pattern 'src/background/**' --ignore-pattern 'src/browser-polyfill.min.js' --ignore-pattern 'src/highlight.min.js' --ignore-pattern 'src/popup/lib/**' src",

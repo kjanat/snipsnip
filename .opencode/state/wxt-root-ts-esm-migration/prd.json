@@ -46,7 +46,7 @@
 			"description": "Convert pure shared utilities such as count-utils, search-core, site-rules, popup-batch-utils, notifications, obsidian-utils, and download-tracker to TypeScript and ESM. Acceptance: converted modules use import/export only, preserve current behavior, and their unit tests continue to pass.",
 			"depends": ["define-core-extension-types"],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "convert-stateful-shared-mods",
