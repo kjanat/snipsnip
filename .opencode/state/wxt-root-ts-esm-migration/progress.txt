@@ -1,0 +1,15 @@
+# Progress Log
+
+PRD: wxt-root-ts-esm-migration
+Started: 2026-04-19
+
+## Codebase Patterns
+
+- Repo is logically single-package, but tooling is split between root and `src/package.json`.
+- Current extension runtime depends heavily on ordered global scripts and `globalThis.snipSnip*` exports.
+- `service-worker.js` is a monolith and currently centralizes messaging, commands, downloads, notifications, and injection orchestration.
+- `contentScript/pageContext.js` must remain an explicitly injected page-context bridge and stay web-accessible.
+- Offscreen behavior must remain browser-aware: Chromium offscreen path plus Firefox fallback.
+- Vendored libs should be wrapped first, not replaced during initial migration.
+
+---

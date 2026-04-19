@@ -1,0 +1,145 @@
+{
+	"prdName": "wxt-root-ts-esm-migration",
+	"spec": "specs/comprehensive-wxt-root-ts-esm-migration.md",
+	"description": "Migrate the extension to a root-managed single-package WXT codebase with TypeScript, ESM, and Chrome+Firefox parity.",
+	"tasks": [
+		{
+			"id": "flatten-root-package",
+			"phase": 1,
+			"title": "Flatten package management to root",
+			"description": "Merge src/package.json into the root package.json, remove the workspace setup, and make Bun, Playwright, ESLint, and test scripts run from root without changing extension runtime behavior. Acceptance: one active package.json, bun test runs from root, legacy non-WXT scripts still function from root.",
+			"depends": [],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "add-wxt-scaffold",
+			"phase": 1,
+			"title": "Add WXT scaffold and root config",
+			"description": "Add WXT to the root toolchain, create wxt.config.ts, and establish the initial root-managed WXT project shape while keeping src as the temporary source root. Acceptance: WXT config exists, root scripts can invoke WXT, and the repo has a stable root-managed extension scaffold.",
+			"depends": ["flatten-root-package"],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "manifest-parity-config",
+			"phase": 1,
+			"title": "Recreate manifest behavior in WXT",
+			"description": "Translate the raw manifest and browser-specific build differences into WXT config, preserving permissions, commands, icons, popup/options paths, and web accessible resources. Acceptance: WXT emits Chrome and Firefox manifests with parity to current behavior, including explicit Firefox handling and page-context WAR output.",
+			"depends": ["add-wxt-scaffold"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "define-core-extension-types",
+			"phase": 2,
+			"title": "Define core TypeScript domain types",
+			"description": "Introduce typed core domain models for extension options, article/content payloads, download tracking state, library state, and agent bridge state. Acceptance: shared runtime code can import concrete TS types instead of ad hoc object shapes and new type definitions compile cleanly.",
+			"depends": ["manifest-parity-config"],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "convert-pure-shared-mods",
+			"phase": 2,
+			"title": "Convert pure shared modules to TS ESM",
+			"description": "Convert pure shared utilities such as count-utils, search-core, site-rules, popup-batch-utils, notifications, obsidian-utils, and download-tracker to TypeScript and ESM. Acceptance: converted modules use import/export only, preserve current behavior, and their unit tests continue to pass.",
+			"depends": ["define-core-extension-types"],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "convert-stateful-shared-mods",
+			"phase": 2,
+			"title": "Convert stateful shared modules to TS ESM",
+			"description": "Convert shared modules with current require/global fallbacks such as template-utils, url-utils, library-export, options-state, library-state, agent-bridge-state, and markdown-options by replacing implicit runtime lookups with explicit imports or injected dependencies. Acceptance: these modules no longer rely on globalThis.snipSnip* for normal operation and continue to satisfy existing tests.",
+			"depends": ["convert-pure-shared-mods"],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "wrap-vendored-runtime-libs",
+			"phase": 2,
+			"title": "Wrap vendored runtime libraries",
+			"description": "Add stable wrapper modules around vendored runtime dependencies such as Readability, Turndown, Turndown GFM, moment, highlight, and browser polyfill so migrated TS/ESM code can consume them without script-order coupling. Acceptance: runtime entrypoints can import wrapper modules instead of depending on raw global side effects.",
+			"depends": ["manifest-parity-config"],
+			"priority": "architecture",
+			"passes": false
+		},
+		{
+			"id": "migrate-background-msgs",
+			"phase": 3,
+			"title": "Migrate background and messaging",
+			"description": "Convert service-worker.js into a WXT background entrypoint, replace importScripts ordering with imports, and extract typed message handlers/contracts. Acceptance: listeners register synchronously, command/context-menu/download behavior still works, and no background path depends on importScripts order.",
+			"depends": ["convert-stateful-shared-mods", "wrap-vendored-runtime-libs"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "migrate-content-page-bridge",
+			"phase": 3,
+			"title": "Migrate content script and page bridge",
+			"description": "Move the content script to a WXT content entrypoint and convert the page-context bridge to an explicitly injected web-accessible script while preserving MathJax/custom-event behavior, DOM capture, and link picker flows. Acceptance: content script loads correctly, page bridge injection works, and end-to-end capture behavior remains intact.",
+			"depends": ["migrate-background-msgs", "wrap-vendored-runtime-libs"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "migrate-offscreen-fallback",
+			"phase": 3,
+			"title": "Migrate offscreen with Firefox fallback",
+			"description": "Convert the offscreen document to a WXT-managed entrypoint, use capability-gated Chromium offscreen behavior, and preserve a functioning Firefox fallback path. Acceptance: Chrome uses offscreen successfully, Firefox fallback does not crash, and HTML-to-Markdown conversion regressions remain covered.",
+			"depends": ["migrate-background-msgs", "wrap-vendored-runtime-libs"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "migrate-popup-page",
+			"phase": 4,
+			"title": "Migrate popup to TS ESM entrypoint",
+			"description": "Convert popup bootstrap code to a WXT popup entrypoint while preserving the existing HTML/CSS structure and replacing script-order dependencies with explicit imports. Acceptance: popup clipping, preview, batch flow, and agent-related actions work as before.",
+			"depends": ["convert-stateful-shared-mods", "migrate-background-msgs", "migrate-content-page-bridge"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "migrate-options-guide-pages",
+			"phase": 4,
+			"title": "Migrate options and guide pages",
+			"description": "Convert options and guide bootstraps to WXT-managed TS/ESM entrypoints, preserving current HTML/CSS structure and replacing global bootstrap order with imports. Acceptance: options restore/save/search/import/export flows work, guide page still loads and behaves correctly, and duplicate popup/options defaults are reduced to shared typed sources where applicable.",
+			"depends": ["convert-stateful-shared-mods", "migrate-background-msgs"],
+			"priority": "integration",
+			"passes": false
+		},
+		{
+			"id": "remove-legacy-build-paths",
+			"phase": 5,
+			"title": "Remove legacy manifest and build scripts",
+			"description": "Delete obsolete manifest-generation and copy/build scripts once WXT parity is confirmed, and make WXT the only packaging/build path. Acceptance: release/build flows no longer depend on generate-browser-manifests.js or other legacy extension packaging logic.",
+			"depends": [
+				"manifest-parity-config",
+				"migrate-content-page-bridge",
+				"migrate-offscreen-fallback",
+				"migrate-popup-page",
+				"migrate-options-guide-pages"
+			],
+			"priority": "polish",
+			"passes": false
+		},
+		{
+			"id": "stabilize-tests-typecheck",
+			"phase": 5,
+			"title": "Stabilize tests and typecheck",
+			"description": "Update Bun tests, Playwright paths, and root typecheck configuration for the migrated WXT/TS/ESM layout. Acceptance: bun test passes from root, Playwright targets the approved WXT output or equivalent path, and the active migrated codebase passes root typecheck.",
+			"depends": [
+				"migrate-popup-page",
+				"migrate-options-guide-pages",
+				"migrate-content-page-bridge",
+				"migrate-offscreen-fallback",
+				"remove-legacy-build-paths"
+			],
+			"priority": "polish",
+			"passes": false
+		}
+	]
+}
