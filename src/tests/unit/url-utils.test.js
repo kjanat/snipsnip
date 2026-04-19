@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, afterEach, mock, jest } = require('bun:test');
+const { describe, test, expect, beforeEach, afterEach, mock } = require('bun:test');
 
 const {
 	safeParseUrl,
@@ -57,7 +57,7 @@ describe('URL utils', () => {
 
 		beforeEach(() => {
 			global.snipSnipTemplateUtils = {
-				generateValidFileName: jest.fn((value) => value.replace(/\s+/g, '-')),
+				generateValidFileName: mock((value) => value.replace(/\s+/g, '-')),
 			};
 		});
 

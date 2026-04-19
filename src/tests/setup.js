@@ -1,6 +1,8 @@
+const { afterEach, mock } = require('bun:test');
+
 /**
- * Jest Setup File
- * Runs before each test file to set up the testing environment
+ * Test setup file.
+ * Runs before each test file to set up the testing environment.
  */
 
 // Polyfills for Node.js environment
@@ -21,17 +23,17 @@ if (typeof DOMParser === 'undefined' && typeof window !== 'undefined') {
 // Uncomment if you want to suppress console output during tests
 // global.console = {
 //   ...console,
-//   log: jest.fn(),
-//   debug: jest.fn(),
-//   info: jest.fn(),
-//   warn: jest.fn(),
-//   error: jest.fn(),
+//   log: mock(),
+//   debug: mock(),
+//   info: mock(),
+//   warn: mock(),
+//   error: mock(),
 // };
 
 // Set up fetch mock if needed
-global.fetch = jest.fn();
+global.fetch = mock();
 
 // Clean up after each test
 afterEach(() => {
-	jest.clearAllMocks();
+	mock.clearAllMocks();
 });

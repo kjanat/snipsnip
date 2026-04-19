@@ -1,3 +1,5 @@
+const { describe, test, expect, mock } = require('bun:test');
+
 /**
  * Code block conversion regression tests
  * Uses the shared production helper.
@@ -71,8 +73,8 @@ describe('Code Block Conversion', () => {
 		node.innerHTML = 'puts "hello"';
 
 		global.hljs = {
-			getLanguage: jest.fn(() => true),
-			highlightAuto: jest.fn(() => ({ language: 'ruby', relevance: 10 })),
+			getLanguage: mock(() => true),
+			highlightAuto: mock(() => ({ language: 'ruby', relevance: 10 })),
 		};
 
 		const result = convertToFencedCodeBlock(node, {
@@ -91,8 +93,8 @@ describe('Code Block Conversion', () => {
 		node.innerHTML = 'puts "hello"';
 
 		global.hljs = {
-			getLanguage: jest.fn((lang) => lang === 'ruby'),
-			highlightAuto: jest.fn(() => ({ language: 'javascript', relevance: 20 })),
+			getLanguage: mock((lang) => lang === 'ruby'),
+			highlightAuto: mock(() => ({ language: 'javascript', relevance: 20 })),
 		};
 
 		const result = convertToFencedCodeBlock(node, {
@@ -111,8 +113,8 @@ describe('Code Block Conversion', () => {
 		node.innerHTML = 'const a = 1;';
 
 		global.hljs = {
-			getLanguage: jest.fn(() => false),
-			highlightAuto: jest.fn(() => ({ language: 'javascript', relevance: 8 })),
+			getLanguage: mock(() => false),
+			highlightAuto: mock(() => ({ language: 'javascript', relevance: 8 })),
 		};
 
 		const result = convertToFencedCodeBlock(node, {
@@ -131,8 +133,8 @@ describe('Code Block Conversion', () => {
 		node.innerHTML = 'const a = 1;';
 
 		global.hljs = {
-			getLanguage: jest.fn(() => false),
-			highlightAuto: jest.fn(() => ({ language: 'javascript', relevance: 8 })),
+			getLanguage: mock(() => false),
+			highlightAuto: mock(() => ({ language: 'javascript', relevance: 8 })),
 		};
 
 		const result = convertToFencedCodeBlock(node, {

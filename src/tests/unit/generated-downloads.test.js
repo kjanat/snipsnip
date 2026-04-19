@@ -1,3 +1,5 @@
+const { describe, test, expect, mock } = require('bun:test');
+
 const { generateValidFileName } = require('../../shared/template-utils');
 
 const SINGLE_DOWNLOAD_NOTIFICATION_DELTA = Object.freeze({ downloads: 1, exports: 1 });
@@ -112,14 +114,14 @@ describe('Generated download helpers', () => {
 	});
 
 	test('routes generated files through the tracked downloads-api blob path when available', async () => {
-		const getOptions = jest.fn().mockResolvedValue({
+		const getOptions = mock().mockResolvedValue({
 			downloadMode: 'downloadsApi',
 			saveAs: true,
 			downloadImages: true,
 			disallowedChars: '[]#^',
 		});
-		const handleDownloadWithBlobUrl = jest.fn().mockResolvedValue(undefined);
-		const createObjectURL = jest.fn().mockReturnValue('blob:generated-export');
+		const handleDownloadWithBlobUrl = mock().mockResolvedValue(undefined);
+		const createObjectURL = mock().mockReturnValue('blob:generated-export');
 
 		await downloadGeneratedFile({
 			title: 'Clip #1',
@@ -133,13 +135,13 @@ describe('Generated download helpers', () => {
 			handleDownloadWithBlobUrl,
 			browserApi: {
 				downloads: {},
-				scripting: { executeScript: jest.fn() },
+				scripting: { executeScript: mock() },
 			},
 			chromeApi: null,
 			createObjectURL,
 			BlobCtor: Blob,
-			ensureScripts: jest.fn(),
-			base64EncodeUnicode: jest.fn(),
+			ensureScripts: mock(),
+			base64EncodeUnicode: mock(),
 		});
 
 		expect(createObjectURL).toHaveBeenCalledTimes(1);
@@ -159,9 +161,9 @@ describe('Generated download helpers', () => {
 	});
 
 	test('falls back to a content-script data URL when downloads api is unavailable', async () => {
-		const ensureScripts = jest.fn().mockResolvedValue(undefined);
-		const executeScript = jest.fn().mockResolvedValue(undefined);
-		const base64EncodeUnicode = jest.fn().mockReturnValue('PGgxPkNsaXA8L2gxPg==');
+		const ensureScripts = mock().mockResolvedValue(undefined);
+		const executeScript = mock().mockResolvedValue(undefined);
+		const base64EncodeUnicode = mock().mockReturnValue('PGgxPkNsaXA8L2gxPg==');
 
 		await downloadGeneratedFile({
 			title: 'Clip',
@@ -170,17 +172,17 @@ describe('Generated download helpers', () => {
 			mimeType: 'text/html;charset=utf-8',
 			fileExtension: 'html',
 		}, {
-			getOptions: jest.fn().mockResolvedValue({
+			getOptions: mock().mockResolvedValue({
 				downloadMode: 'contentLink',
 				disallowedChars: '[]#^',
 			}),
-			handleDownloadWithBlobUrl: jest.fn(),
+			handleDownloadWithBlobUrl: mock(),
 			browserApi: {
 				downloads: null,
 				scripting: { executeScript },
 			},
 			chromeApi: null,
-			createObjectURL: jest.fn(),
+			createObjectURL: mock(),
 			BlobCtor: Blob,
 			ensureScripts,
 			base64EncodeUnicode,

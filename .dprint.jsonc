@@ -1,7 +1,7 @@
 {
 	"extends": "https://cdn.jsdelivr.net/gh/kjanat/kjanat/configs/dprint.remote.json",
 	"exec": {
-		"associations": ["*.go", "*.rs", "*.toml", "*.sh", "*.bash", "*.justfile", "*.package.json"],
+		"associations": ["*.go", "*.rs", "*.toml", "*.sh", "*.bash", "**/justfile", "**/package.json"],
 		"commands": [
 			{ "command": "bunx tombi format - --stdin-filename {{file_path}}", "exts": ["toml"] },
 			{ "command": "bunx sort-package-json --stdin", "fileNames": ["package.json"] },

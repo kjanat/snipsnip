@@ -14,7 +14,6 @@ const EXCLUDED_NAMES = new Set([
 	'.gitignore',
 	'package.json',
 	'package-lock.json',
-	'jest.config.js',
 	'playwright.config.js',
 	'scripts',
 ]);

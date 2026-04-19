@@ -1,3 +1,5 @@
+const { describe, test, expect, beforeEach, afterEach, mock } = require('bun:test');
+
 const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('../helpers/jsdom-shim');
@@ -161,11 +163,11 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 	const browser = {
 		storage: {
 			sync: {
-				get: jest.fn(() => Promise.resolve(storedOptions)),
-				set: jest.fn(() => Promise.resolve()),
+				get: mock(() => Promise.resolve(storedOptions)),
+				set: mock(() => Promise.resolve()),
 			},
 			local: {
-				get: jest.fn((keys) => {
+				get: mock((keys) => {
 					if (typeof keys === 'string') {
 						return Promise.resolve({ [keys]: localState[keys] });
 					}
@@ -177,11 +179,11 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 					}
 					return Promise.resolve({ ...localState });
 				}),
-				set: jest.fn((payload) => {
+				set: mock((payload) => {
 					localState = { ...localState, ...payload };
 					return Promise.resolve();
 				}),
-				remove: jest.fn((keys) => {
+				remove: mock((keys) => {
 					const keyList = Array.isArray(keys) ? keys : [keys];
 					keyList.forEach((key) => {
 						delete localState[key];
@@ -191,11 +193,11 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 			},
 		},
 		runtime: {
-			getURL: jest.fn(() => 'chrome-extension://snipsnip/'),
+			getURL: mock(() => 'chrome-extension://snipsnip/'),
 		},
 		contextMenus: {
-			update: jest.fn(() => Promise.resolve()),
-			removeAll: jest.fn(() => Promise.resolve()),
+			update: mock(() => Promise.resolve()),
+			removeAll: mock(() => Promise.resolve()),
 		},
 		downloads: {},
 	};
@@ -203,7 +205,7 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 	dom.window.browser = browser;
 	dom.window.chrome = browser;
 	dom.window.moment = moment;
-	dom.window.createMenus = jest.fn();
+	dom.window.createMenus = mock();
 	dom.window.eval(`var defaultOptions = ${JSON.stringify(storedOptions)};`);
 	dom.window.eval(searchCoreSource);
 	dom.window.eval(libraryStateSource);
@@ -416,7 +418,7 @@ describe('Options page search UI', () => {
 		});
 		const { document } = dom.window;
 
-		dom.window.confirm = jest.fn(() => true);
+		dom.window.confirm = mock(() => true);
 		document.dispatchEvent(new dom.window.Event('DOMContentLoaded', { bubbles: true }));
 		await waitForMicrotasks();
 		await waitFor(dom.window, 50);
@@ -440,7 +442,7 @@ describe('Options page search UI', () => {
 		});
 		const { document } = dom.window;
 
-		dom.window.confirm = jest.fn(() => true);
+		dom.window.confirm = mock(() => true);
 		document.dispatchEvent(new dom.window.Event('DOMContentLoaded', { bubbles: true }));
 		await waitForMicrotasks();
 

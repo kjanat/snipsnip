@@ -43,10 +43,20 @@
 	},
 	"overrides": [
 		{
-			"files": ["scripts/**/*.js", "jest.config.js", "playwright.config.js", "tests/**/*.js"],
+			"files": ["scripts/**/*.js", "playwright.config.js", "tests/**/*.js"],
 			"env": {
-				"node": true,
-				"jest": true
+				"node": true
+			},
+			"globals": {
+				"describe": "readonly",
+				"test": "readonly",
+				"expect": "readonly",
+				"beforeAll": "readonly",
+				"beforeEach": "readonly",
+				"afterAll": "readonly",
+				"afterEach": "readonly",
+				"mock": "readonly",
+				"spyOn": "readonly"
 			},
 			"parserOptions": {
 				"sourceType": "script"
@@ -54,7 +64,7 @@
 		},
 		{
 			"files": ["**/*.js"],
-			"excludedFiles": ["scripts/**/*.js", "jest.config.js", "playwright.config.js", "tests/**/*.js"],
+			"excludedFiles": ["scripts/**/*.js", "playwright.config.js", "tests/**/*.js"],
 			"env": {
 				"browser": true
 			},

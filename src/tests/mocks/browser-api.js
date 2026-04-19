@@ -3,11 +3,13 @@
  * Provides mock objects for chrome.* and browser.* APIs used in the extension
  */
 
+const { mock } = require('bun:test');
+
 // Storage mock
 const storageMock = {
 	local: {
 		_data: {},
-		get: jest.fn((keys, callback) => {
+		get: mock((keys, callback) => {
 			const result = {};
 			if (typeof keys === 'string') {
 				result[keys] = storageMock.local._data[keys];
@@ -27,14 +29,14 @@ const storageMock = {
 			}
 			return Promise.resolve(result);
 		}),
-		set: jest.fn((items, callback) => {
+		set: mock((items, callback) => {
 			Object.assign(storageMock.local._data, items);
 			if (callback) {
 				callback();
 			}
 			return Promise.resolve();
 		}),
-		remove: jest.fn((keys, callback) => {
+		remove: mock((keys, callback) => {
 			if (typeof keys === 'string') {
 				delete storageMock.local._data[keys];
 			} else if (Array.isArray(keys)) {
@@ -45,7 +47,7 @@ const storageMock = {
 			}
 			return Promise.resolve();
 		}),
-		clear: jest.fn((callback) => {
+		clear: mock((callback) => {
 			storageMock.local._data = {};
 			if (callback) {
 				callback();
@@ -58,7 +60,7 @@ const storageMock = {
 	},
 	sync: {
 		_data: {},
-		get: jest.fn((keys, callback) => {
+		get: mock((keys, callback) => {
 			const result = {};
 			if (typeof keys === 'string') {
 				result[keys] = storageMock.sync._data[keys];
@@ -78,7 +80,7 @@ const storageMock = {
 			}
 			return Promise.resolve(result);
 		}),
-		set: jest.fn((items, callback) => {
+		set: mock((items, callback) => {
 			Object.assign(storageMock.sync._data, items);
 			if (callback) {
 				callback();
@@ -90,8 +92,8 @@ const storageMock = {
 		},
 	},
 	onChanged: {
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
+		addListener: mock(),
+		removeListener: mock(),
 	},
 };
 
@@ -99,33 +101,33 @@ const storageMock = {
 const runtimeMock = {
 	lastError: null,
 	id: 'test-extension-id',
-	connectNative: jest.fn(() => ({
-		postMessage: jest.fn(),
-		disconnect: jest.fn(),
+	connectNative: mock(() => ({
+		postMessage: mock(),
+		disconnect: mock(),
 		onMessage: {
-			addListener: jest.fn(),
-			removeListener: jest.fn(),
+			addListener: mock(),
+			removeListener: mock(),
 		},
 		onDisconnect: {
-			addListener: jest.fn(),
-			removeListener: jest.fn(),
+			addListener: mock(),
+			removeListener: mock(),
 		},
 	})),
-	sendMessage: jest.fn((message, callback) => {
+	sendMessage: mock((message, callback) => {
 		if (callback) {
 			callback({ success: true });
 		}
 		return Promise.resolve({ success: true });
 	}),
 	onMessage: {
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
-		hasListener: jest.fn(),
+		addListener: mock(),
+		removeListener: mock(),
+		hasListener: mock(),
 	},
-	getURL: jest.fn((path) => {
+	getURL: mock((path) => {
 		return `chrome-extension://test-extension-id/${path}`;
 	}),
-	getManifest: jest.fn(() => ({
+	getManifest: mock(() => ({
 		name: 'SnipSnip - Markdown Web Clipper',
 		version: '4.0.0',
 		manifest_version: 3,
@@ -135,7 +137,7 @@ const runtimeMock = {
 // Tabs mock
 const tabsMock = {
 	_tabs: [],
-	query: jest.fn((queryInfo, callback) => {
+	query: mock((queryInfo, callback) => {
 		let results = tabsMock._tabs;
 		if (queryInfo.active) {
 			results = results.filter(tab => tab.active);
@@ -148,14 +150,14 @@ const tabsMock = {
 		}
 		return Promise.resolve(results);
 	}),
-	get: jest.fn((tabId, callback) => {
+	get: mock((tabId, callback) => {
 		const tab = tabsMock._tabs.find(t => t.id === tabId);
 		if (callback) {
 			callback(tab);
 		}
 		return Promise.resolve(tab);
 	}),
-	create: jest.fn((createProperties, callback) => {
+	create: mock((createProperties, callback) => {
 		const newTab = {
 			id: tabsMock._tabs.length + 1,
 			windowId: 1,
@@ -170,13 +172,13 @@ const tabsMock = {
 		}
 		return Promise.resolve(newTab);
 	}),
-	sendMessage: jest.fn((tabId, message, callback) => {
+	sendMessage: mock((tabId, message, callback) => {
 		if (callback) {
 			callback({ success: true });
 		}
 		return Promise.resolve({ success: true });
 	}),
-	executeScript: jest.fn((tabId, details, callback) => {
+	executeScript: mock((tabId, details, callback) => {
 		if (callback) {
 			callback([]);
 		}
@@ -198,7 +200,7 @@ const tabsMock = {
 // Downloads mock
 const downloadsMock = {
 	_downloads: [],
-	download: jest.fn((options, callback) => {
+	download: mock((options, callback) => {
 		const downloadId = downloadsMock._downloads.length + 1;
 		downloadsMock._downloads.push({
 			id: downloadId,
@@ -217,7 +219,7 @@ const downloadsMock = {
 // Context Menus mock
 const contextMenusMock = {
 	_menus: [],
-	create: jest.fn((createProperties, callback) => {
+	create: mock((createProperties, callback) => {
 		const menuId = createProperties.id || `menu-${contextMenusMock._menus.length + 1}`;
 		contextMenusMock._menus.push({
 			...createProperties,
@@ -228,7 +230,7 @@ const contextMenusMock = {
 		}
 		return menuId;
 	}),
-	update: jest.fn((id, updateProperties, callback) => {
+	update: mock((id, updateProperties, callback) => {
 		const menu = contextMenusMock._menus.find(m => m.id === id);
 		if (menu) {
 			Object.assign(menu, updateProperties);
@@ -238,14 +240,14 @@ const contextMenusMock = {
 		}
 		return Promise.resolve();
 	}),
-	remove: jest.fn((menuItemId, callback) => {
+	remove: mock((menuItemId, callback) => {
 		contextMenusMock._menus = contextMenusMock._menus.filter(m => m.id !== menuItemId);
 		if (callback) {
 			callback();
 		}
 		return Promise.resolve();
 	}),
-	removeAll: jest.fn((callback) => {
+	removeAll: mock((callback) => {
 		contextMenusMock._menus = [];
 		if (callback) {
 			callback();
@@ -253,8 +255,8 @@ const contextMenusMock = {
 		return Promise.resolve();
 	}),
 	onClicked: {
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
+		addListener: mock(),
+		removeListener: mock(),
 	},
 	_reset: () => {
 		contextMenusMock._menus = [];
@@ -263,17 +265,17 @@ const contextMenusMock = {
 
 // Scripting mock
 const scriptingMock = {
-	executeScript: jest.fn((injection) => {
+	executeScript: mock((injection) => {
 		return Promise.resolve([{ result: null }]);
 	}),
-	insertCSS: jest.fn((injection) => {
+	insertCSS: mock((injection) => {
 		return Promise.resolve();
 	}),
 };
 
 // Clipboard mock
 const clipboardMock = {
-	writeText: jest.fn((text) => {
+	writeText: mock((text) => {
 		clipboardMock._lastText = text;
 		return Promise.resolve();
 	}),
@@ -286,22 +288,22 @@ const clipboardMock = {
 // Commands mock
 const commandsMock = {
 	onCommand: {
-		addListener: jest.fn(),
-		removeListener: jest.fn(),
+		addListener: mock(),
+		removeListener: mock(),
 	},
 };
 
 const permissionsMock = {
-	contains: jest.fn(() => Promise.resolve(false)),
-	request: jest.fn(() => Promise.resolve(true)),
+	contains: mock(() => Promise.resolve(false)),
+	request: mock(() => Promise.resolve(true)),
 };
 
 // Offscreen mock
 const offscreenMock = {
-	createDocument: jest.fn((parameters) => {
+	createDocument: mock((parameters) => {
 		return Promise.resolve();
 	}),
-	closeDocument: jest.fn(() => {
+	closeDocument: mock(() => {
 		return Promise.resolve();
 	}),
 };
@@ -327,7 +329,7 @@ const browserAPI = {
 		downloadsMock._reset();
 		contextMenusMock._reset();
 		clipboardMock._reset();
-		jest.clearAllMocks();
+		mock.clearAllMocks();
 	},
 };
 

@@ -1,3 +1,5 @@
+const { describe, test, expect, beforeEach, mock } = require('bun:test');
+
 /**
  * Download Filename Conflict Tests
  * Tests for the fix that prevents conflicts with other extensions
@@ -27,7 +29,7 @@ describe('Download Filename Conflict Handling', () => {
 		test('should suggest filename for download tracked by ID', () => {
 			trackerState.snipSnipDownloads.set(123, { filename: 'folder/article.md' });
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 123, url: 'blob:chrome-extension://test/abc' };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -44,7 +46,7 @@ describe('Download Filename Conflict Handling', () => {
 			trackerState.snipSnipUrls.set(blobUrl, { filename: 'downloads/note.md', isMarkdown: true });
 			trackerState.snipSnipBlobUrls.add(blobUrl);
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 456, url: blobUrl };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -61,7 +63,7 @@ describe('Download Filename Conflict Handling', () => {
 			trackerState.snipSnipBlobUrls.add(blobUrl);
 			trackerState.snipSnipUrls.set(blobUrl, { filename: 'clip.md' });
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 789, url: blobUrl };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -74,7 +76,7 @@ describe('Download Filename Conflict Handling', () => {
 		});
 
 		test('should NOT call suggest for untracked downloads', () => {
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 999, url: 'https://example.com/file.pdf' };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -86,7 +88,7 @@ describe('Download Filename Conflict Handling', () => {
 		test('should NOT call suggest for blob URLs not in our tracking set', () => {
 			const otherBlobUrl = 'blob:chrome-extension://other-extension/abc';
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 111, url: otherBlobUrl };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -98,7 +100,7 @@ describe('Download Filename Conflict Handling', () => {
 		test('should NOT call suggest when download is identified but filename is missing', () => {
 			trackerState.snipSnipDownloads.set(123, { filename: null });
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 123, url: 'blob:chrome-extension://test/abc' };
 
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
@@ -112,7 +114,7 @@ describe('Download Filename Conflict Handling', () => {
 			trackerState.snipSnipDownloads.set(123, { filename: 'from-id.md' });
 			trackerState.snipSnipUrls.set(blobUrl, { filename: 'from-url.md' });
 
-			const suggest = jest.fn();
+			const suggest = mock();
 			const downloadItem = { id: 123, url: blobUrl };
 
 			tracker.handleFilenameConflict(downloadItem, suggest);
@@ -170,7 +172,7 @@ describe('Download Filename Conflict Handling', () => {
 			expect(trackerState.snipSnipUrls.size).toBe(3);
 
 			urls.forEach((url, index) => {
-				const suggest = jest.fn();
+				const suggest = mock();
 				tracker.handleFilenameConflict({ id: index, url }, suggest);
 				expect(suggest).toHaveBeenCalledWith({
 					filename: `article-${index}.md`,
@@ -180,7 +182,7 @@ describe('Download Filename Conflict Handling', () => {
 		});
 
 		test('records metrics and cleanup for complete and interrupted states', async () => {
-			const metricsSpy = jest.fn().mockResolvedValue(undefined);
+			const metricsSpy = mock().mockResolvedValue(undefined);
 			tracker.trackUrl('blob:chrome-extension://test/metrics', {
 				filename: 'metrics.md',
 				notificationDelta: { downloads: 1, exports: 1 },
@@ -308,7 +310,7 @@ describe('Blob Download Fallback Options', () => {
 		const snipSnipUrls = new Map();
 		const snipSnipBlobUrls = new Set();
 		const downloadsAPI = {
-			download: jest.fn().mockResolvedValue(321),
+			download: mock().mockResolvedValue(321),
 		};
 
 		const handleDownloadWithBlobUrl = async (blobUrl, filename, options = null) => {
@@ -357,7 +359,7 @@ describe('Blob Download Fallback Options', () => {
 
 	test('should default saveAs to false when no option is provided', async () => {
 		const downloadsAPI = {
-			download: jest.fn().mockResolvedValue(654),
+			download: mock().mockResolvedValue(654),
 		};
 
 		const handleDownloadWithBlobUrl = async (blobUrl, filename, options = null) => {
@@ -425,9 +427,9 @@ describe('Download tracker helpers', () => {
 
 		const metricsError = new Error('boom');
 		const deps = {
-			logComplete: jest.fn(),
-			recordNotificationMetrics: jest.fn().mockRejectedValue(metricsError),
-			onMetricsError: jest.fn(),
+			logComplete: mock(),
+			recordNotificationMetrics: mock().mockRejectedValue(metricsError),
+			onMetricsError: mock(),
 		};
 
 		await tracker.handleDownloadChange({
@@ -588,7 +590,7 @@ describe('Extension Conflict Prevention', () => {
 		];
 
 		otherExtensionDownloads.forEach(downloadItem => {
-			const suggest = jest.fn();
+			const suggest = mock();
 			const result = tracker.handleFilenameConflict(downloadItem, suggest);
 			expect(result).toBe(false);
 			expect(suggest).not.toHaveBeenCalled();
@@ -603,7 +605,7 @@ describe('Extension Conflict Prevention', () => {
 		trackerState.snipSnipUrls.set(ourBlobUrl, { filename: 'article.md' });
 		trackerState.snipSnipBlobUrls.add(ourBlobUrl);
 
-		const suggest = jest.fn();
+		const suggest = mock();
 		tracker.handleFilenameConflict({ id: 99, url: ourBlobUrl }, suggest);
 		expect(suggest).toHaveBeenCalled();
 

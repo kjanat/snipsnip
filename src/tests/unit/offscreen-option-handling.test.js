@@ -1,4 +1,4 @@
-const { describe, test, expect, mock, spyOn, jest } = require('bun:test');
+const { describe, test, expect, mock, spyOn } = require('bun:test');
 
 /**
  * Tests shared offscreen markdown option normalization helper.
@@ -104,8 +104,8 @@ describe('Offscreen markdown option handling', () => {
 	test('prefers runtime template utils when the helper is predefined before module loads', () => {
 		const originalHelper = global.snipSnipTemplateUtils;
 		global.snipSnipTemplateUtils = {
-			textReplace: jest.fn((value) => String(value || '').replace('{title}', 'Preloaded')),
-			generateValidFileName: jest.fn((value) => value),
+			textReplace: mock((value) => String(value || '').replace('{title}', 'Preloaded')),
+			generateValidFileName: mock((value) => value),
 		};
 
 		try {
@@ -200,8 +200,8 @@ describe('Offscreen markdown option handling', () => {
 		const originalHelper = global.snipSnipTemplateUtils;
 		const actualTemplateUtils = require('../../shared/template-utils');
 		global.snipSnipTemplateUtils = {
-			textReplace: jest.fn((value) => String(value || '').replace('{pageTitle}', 'Injected Title')),
-			generateValidFileName: jest.fn((value) => value),
+			textReplace: mock((value) => String(value || '').replace('{pageTitle}', 'Injected Title')),
+			generateValidFileName: mock((value) => value),
 		};
 
 		try {
