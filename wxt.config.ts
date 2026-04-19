@@ -3,9 +3,9 @@ import { defineConfig } from 'wxt';
 
 const autoIcons: AutoIconsOptions = {
 	enabled: true,
-	baseIconPath: 'assets/icon.png',
+	baseIconPath: 'assets/icon.svg',
 	developmentIndicator: 'overlay',
-	sizes: [16, 32, 48, 128, 192, 256, 512],
+	sizes: [192, 256, 512],
 };
 
 // See https://wxt.dev/api/config.html
