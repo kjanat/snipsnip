@@ -24,19 +24,19 @@ function createBrowserEnvironment() {
 	const { document } = window;
 
 	// Load Turndown library
-	const turndownPath = path.join(__dirname, '../../background/turndown.js');
+	const turndownPath = path.join(__dirname, '../../background/turndown.ts');
 	const turndownCode = fs.readFileSync(turndownPath, 'utf8');
 
 	// Load Turndown GFM plugin
-	const gfmPath = path.join(__dirname, '../../background/turndown-plugin-gfm.js');
+	const gfmPath = path.join(__dirname, '../../background/turndown-plugin-gfm.ts');
 	const gfmCode = fs.readFileSync(gfmPath, 'utf8');
 
 	// Load Readability library
-	const readabilityPath = path.join(__dirname, '../../background/Readability.js');
+	const readabilityPath = path.join(__dirname, '../../background/Readability.ts');
 	const readabilityCode = fs.readFileSync(readabilityPath, 'utf8');
 
 	// Load shared readability recovery helpers
-	const readabilityRecoveryPath = path.join(__dirname, '../../shared/readability-recovery.js');
+	const readabilityRecoveryPath = path.join(__dirname, '../../shared/readability-recovery.ts');
 	const readabilityRecoveryCode = fs.readFileSync(readabilityRecoveryPath, 'utf8');
 
 	// Execute library sources directly inside the test window.

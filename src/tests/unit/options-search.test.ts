@@ -4,39 +4,25 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('../helpers/jsdom-shim');
 
-// Load search-core first — options-search depends on globalThis.snipSnipSearchCore
-require('../../shared/search-core.js');
-const optionsSearch = require('../../options/options-search.js');
+const searchCore = require('../../shared/search-core.ts');
+const libraryState = require('../../shared/library-state.ts');
+const optionsState = require('../../shared/options-state.ts');
+const templateUtils = require('../../shared/template-utils.ts');
+const optionsSearch = require('../../options/options-search.ts');
 
 const optionsHtml = fs.readFileSync(
 	path.join(__dirname, '../../options/options.html'),
 	'utf8',
 );
-const searchCoreSource = fs.readFileSync(
-	path.join(__dirname, '../../shared/search-core.js'),
-	'utf8',
-);
 const optionsSearchSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options-search.js'),
-	'utf8',
-);
-const optionsStateSource = fs.readFileSync(
-	path.join(__dirname, '../../shared/options-state.js'),
-	'utf8',
-);
-const templateUtilsSource = fs.readFileSync(
-	path.join(__dirname, '../../shared/template-utils.js'),
+	path.join(__dirname, '../../options/options-search.ts'),
 	'utf8',
 );
 const optionsSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options.js'),
+	path.join(__dirname, '../../options/options.ts'),
 	'utf8',
 );
-const libraryStateSource = fs.readFileSync(
-	path.join(__dirname, '../../shared/library-state.js'),
-	'utf8',
-);
-const moment = require('../../background/moment.min.js');
+const moment = require('../../background/moment.min.ts');
 
 const baseOptions = {
 	headingStyle: 'atx',
@@ -207,11 +193,11 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 	dom.window.moment = moment;
 	dom.window.createMenus = mock();
 	dom.window.eval(`var defaultOptions = ${JSON.stringify(storedOptions)};`);
-	dom.window.eval(searchCoreSource);
-	dom.window.eval(libraryStateSource);
-	dom.window.eval(optionsStateSource);
+	dom.window.snipSnipSearchCore = searchCore;
+	dom.window.snipSnipLibraryState = libraryState;
+	dom.window.snipSnipOptionsState = optionsState;
+	dom.window.snipSnipTemplateUtils = templateUtils;
 	dom.window.eval(optionsSearchSource);
-	dom.window.eval(templateUtilsSource);
 	dom.window.eval(optionsSource);
 
 	return {

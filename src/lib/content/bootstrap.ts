@@ -1,4 +1,4 @@
-import browserApi from '../../browser-polyfill.min.js';
+import browserApi from '../../browser-polyfill.min.ts';
 
 let contentRuntimeLoadPromise: Promise<void> | null = null;
 
@@ -10,7 +10,7 @@ export async function bootContentScriptRuntime(options: ContentRuntimeBootstrapO
 	globalThis.browser ??= browserApi;
 
 	if (!contentRuntimeLoadPromise) {
-		const importModule = options.importModule ?? (() => import('../../contentScript/contentScript.js'));
+		const importModule = options.importModule ?? (() => import('../../contentScript/contentScript.ts'));
 		contentRuntimeLoadPromise = importModule().then(() => undefined);
 	}
 

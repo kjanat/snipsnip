@@ -1,4 +1,4 @@
-const popupBatchUtils = require('../../shared/popup-batch-utils.js');
+const popupBatchUtils = require('../../shared/popup-batch-utils.ts');
 
 describe('popup-batch-utils', () => {
 	describe('parseMarkdownLink', () => {

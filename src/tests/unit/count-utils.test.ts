@@ -1,4 +1,4 @@
-const countUtils = require('../../shared/count-utils.js');
+const countUtils = require('../../shared/count-utils.ts');
 
 describe('count-utils', () => {
 	test('includes minRead in the supported counter modes', () => {

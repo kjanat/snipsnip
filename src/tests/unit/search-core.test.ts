@@ -1,4 +1,4 @@
-const searchCore = require('../../shared/search-core.js');
+const searchCore = require('../../shared/search-core.ts');
 
 describe('search-core — normalizeSearchText', () => {
 	const { normalizeSearchText } = searchCore;

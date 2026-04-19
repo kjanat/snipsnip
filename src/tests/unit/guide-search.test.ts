@@ -2,9 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('../helpers/jsdom-shim');
 
-// Load shared search core
-require('../../shared/search-core.js');
-const searchCore = globalThis.snipSnipSearchCore;
+const searchCore = require('../../shared/search-core.ts');
 
 const guideHtml = fs.readFileSync(
 	path.join(__dirname, '../../guide/guide.html'),
@@ -12,12 +10,7 @@ const guideHtml = fs.readFileSync(
 );
 
 const guideSource = fs.readFileSync(
-	path.join(__dirname, '../../guide/guide.js'),
-	'utf8',
-);
-
-const searchCoreSource = fs.readFileSync(
-	path.join(__dirname, '../../shared/search-core.js'),
+	path.join(__dirname, '../../guide/guide.ts'),
 	'utf8',
 );
 
@@ -283,7 +276,7 @@ describe('Guide keyboard shortcuts', () => {
 			storage: { sync: { get: () => Promise.resolve(defaultOpts) } },
 			runtime: { openOptionsPage: () => {} },
 		};
-		dom.window.eval(searchCoreSource);
+		dom.window.snipSnipSearchCore = searchCore;
 		dom.window.eval(guideSource);
 	});
 
@@ -334,7 +327,7 @@ describe('Guide theme application', () => {
 			storage: { sync: { get: () => Promise.resolve(opts) } },
 			runtime: { openOptionsPage: () => {} },
 		};
-		dom.window.eval(searchCoreSource);
+		dom.window.snipSnipSearchCore = searchCore;
 		dom.window.eval(guideSource);
 
 		// Wait for async storage.sync.get to resolve

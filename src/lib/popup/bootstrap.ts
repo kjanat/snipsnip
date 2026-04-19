@@ -1,4 +1,4 @@
-import browserApi from '../../browser-polyfill.min.js';
+import browserApi from '../../browser-polyfill.min.ts';
 import popupTemplate from '../../popup/popup.html?raw';
 import agentBridgeState from '../../shared/agent-bridge-state.ts';
 import countUtils from '../../shared/count-utils.ts';
@@ -12,9 +12,9 @@ import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '../pa
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
 const codeMirrorCssUrl = new URL('../../popup/lib/codemirror.css', import.meta.url).href;
 const popupCssUrl = new URL('../../popup/popup.css', import.meta.url).href;
-const codeMirrorScriptUrl = new URL('../../popup/lib/codemirror.js', import.meta.url).href;
-const markdownModeScriptUrl = new URL('../../popup/lib/modes/markdown/markdown.js', import.meta.url).href;
-const notificationHostScriptUrl = new URL('../../notifications/notification-host.js', import.meta.url).href;
+const codeMirrorScriptUrl = new URL('../../popup/lib/codemirror.ts', import.meta.url).href;
+const markdownModeScriptUrl = new URL('../../popup/lib/modes/markdown/markdown.ts', import.meta.url).href;
+const notificationHostScriptUrl = new URL('../../notifications/notification-host.ts', import.meta.url).href;
 
 let popupRuntimeLoadPromise: Promise<void> | null = null;
 
@@ -52,7 +52,7 @@ function buildPopupAssetMap(): Record<string, string> {
 		'lib/github-markdown.css': githubMarkdownCssUrl,
 		'lib/material-darker.css': new URL('../../popup/lib/material-darker.css', import.meta.url).href,
 		'lib/material.css': new URL('../../popup/lib/material.css', import.meta.url).href,
-		'lib/marked.min.js': new URL('../../popup/lib/marked.min.js', import.meta.url).href,
+		'lib/marked.min.js': new URL('../../popup/lib/marked.min.ts', import.meta.url).href,
 		'lib/monokai.css': new URL('../../popup/lib/monokai.css', import.meta.url).href,
 		'lib/nord.css': new URL('../../popup/lib/nord.css', import.meta.url).href,
 		'lib/openai-dark.css': new URL('../../popup/lib/openai-dark.css', import.meta.url).href,
@@ -176,11 +176,11 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			syncPopupPageLinks();
 
 			const importThemeBootstrapModule = options.importThemeBootstrapModule
-				?? (() => import('../../popup/theme-bootstrap.js'));
+				?? (() => import('../../popup/theme-bootstrap.ts'));
 			const importPopupShortcutsModule = options.importPopupShortcutsModule
-				?? (() => import('../../shared/popup-shortcuts.js'));
+				?? (() => import('../../shared/popup-shortcuts.ts'));
 			const importPopupRuntimeModule = options.importPopupRuntimeModule
-				?? (() => import('../../popup/popup.js'));
+				?? (() => import('../../popup/popup.ts'));
 			const loadScript = options.loadScript ?? loadClassicScript;
 			await importThemeBootstrapModule();
 			await loadScript(codeMirrorScriptUrl, 'popup-codemirror-script');

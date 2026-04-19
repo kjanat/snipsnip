@@ -1,8 +1,8 @@
-import browserApi from '../../browser-polyfill.min.js';
+import browserApi from '../../browser-polyfill.min.ts';
 import guideTemplate from '../../guide/guide.html?raw';
 import searchCore from '../../shared/search-core.ts';
 
-import { defaultOptions } from '../background/default-options-runtime.js';
+import { defaultOptions } from '../background/default-options-runtime.ts';
 import { installWxtPagePaths } from '../page-paths.ts';
 
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
@@ -61,7 +61,7 @@ export async function bootGuideRuntime(options: GuideRuntimeBootstrapOptions = {
 			installGuideStyles();
 			installGuideShell(options.loadTemplate ?? (() => guideTemplate));
 
-			const importModule = options.importModule ?? (() => import('../../guide/guide.js'));
+			const importModule = options.importModule ?? (() => import('../../guide/guide.ts'));
 			await importModule();
 		})();
 	}

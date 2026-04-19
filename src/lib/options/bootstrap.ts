@@ -1,4 +1,4 @@
-import browserApi from '../../browser-polyfill.min.js';
+import browserApi from '../../browser-polyfill.min.ts';
 import optionsTemplate from '../../options/options.html?raw';
 import agentBridgeState from '../../shared/agent-bridge-state.ts';
 import libraryState from '../../shared/library-state.ts';
@@ -7,8 +7,8 @@ import searchCore from '../../shared/search-core.ts';
 import siteRules from '../../shared/site-rules.ts';
 import templateUtils from '../../shared/template-utils.ts';
 
-import { createMenus } from '../background/context-menus-runtime.js';
-import { defaultOptions } from '../background/default-options-runtime.js';
+import { createMenus } from '../background/context-menus-runtime.ts';
+import { defaultOptions } from '../background/default-options-runtime.ts';
 import { getGuidePageHref, installWxtPagePaths } from '../page-paths.ts';
 import { loadMomentApi } from '../vendors/moment.ts';
 
@@ -88,9 +88,9 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 
 			const loadMoment = options.loadMoment ?? loadMomentApi;
 			const importOptionsSearchModule = options.importOptionsSearchModule
-				?? (() => import('../../options/options-search.js'));
+				?? (() => import('../../options/options-search.ts'));
 			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
-				?? (() => import('../../options/options.js'));
+				?? (() => import('../../options/options.ts'));
 
 			await loadMoment();
 			await importOptionsSearchModule();

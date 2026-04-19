@@ -1,21 +1,3 @@
-// In Chrome service workers, importScripts is available; in Firefox background
-// scripts, these files are listed in manifest.json background.scripts instead.
-if (typeof importScripts === 'function' && globalThis.snipSnipUseImportedBackground !== true) {
-	importScripts(
-		'browser-polyfill.min.js',
-		'background/moment.min.js',
-		'background/apache-mime-types.js',
-		'shared/notifications.js',
-		'shared/site-rules.js',
-		'shared/default-options.js',
-		'shared/template-utils.js',
-		'shared/agent-bridge-state.js',
-		'shared/library-export.js',
-		'shared/context-menus.js',
-		'shared/download-tracker.js',
-	);
-}
-
 /** @typedef {import('./lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
 
 // Log platform info
