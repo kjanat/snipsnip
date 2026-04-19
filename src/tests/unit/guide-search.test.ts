@@ -10,7 +10,7 @@ const guideHtml = fs.readFileSync(
 );
 
 const guideSource = fs.readFileSync(
-	path.join(__dirname, '../../guide/guide.ts'),
+	path.join(__dirname, '../../guide/guide.js'),
 	'utf8',
 );
 

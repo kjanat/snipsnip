@@ -3,21 +3,17 @@
  * These tests intentionally hit public pages to restore the old live-site signal.
  */
 
-const { test, expect, chromium } = require('playwright/test');
-const path = require('path');
-const {
-	repoRoot,
-	getExtensionPageUrl,
-	getExtensionLaunchArgs,
-} = require('@/tests/helpers/extension-target');
-const {
-	createSnapshotRecord,
-	loadLatestSuccessfulRun,
-	buildComparison,
-	persistSnapshotRun,
-	formatComparisonForFailure,
+import { getExtensionLaunchArgs, getExtensionPageUrl, repoRoot } from '@/tests/helpers/extension-target';
+import {
 	attachSnapshotArtifacts,
-} = require('@/tests/helpers/live-public-artifacts');
+	buildComparison,
+	createSnapshotRecord,
+	formatComparisonForFailure,
+	loadLatestSuccessfulRun,
+	persistSnapshotRun,
+} from '@/tests/helpers/live-public-artifacts';
+import path from 'path';
+import { chromium, expect, test } from 'playwright/test';
 
 const livePublicArtifactRoot = path.join(repoRoot, 'test-artifacts', 'live-public');
 const liveClipCases = [

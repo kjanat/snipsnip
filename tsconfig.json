@@ -5,6 +5,7 @@
 		"module": "nodenext",
 		"moduleDetection": "force",
 		"moduleResolution": "nodenext", // don't change. I NEED YOU TO FUCKING USE MODULE SYNTAX!!!
+		"verbatimModuleSyntax": true,
 		"types": ["bun"]
 	},
 	"include": [

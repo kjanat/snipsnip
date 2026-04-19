@@ -3,13 +3,10 @@
  * Tests the extension in a real browser environment using Playwright
  */
 
-const fs = require('fs');
-const { test, expect, chromium } = require('playwright/test');
-const path = require('path');
-const {
-	getExtensionPageUrl,
-	getExtensionLaunchArgs,
-} = require('@/tests/helpers/extension-target');
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import fs from 'fs';
+import path from 'path';
+import { chromium, expect, test } from 'playwright/test';
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixtureFiles = {
 	'/extension/deterministic-article.html': path.join(

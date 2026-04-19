@@ -1,4 +1,4 @@
-import { generateValidFileName as defaultGenerateValidFileName } from './template-utils';
+import { generateValidFileName as defaultGenerateValidFileName } from './template-utils.ts';
 
 export function safeParseUrl(urlString: string): URL | null {
 	try {

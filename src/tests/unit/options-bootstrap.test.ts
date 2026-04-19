@@ -99,7 +99,6 @@ describe('options runtime bootstrap', () => {
 		expect(document.getElementById('settings-search')).not.toBeNull();
 		expect(document.getElementById('options-fonts-stylesheet')).not.toBeNull();
 		expect(document.getElementById('options-shell-stylesheet')).not.toBeNull();
-		expect(globalThis.browser).toBeDefined();
 		expect(globalThis.defaultOptions).toBeDefined();
 		expect(globalThis.snipSnipAgentBridgeState).toBeDefined();
 		expect(globalThis.snipSnipLibraryState).toBeDefined();

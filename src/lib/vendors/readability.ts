@@ -1,6 +1,12 @@
-import type { ReadabilityApi } from '@/lib/types';
+import type { ReadabilityApi } from '@/lib/types/index.ts';
 
-import { getModuleDefaultExport, getObjectProperty, isFunction, isRecord, loadVendorRuntime } from './runtime-loader';
+import {
+	getModuleDefaultExport,
+	getObjectProperty,
+	isFunction,
+	isRecord,
+	loadVendorRuntime,
+} from './runtime-loader.ts';
 
 export interface ReadabilityLoadOptions {
 	importModule?: () => Promise<unknown>;
@@ -27,7 +33,7 @@ export async function loadReadabilityApi(options: ReadabilityLoadOptions = {}): 
 		setValue: (value) => {
 			globalThis.Readability = value;
 		},
-		importModule: options.importModule ?? (() => import('@/background/Readability')),
+		importModule: options.importModule ?? (() => import('@/background/Readability.js')),
 		resolveModule: (loadedModule) => {
 			const defaultExport = getModuleDefaultExport(loadedModule);
 			if (isReadabilityApi(defaultExport)) {

@@ -19,7 +19,7 @@ import type {
 	SnipSnipUrlUtilsApi,
 	TurndownPluginGfmApi,
 	TurndownServiceApi,
-} from '@/lib/types';
+} from '@/lib/types/index.ts';
 
 declare global {
 	interface globalThis {

@@ -75,7 +75,8 @@ export async function getOptions() {
 
 	const siteRulesApi = globalThis.snipSnipSiteRules;
 	if (siteRulesApi?.normalizeSiteRules) {
-		options.siteRules = siteRulesApi.normalizeSiteRules(options.siteRules);
+		const normalized = siteRulesApi.normalizeSiteRules(options.siteRules) as never[];
+		options.siteRules = normalized;
 	} else if (!Array.isArray(options.siteRules)) {
 		options.siteRules = [];
 	}

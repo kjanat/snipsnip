@@ -1,12 +1,12 @@
 import popupTemplate from '@/popup/popup.html?raw';
-import agentBridgeState from '@/shared/agent-bridge-state';
-import countUtils from '@/shared/count-utils';
-import libraryState from '@/shared/library-state';
-import obsidianUtils from '@/shared/obsidian-utils';
-import optionsState from '@/shared/options-state';
-import popupBatchUtils from '@/shared/popup-batch-utils';
+import agentBridgeState from '@/shared/agent-bridge-state.ts';
+import countUtils from '@/shared/count-utils.ts';
+import libraryState from '@/shared/library-state.ts';
+import obsidianUtils from '@/shared/obsidian-utils.ts';
+import optionsState from '@/shared/options-state.ts';
+import popupBatchUtils from '@/shared/popup-batch-utils.ts';
 
-import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '@/lib/page-paths';
+import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
 
 const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const codeMirrorCssUrl = new URL('@/popup/lib/codemirror.css', import.meta.url).href;
@@ -170,11 +170,11 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			syncPopupPageLinks();
 
 			const importThemeBootstrapModule = options.importThemeBootstrapModule
-				?? (() => import('@/popup/theme-bootstrap'));
+				?? (() => import('@/popup/theme-bootstrap.js'));
 			const importPopupShortcutsModule = options.importPopupShortcutsModule
-				?? (() => import('@/shared/popup-shortcuts'));
+				?? (() => import('@/shared/popup-shortcuts.js'));
 			const importPopupRuntimeModule = options.importPopupRuntimeModule
-				?? (() => import('@/popup/popup'));
+				?? (() => import('@/popup/popup.js'));
 			const loadScript = options.loadScript ?? loadClassicScript;
 			await importThemeBootstrapModule();
 			await loadScript(codeMirrorScriptUrl, 'popup-codemirror-script');

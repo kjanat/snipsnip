@@ -1,6 +1,6 @@
-import type { MomentApi } from '@/lib/types';
+import type { MomentApi } from '@/lib/types/extension.ts';
 
-import { getModuleDefaultExport, isFunction, loadVendorRuntime } from './runtime-loader';
+import { getModuleDefaultExport, isFunction, loadVendorRuntime } from './runtime-loader.ts';
 
 export interface MomentLoadOptions {
 	importModule?: () => Promise<unknown>;
@@ -22,7 +22,7 @@ export async function loadMomentApi(options: MomentLoadOptions = {}): Promise<Mo
 		setValue: (value) => {
 			globalThis.moment = value;
 		},
-		importModule: options.importModule ?? (() => import('@/background/moment.min')),
+		importModule: options.importModule ?? (() => import('@/background/moment.min.js')),
 		resolveModule: (loadedModule) => {
 			const defaultExport = getModuleDefaultExport(loadedModule);
 			return isMomentApi(defaultExport) ? defaultExport : undefined;

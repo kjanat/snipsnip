@@ -1,6 +1,12 @@
-import type { TurndownPluginGfmApi, TurndownServiceApi } from '@/lib/types';
+import type { TurndownPluginGfmApi, TurndownServiceApi } from '@/lib/types/index.ts';
 
-import { getModuleDefaultExport, getObjectProperty, isFunction, isRecord, loadVendorRuntime } from './runtime-loader';
+import {
+	getModuleDefaultExport,
+	getObjectProperty,
+	isFunction,
+	isRecord,
+	loadVendorRuntime,
+} from './runtime-loader.ts';
 
 export interface TurndownRuntime {
 	TurndownService: TurndownServiceApi;
@@ -83,9 +89,10 @@ export async function loadTurndownRuntime(options: TurndownLoadOptions = {}): Pr
 			globalThis.turndownPluginGfm = value.turndownPluginGfm;
 		},
 		importModule: async () => ({
-			TurndownServiceModule: await (options.importTurndownServiceModule ?? (() => import('@/background/turndown')))(),
+			TurndownServiceModule: await (options.importTurndownServiceModule ?? (() =>
+				import('@/background/turndown.js')))(),
 			TurndownPluginGfmModule: await (options.importTurndownPluginGfmModule
-				?? (() => import('@/background/turndown-plugin-gfm')))(),
+				?? (() => import('@/background/turndown-plugin-gfm.js')))(),
 		}),
 		resolveModule: (loadedModule) => {
 			const TurndownService = resolveTurndownServiceModule(

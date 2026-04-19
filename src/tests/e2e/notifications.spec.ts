@@ -3,16 +3,16 @@
  * Validates that queued notifications render only after successful extension use.
  */
 
-const fs = require('fs');
-const { test, expect, chromium } = require('playwright/test');
-const path = require('path');
-const { getExtensionLaunchArgs } = require('@/tests/helpers/extension-target');
+import { getExtensionLaunchArgs } from '@/tests/helpers/extension-target';
+import fs from 'fs';
+import path from 'path';
+import { BrowserContext, chromium, expect, test, Worker } from 'playwright/test';
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const notificationHostPath = '/notifications/host.html';
 const notificationHostUrl = `${fixtureHost}${notificationHostPath}`;
 const notificationHostFixture = path.join(__dirname, '../fixtures/e2e-pages/notifications/host.html');
 
-async function installFixtureRoutes(context) {
+async function installFixtureRoutes(context: BrowserContext) {
 	await context.route(`${fixtureHost}/**`, async (route) => {
 		const url = new URL(route.request().url());
 
@@ -56,7 +56,7 @@ async function loadExtensionContext() {
 	return { context, serviceWorker, extensionId };
 }
 
-async function resetNotificationState(serviceWorker) {
+async function resetNotificationState(serviceWorker: Worker) {
 	const version = await serviceWorker.evaluate(() => browser.runtime.getManifest().version);
 
 	await serviceWorker.evaluate(async ({ currentVersion }) => {
@@ -75,18 +75,18 @@ async function resetNotificationState(serviceWorker) {
 	}, { currentVersion: version });
 }
 
-async function getFirstSupportThreshold(serviceWorker) {
+async function getFirstSupportThreshold(serviceWorker: Worker) {
 	return await serviceWorker.evaluate(() => self.snipSnipNotifications.SUPPORT_NOTIFICATION_THRESHOLDS[0]);
 }
 
-async function getTabIdForUrl(serviceWorker, url) {
+async function getTabIdForUrl(serviceWorker: Worker, url: string) {
 	return await serviceWorker.evaluate(async ({ targetUrl }) => {
 		const tabs = await browser.tabs.query({});
 		return tabs.find((tab) => tab.url === targetUrl)?.id || null;
 	}, { targetUrl: url });
 }
 
-async function recordMetrics(serviceWorker, delta, tabId) {
+async function recordMetrics(serviceWorker: Worker, delta, tabId) {
 	return await serviceWorker.evaluate(async ({ metricDelta, targetTabId }) => {
 		return await recordNotificationMetrics(metricDelta, {
 			tabId: targetTabId,
@@ -97,7 +97,7 @@ async function recordMetrics(serviceWorker, delta, tabId) {
 	});
 }
 
-async function queueVersionUpdateNotification(serviceWorker, previousVersion) {
+async function queueVersionUpdateNotification(serviceWorker: Worker, previousVersion: string) {
 	return await serviceWorker.evaluate(async ({ priorVersion }) => {
 		await handleInstalled({
 			reason: 'update',
@@ -112,9 +112,9 @@ async function queueVersionUpdateNotification(serviceWorker, previousVersion) {
 	}, { priorVersion: previousVersion });
 }
 
-async function triggerInstallOnboarding(serviceWorker) {
+async function triggerInstallOnboarding(serviceWorker: Worker) {
 	return await serviceWorker.evaluate(async () => {
-		const guideUrl = browser.runtime.getURL('guide.html?welcome=true');
+		const guideUrl = browser.runtime.getURL('/guide.html?welcome=true');
 		await handleInstalled({
 			reason: 'install',
 		});
@@ -123,8 +123,8 @@ async function triggerInstallOnboarding(serviceWorker) {
 }
 
 test.describe('Notifications E2E', () => {
-	let context;
-	let serviceWorker;
+	let context: BrowserContext;
+	let serviceWorker: Worker;
 
 	test.beforeAll(async () => {
 		({ context, serviceWorker } = await loadExtensionContext());

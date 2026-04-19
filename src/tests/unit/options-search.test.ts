@@ -18,11 +18,11 @@ const optionsHtml = fs.readFileSync(
 	'utf8',
 );
 const optionsSearchSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options-search.ts'),
+	path.join(__dirname, '../../options/options-search.js'),
 	'utf8',
 );
 const optionsSource = fs.readFileSync(
-	path.join(__dirname, '../../options/options.ts'),
+	path.join(__dirname, '../../options/options.js'),
 	'utf8',
 );
 const moment = (value: Date | number | string | null = new Date()) => ({

@@ -1,15 +1,15 @@
 import optionsTemplate from '@/options/options.html?raw';
-import agentBridgeState from '@/shared/agent-bridge-state';
-import libraryState from '@/shared/library-state';
-import optionsState from '@/shared/options-state';
-import searchCore from '@/shared/search-core';
-import siteRules from '@/shared/site-rules';
-import templateUtils from '@/shared/template-utils';
+import agentBridgeState from '@/shared/agent-bridge-state.ts';
+import libraryState from '@/shared/library-state.ts';
+import optionsState from '@/shared/options-state.ts';
+import searchCore from '@/shared/search-core.ts';
+import siteRules from '@/shared/site-rules.ts';
+import templateUtils from '@/shared/template-utils.ts';
 
-import { createMenus } from '@/lib/background/context-menus-runtime';
-import { defaultOptions } from '@/lib/background/default-options-runtime';
-import { getGuidePageHref, installWxtPagePaths } from '@/lib/page-paths';
-import { loadMomentApi } from '@/lib/vendors/moment';
+import { createMenus } from '@/lib/background/context-menus-runtime.js';
+import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
+import { getGuidePageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
+import { loadMomentApi } from '@/lib/vendors/moment.ts';
 
 const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const optionsCssUrl = new URL('@/options/options.css', import.meta.url).href;
@@ -86,9 +86,9 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 
 			const loadMoment = options.loadMoment ?? loadMomentApi;
 			const importOptionsSearchModule = options.importOptionsSearchModule
-				?? (() => import('@/options/options-search'));
+				?? (() => import('@/options/options-search.js'));
 			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
-				?? (() => import('@/options/options'));
+				?? (() => import('@/options/options.js'));
 
 			await loadMoment();
 			await importOptionsSearchModule();

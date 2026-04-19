@@ -1,6 +1,6 @@
-import type { HighlightApi } from '@/lib/types';
+import type { HighlightApi } from '@/lib/types/index.ts';
 
-import { getModuleDefaultExport, isRecord, loadVendorRuntime } from './runtime-loader';
+import { getModuleDefaultExport, isRecord, loadVendorRuntime } from './runtime-loader.ts';
 
 export interface HighlightLoadOptions {
 	importModule?: () => Promise<unknown>;
@@ -26,7 +26,7 @@ export async function loadHighlightApi(options: HighlightLoadOptions = {}): Prom
 		setValue: (value) => {
 			globalThis.hljs = value;
 		},
-		importModule: options.importModule ?? (() => import('@/highlight.min')),
+		importModule: options.importModule ?? (() => import('@/highlight.min.js')),
 		resolveModule: (loadedModule) => {
 			const defaultExport = getModuleDefaultExport(loadedModule);
 			return isHighlightApi(defaultExport) ? defaultExport : undefined;

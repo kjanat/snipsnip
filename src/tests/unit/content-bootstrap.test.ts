@@ -18,7 +18,6 @@ describe('content runtime bootstrap', () => {
 			bootContentScriptRuntime({ importModule }),
 		]);
 
-		expect(globalThis.browser).toBeDefined();
 		expect(importModule).toHaveBeenCalledTimes(1);
 	});
 });

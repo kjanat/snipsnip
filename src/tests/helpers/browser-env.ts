@@ -3,10 +3,10 @@
  * Loads browser libraries (Turndown, Readability) in a JSDOM environment
  */
 
-const fs = require('fs');
-const path = require('path');
-const { JSDOM } = require('./jsdom-shim');
-const turndownFactory = require('@/shared/turndown-factory');
+import turndownFactory from '@/shared/turndown-factory.js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { JSDOM } from './jsdom-shim';
 
 /**
  * Create a browser-like environment with required libraries loaded
@@ -24,20 +24,20 @@ function createBrowserEnvironment() {
 	const { document } = window;
 
 	// Load Turndown library
-	const turndownPath = path.join(__dirname, '../../background/turndown.ts');
-	const turndownCode = fs.readFileSync(turndownPath, 'utf8');
+	const turndownPath = join(import.meta.dirname, '../../background/turndown.js');
+	const turndownCode = readFileSync(turndownPath, 'utf8');
 
 	// Load Turndown GFM plugin
-	const gfmPath = path.join(__dirname, '../../background/turndown-plugin-gfm.ts');
-	const gfmCode = fs.readFileSync(gfmPath, 'utf8');
+	const gfmPath = join(import.meta.dirname, '../../background/turndown-plugin-gfm.js');
+	const gfmCode = readFileSync(gfmPath, 'utf8');
 
 	// Load Readability library
-	const readabilityPath = path.join(__dirname, '../../background/Readability.ts');
-	const readabilityCode = fs.readFileSync(readabilityPath, 'utf8');
+	const readabilityPath = join(import.meta.dirname, '../../background/Readability.js');
+	const readabilityCode = readFileSync(readabilityPath, 'utf8');
 
 	// Load shared readability recovery helpers
-	const readabilityRecoveryPath = path.join(__dirname, '../../shared/readability-recovery.ts');
-	const readabilityRecoveryCode = fs.readFileSync(readabilityRecoveryPath, 'utf8');
+	const readabilityRecoveryPath = join(import.meta.dirname, '../../shared/readability-recovery.js');
+	const readabilityRecoveryCode = readFileSync(readabilityRecoveryPath, 'utf8');
 
 	// Execute library sources directly inside the test window.
 	dom.window.eval(`

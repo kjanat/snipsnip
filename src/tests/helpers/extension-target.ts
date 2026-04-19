@@ -1,20 +1,20 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import { join, resolve } from 'path';
 
-const repoRoot = path.resolve(__dirname, '../..', '..');
-const defaultExtensionPath = path.join(repoRoot, '.output', 'chrome-mv3');
+const repoRoot = resolve(import.meta.dirname, '../../..');
+const defaultExtensionPath = join(repoRoot, '.output', 'chrome-mv3');
 const popupPagePath = 'popup.html';
 
 function getExtensionPath() {
 	const configuredPath = process.env.SNIPSNIP_EXTENSION_PATH;
 	const extensionPath = configuredPath
-		? path.resolve(repoRoot, configuredPath)
+		? resolve(repoRoot, configuredPath)
 		: defaultExtensionPath;
-	const manifestPath = path.join(extensionPath, 'manifest.json');
+	const manifestPath = join(extensionPath, 'manifest.json');
 
 	if (!fs.existsSync(manifestPath)) {
 		throw new Error(
-			`Missing built extension at ${extensionPath}. Run \`bun run build:wxt\` or set SNIPSNIP_EXTENSION_PATH.`,
+			`Missing built extension at ${extensionPath}. Run \`bun build:wxt\` or set SNIPSNIP_EXTENSION_PATH.`,
 		);
 	}
 
@@ -35,10 +35,4 @@ function getExtensionLaunchArgs() {
 	];
 }
 
-module.exports = {
-	repoRoot,
-	popupPagePath,
-	getExtensionPath,
-	getExtensionPageUrl,
-	getExtensionLaunchArgs,
-};
+export { getExtensionLaunchArgs, getExtensionPageUrl, getExtensionPath, popupPagePath, repoRoot };

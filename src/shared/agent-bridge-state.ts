@@ -1,4 +1,9 @@
-import type { AgentBridgeLatestClip, AgentBridgeSettings, AgentBridgeStatus, ExtensionStorageArea } from '@/lib/types';
+import type {
+	AgentBridgeLatestClip,
+	AgentBridgeSettings,
+	AgentBridgeStatus,
+	ExtensionStorageArea,
+} from '@/lib/types/index.ts';
 
 export const STORAGE_KEYS = Object.freeze({
 	SETTINGS: 'agentBridgeSettings',

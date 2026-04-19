@@ -216,12 +216,7 @@ export interface ExtensionStorageArea {
 	remove?(keys: string | string[]): Promise<void>;
 }
 
-export interface ExtensionBrowserApi {
-	storage?: {
-		local?: ExtensionStorageArea;
-		sync?: ExtensionStorageArea;
-	};
-}
+export type ExtensionBrowserApi = typeof import('wxt/browser').browser;
 
 export interface SnipSnipTemplateUtilsApi {
 	textReplace(template: string, article: Record<string, unknown>, disallowedChars?: string | null): string;

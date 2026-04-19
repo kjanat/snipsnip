@@ -1,3 +1,3 @@
-import { bootOffscreenRuntime } from '@/lib/offscreen/bootstrap';
+import { bootOffscreenRuntime } from '@/lib/offscreen/bootstrap.ts';
 
 await bootOffscreenRuntime();

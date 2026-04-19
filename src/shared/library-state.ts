@@ -1,4 +1,4 @@
-import type { ClipSnapshot, ExtensionStorageArea, LibraryItem, LibrarySettings } from '@/lib/types';
+import type { ClipSnapshot, ExtensionStorageArea, LibraryItem, LibrarySettings } from '@/lib/types/index.ts';
 
 export const STORAGE_KEYS = Object.freeze({
 	SETTINGS: 'librarySettings',

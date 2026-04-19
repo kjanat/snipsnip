@@ -1,4 +1,9 @@
-import type { DownloadChangeDeps, DownloadTrackerApi, DownloadTrackerState, DownloadTrackingInfo } from '@/lib/types';
+import type {
+	DownloadChangeDeps,
+	DownloadTrackerApi,
+	DownloadTrackerState,
+	DownloadTrackingInfo,
+} from '@/lib/types/index.ts';
 
 interface CreateDownloadTrackerOptions {
 	activeDownloads?: Map<number, string>;

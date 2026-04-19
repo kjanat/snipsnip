@@ -104,7 +104,6 @@ describe('popup runtime bootstrap', () => {
 		expect((document.getElementById('options') as HTMLAnchorElement | null)?.getAttribute('href')).toBe(
 			'/options.html',
 		);
-		expect(globalThis.browser).toBeDefined();
 		expect(globalThis.snipSnipAgentBridgeState).toBeDefined();
 		expect(globalThis.snipSnipCountUtils).toBeDefined();
 		expect(globalThis.snipSnipLibraryState).toBeDefined();

@@ -1,4 +1,4 @@
-import type { NotificationMetricsDelta } from '@/lib/types';
+import type { NotificationMetricsDelta } from '@/lib/types/index.ts';
 
 export interface NotificationAction {
 	label: string;

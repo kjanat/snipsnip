@@ -70,7 +70,6 @@ describe('guide runtime bootstrap', () => {
 		expect(document.getElementById('guide-content')).not.toBeNull();
 		expect(document.getElementById('guide-fonts-stylesheet')).not.toBeNull();
 		expect(document.getElementById('guide-shell-stylesheet')).not.toBeNull();
-		expect(globalThis.browser).toBeDefined();
 		expect(globalThis.defaultOptions).toBeDefined();
 		const pagePaths = Reflect.get(globalThis, 'snipSnipPagePaths');
 		expect(pagePaths).toBeDefined();

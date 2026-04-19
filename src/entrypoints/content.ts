@@ -1,4 +1,4 @@
-import { bootContentScriptRuntime } from '@/lib/content/bootstrap';
+import { bootContentScriptRuntime } from '@/lib/content/bootstrap.ts';
 
 export default defineContentScript({
 	matches: ['<all_urls>'],

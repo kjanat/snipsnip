@@ -1,10 +1,9 @@
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
+import { createHash } from 'crypto';
+import { existsSync, mkdirSync, PathLike, PathOrFileDescriptor, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 function sha256(value) {
-	return crypto
-		.createHash('sha256')
+	return createHash('sha256')
 		.update(String(value || ''), 'utf8')
 		.digest('hex');
 }
@@ -44,33 +43,33 @@ function getCaseId(liveCase) {
 
 function getCasePaths(rootDir, liveCase) {
 	const caseId = getCaseId(liveCase);
-	const caseDir = path.join(rootDir, caseId);
+	const caseDir = join(rootDir, caseId);
 
 	return {
 		caseId,
 		caseDir,
-		latestDir: path.join(caseDir, 'latest-success'),
-		historyDir: path.join(caseDir, 'history'),
+		latestDir: join(caseDir, 'latest-success'),
+		historyDir: join(caseDir, 'history'),
 	};
 }
 
 function ensureDir(dirPath) {
-	fs.mkdirSync(dirPath, { recursive: true });
+	mkdirSync(dirPath, { recursive: true });
 }
 
-function writeJson(filePath, data) {
-	fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+function writeJson(filePath: PathOrFileDescriptor, data: any) {
+	writeFileSync(filePath, JSON.stringify(data, null, '\t'), 'utf8');
 }
 
-function writeText(filePath, content) {
-	fs.writeFileSync(filePath, String(content || ''), 'utf8');
+function writeText(filePath: PathOrFileDescriptor, content?: any) {
+	writeFileSync(filePath, String(content || ''), 'utf8');
 }
 
-function readJsonIfExists(filePath) {
-	if (!fs.existsSync(filePath)) {
+function readJsonIfExists(filePath: PathLike) {
+	if (!existsSync(filePath)) {
 		return null;
 	}
-	return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+	return JSON.parse(readFileSync(filePath, 'utf8'));
 }
 
 function diffLists(previousList = [], currentList = []) {
@@ -146,7 +145,7 @@ function createSnapshotRecord(liveCase, pageCapture, clipCapture, options = {}) 
 
 function loadLatestSuccessfulRun(rootDir, liveCase) {
 	const { latestDir } = getCasePaths(rootDir, liveCase);
-	const summaryPath = path.join(latestDir, 'summary.json');
+	const summaryPath = join(latestDir, 'summary.json');
 	const summary = readJsonIfExists(summaryPath);
 
 	if (!summary) {
@@ -156,8 +155,8 @@ function loadLatestSuccessfulRun(rootDir, liveCase) {
 	return {
 		summary,
 		summaryPath,
-		htmlPath: path.join(latestDir, 'page.html'),
-		markdownPath: path.join(latestDir, 'clip.md'),
+		htmlPath: join(latestDir, 'page.html'),
+		markdownPath: join(latestDir, 'clip.md'),
 	};
 }
 
@@ -212,43 +211,43 @@ function buildComparison(previousRun, currentRecord) {
 	};
 }
 
-function persistSnapshotRun(rootDir, liveCase, record, pageCapture, clipCapture, comparison) {
+function persistSnapshotRun(rootDir: string, liveCase: string, record, pageCapture, clipCapture, comparison) {
 	const { historyDir, latestDir } = getCasePaths(rootDir, liveCase);
 	const runDate = new Date(record.runAt || new Date().toISOString());
-	const runDir = path.join(historyDir, `${createRunId(runDate)}-${record.status}`);
+	const runDir = join(historyDir, `${createRunId(runDate)}-${record.status}`);
 
 	ensureDir(runDir);
-	writeJson(path.join(runDir, 'summary.json'), record);
-	writeJson(path.join(runDir, 'comparison-to-latest.json'), comparison || {});
+	writeJson(join(runDir, 'summary.json'), record);
+	writeJson(join(runDir, 'comparison-to-latest.json'), comparison || {});
 
 	if (pageCapture?.html) {
-		writeText(path.join(runDir, 'page.html'), pageCapture.html);
+		writeText(join(runDir, 'page.html'), pageCapture.html);
 	}
 
 	if (clipCapture?.markdown != null) {
-		writeText(path.join(runDir, 'clip.md'), clipCapture.markdown);
+		writeText(join(runDir, 'clip.md'), clipCapture.markdown);
 	}
 
 	if (record.status === 'passed') {
 		ensureDir(latestDir);
-		writeJson(path.join(latestDir, 'summary.json'), record);
-		writeJson(path.join(latestDir, 'comparison-to-latest.json'), comparison || {});
+		writeJson(join(latestDir, 'summary.json'), record);
+		writeJson(join(latestDir, 'comparison-to-latest.json'), comparison || {});
 
 		if (pageCapture?.html) {
-			writeText(path.join(latestDir, 'page.html'), pageCapture.html);
+			writeText(join(latestDir, 'page.html'), pageCapture.html);
 		}
 
 		if (clipCapture?.markdown != null) {
-			writeText(path.join(latestDir, 'clip.md'), clipCapture.markdown);
+			writeText(join(latestDir, 'clip.md'), clipCapture.markdown);
 		}
 	}
 
 	return {
 		runDir,
-		summaryPath: path.join(runDir, 'summary.json'),
-		comparisonPath: path.join(runDir, 'comparison-to-latest.json'),
-		pagePath: path.join(runDir, 'page.html'),
-		markdownPath: path.join(runDir, 'clip.md'),
+		summaryPath: join(runDir, 'summary.json'),
+		comparisonPath: join(runDir, 'comparison-to-latest.json'),
+		pagePath: join(runDir, 'page.html'),
+		markdownPath: join(runDir, 'clip.md'),
 	};
 }
 
@@ -298,7 +297,7 @@ async function attachSnapshotArtifacts(testInfo, persistedArtifacts) {
 		},
 	];
 
-	if (fs.existsSync(persistedArtifacts.markdownPath)) {
+	if (existsSync(persistedArtifacts.markdownPath)) {
 		attachments.push({
 			name: 'live-public-markdown',
 			path: persistedArtifacts.markdownPath,
@@ -306,7 +305,7 @@ async function attachSnapshotArtifacts(testInfo, persistedArtifacts) {
 		});
 	}
 
-	if (fs.existsSync(persistedArtifacts.pagePath)) {
+	if (existsSync(persistedArtifacts.pagePath)) {
 		attachments.push({
 			name: 'live-public-page-html',
 			path: persistedArtifacts.pagePath,

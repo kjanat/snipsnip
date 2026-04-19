@@ -1,4 +1,4 @@
-import { generateValidFileName as defaultGenerateValidFileName } from './template-utils';
+import { generateValidFileName as defaultGenerateValidFileName } from './template-utils.ts';
 
 function padNumber(value: number): string {
 	return String(value).padStart(2, '0');

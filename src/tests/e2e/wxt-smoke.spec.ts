@@ -1,12 +1,9 @@
-const { test, expect, chromium } = require('playwright/test');
-const {
-	getExtensionPageUrl,
-	getExtensionLaunchArgs,
-} = require('@/tests/helpers/extension-target');
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import { BrowserContext, chromium, expect, test } from 'playwright/test';
 
 test.describe('WXT smoke', () => {
-	let context;
-	let extensionId;
+	let context: BrowserContext;
+	let extensionId: string;
 
 	test.beforeAll(async () => {
 		context = await chromium.launchPersistentContext('', {

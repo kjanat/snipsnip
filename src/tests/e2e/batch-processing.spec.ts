@@ -3,14 +3,11 @@
  * Uses routed fixture pages so CI does not depend on external websites.
  */
 
-const fs = require('fs');
-const http = require('http');
-const { test, expect, chromium } = require('playwright/test');
-const path = require('path');
-const {
-	getExtensionPageUrl,
-	getExtensionLaunchArgs,
-} = require('@/tests/helpers/extension-target');
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import fs from 'fs';
+import http from 'http';
+import path from 'path';
+import { chromium, expect, test } from 'playwright/test';
 const fixturePathMap = {
 	'/batch/alpha.html': path.join(__dirname, '../fixtures/e2e-pages/batch/alpha.html'),
 	'/batch/beta.html': path.join(__dirname, '../fixtures/e2e-pages/batch/beta.html'),
