@@ -11,5 +11,26 @@ Started: 2026-04-19
 - `contentScript/pageContext.js` must remain an explicitly injected page-context bridge and stay web-accessible.
 - Offscreen behavior must remain browser-aware: Chromium offscreen path plus Firefox fallback.
 - Vendored libs should be wrapped first, not replaced during initial migration.
+- Bun `catalog:` dependency refs were workspace-era plumbing; a true single-package root must inline concrete versions.
+- Root linting must explicitly ignore vendored/minified browser assets; otherwise first-party lint gets swamped by third-party code.
+- Root typecheck is temporarily TS-file scoped via `tsconfig.typecheck.json` until the JS-to-TS migration tasks land.
 
 ---
+
+## Task - [flatten-root-package]
+
+- Flattened package management into the root `package.json` and removed `src/package.json`.
+- Merged extension scripts and devDependencies into the root package and retargeted path-sensitive commands to run from repo root.
+- Removed workspace/catalog-only dependency indirection by inlining concrete tool versions.
+- Added `tsconfig.typecheck.json` so root `typecheck` is runnable against current TS files during the pre-TS migration phase.
+- Tightened root lint script to ignore vendored/minified third-party assets while still linting first-party source from root.
+- Files changed:
+  - `package.json`
+  - `tsconfig.json`
+  - `tsconfig.typecheck.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+  - deleted `src/package.json`
+- Learnings:
+  - Workspace-era Bun dependency patterns (`catalog:`) block single-package installs and must be removed immediately.
+  - Pre-migration repo feedback loops need scoped lint/typecheck targets or vendored legacy JS will drown signal.

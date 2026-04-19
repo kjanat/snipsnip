@@ -27,5 +27,6 @@
 		"noUnusedParameters": true,
 		"noPropertyAccessFromIndexSignature": false
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": ["src/tests", "src/test-results", "src/.build", "src/web-ext-artifacts"]
 }

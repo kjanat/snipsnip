@@ -4,27 +4,16 @@
   "workspaces": {
     "": {
       "devDependencies": {
-        "@types/bun": "latest",
-        "typescript": ">=5,<6",
-      },
-    },
-    "src": {
-      "name": "snipsnip",
-      "devDependencies": {
         "@happy-dom/global-registrator": "latest",
-        "@playwright/test": "catalog:",
-        "eslint": "catalog:",
-        "eslint-config-prettier": "catalog:",
+        "@playwright/test": "^1.56.1",
+        "@types/bun": "latest",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^10.1.8",
         "happy-dom": "latest",
-        "web-ext": "catalog:",
+        "typescript": ">=5,<6",
+        "web-ext": "^7.4.0",
       },
     },
-  },
-  "catalog": {
-    "@playwright/test": "^1.56.1",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^10.1.8",
-    "web-ext": "^7.4.0",
   },
   "packages": {
     "@babel/code-frame": ["@babel/code-frame@7.29.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.28.5", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw=="],
@@ -754,8 +743,6 @@
     "sign-addon": ["sign-addon@5.3.0", "", { "dependencies": { "common-tags": "1.8.2", "core-js": "3.29.0", "deepcopy": "2.1.0", "es6-error": "4.1.1", "es6-promisify": "7.0.0", "jsonwebtoken": "9.0.0", "mz": "2.7.0", "request": "2.88.2", "source-map-support": "0.5.21", "stream-to-promise": "3.0.0" } }, "sha512-7nHlCzhQgVMLBNiXVEgbG/raq48awOW0lYMN5uo1BaB3mp0+k8M8pvDwbfTlr3apcxZJsk9HQsAW1POwoJugpQ=="],
 
     "signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
-
-    "snipsnip": ["snipsnip@workspace:src"],
 
     "sonic-boom": ["sonic-boom@3.8.1", "", { "dependencies": { "atomic-sleep": "^1.0.0" } }, "sha512-y4Z8LCDBuum+PBP3lSV7RHrXscqksve/bi0as7mhwVnBW+/wUqKT/2Kb7um8yqcFy0duYbbPxzt89Zy2nOCaxg=="],
 

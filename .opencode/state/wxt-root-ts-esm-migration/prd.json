@@ -10,7 +10,7 @@
 			"description": "Merge src/package.json into the root package.json, remove the workspace setup, and make Bun, Playwright, ESLint, and test scripts run from root without changing extension runtime behavior. Acceptance: one active package.json, bun test runs from root, legacy non-WXT scripts still function from root.",
 			"depends": [],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "add-wxt-scaffold",
