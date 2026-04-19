@@ -20,3 +20,4 @@ native/*.zip
 native/.tmp-builds
 tmp/
 capture-store-screenshots.js
+test-results/
