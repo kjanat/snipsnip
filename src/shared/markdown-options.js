@@ -21,13 +21,21 @@
 		}
 
 		try {
-			return require('./template-utils');
+			const templateUtils = require('./template-utils');
+			if (
+				templateUtils
+				&& typeof templateUtils.textReplace === 'function'
+				&& typeof templateUtils.generateValidFileName === 'function'
+			) {
+				return templateUtils;
+			}
 		} catch {
-			return {
-				textReplace: fallbackTextReplace,
-				generateValidFileName: identity,
-			};
 		}
+
+		return {
+			textReplace: fallbackTextReplace,
+			generateValidFileName: identity,
+		};
 	}
 
 	function createEffectiveMarkdownOptions(article, providedOptions = null, downloadImages = null) {

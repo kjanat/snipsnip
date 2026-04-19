@@ -1,3 +1,5 @@
+const { describe, test, expect, mock, spyOn, jest } = require('bun:test');
+
 /**
  * Tests shared offscreen markdown option normalization helper.
  */
@@ -84,7 +86,7 @@ describe('Offscreen markdown option handling', () => {
 	});
 
 	test('sanitizes imagePrefix segments via generateValidFileName', () => {
-		const spy = jest.spyOn(templateUtils, 'generateValidFileName');
+		const spy = spyOn(templateUtils, 'generateValidFileName');
 		const options = {
 			includeTemplate: false,
 			imagePrefix: '{pageTitle}/assets /snapshots',
@@ -105,11 +107,9 @@ describe('Offscreen markdown option handling', () => {
 			textReplace: jest.fn((value) => String(value || '').replace('{title}', 'Preloaded')),
 			generateValidFileName: jest.fn((value) => value),
 		};
-		jest.resetModules();
 
 		try {
-			const { createEffectiveMarkdownOptions: runtimeOptions } = require('../../shared/markdown-options');
-			const derived = runtimeOptions(article, {
+			const derived = createEffectiveMarkdownOptions(article, {
 				includeTemplate: true,
 				frontmatter: 'title: {title}',
 				backmatter: '',
@@ -121,7 +121,6 @@ describe('Offscreen markdown option handling', () => {
 			expect(derived.imagePrefix).toBe('Preloaded/assets');
 		} finally {
 			global.snipSnipTemplateUtils = originalHelper;
-			jest.resetModules();
 		}
 	});
 
@@ -175,91 +174,77 @@ describe('Offscreen markdown option handling', () => {
 	test('uses fallback template utils when the runtime helper is missing', () => {
 		const originalHelper = global.snipSnipTemplateUtils;
 		delete global.snipSnipTemplateUtils;
-		jest.resetModules();
 
-		jest.isolateModules(() => {
-			const { createEffectiveMarkdownOptions: fallbackOptions } = require('../../shared/markdown-options');
-			const fallbackArticle = {
-				title: 'Fallback Title',
-				pageURL: 'https://fallback.test/page',
-				baseURI: 'https://fallback.test',
-				keywords: ['fallback'],
-			};
+		const fallbackArticle = {
+			title: 'Fallback Title',
+			pageURL: 'https://fallback.test/page',
+			baseURI: 'https://fallback.test',
+			keywords: ['fallback'],
+		};
 
-			const derived = fallbackOptions(fallbackArticle, {
-				includeTemplate: true,
-				frontmatter: 'title: {title}',
-				backmatter: 'source: {pageURL}',
-				imagePrefix: '{title}/assets',
-				disallowedChars: '[]',
-			}, null);
+		const derived = createEffectiveMarkdownOptions(fallbackArticle, {
+			includeTemplate: true,
+			frontmatter: 'title: {title}',
+			backmatter: 'source: {pageURL}',
+			imagePrefix: '{title}/assets',
+			disallowedChars: '[]',
+		}, null);
 
-			expect(derived.frontmatter).toBe('title: Fallback Title\n');
-			expect(derived.imagePrefix).toContain('Fallback Title/assets');
-		});
+		expect(derived.frontmatter).toBe('title: Fallback Title\n');
+		expect(derived.imagePrefix).toContain('Fallback Title/assets');
 
 		global.snipSnipTemplateUtils = originalHelper;
-		jest.resetModules();
 	});
 
 	test('uses runtime template utils when the global helper is present', () => {
 		const originalHelper = global.snipSnipTemplateUtils;
+		const actualTemplateUtils = require('../../shared/template-utils');
 		global.snipSnipTemplateUtils = {
 			textReplace: jest.fn((value) => String(value || '').replace('{pageTitle}', 'Injected Title')),
 			generateValidFileName: jest.fn((value) => value),
 		};
-		jest.resetModules();
 
 		try {
-			jest.isolateModules(() => {
-				const { createEffectiveMarkdownOptions: runtimeOptions } = require('../../shared/markdown-options');
-				const derived = runtimeOptions(article, {
-					includeTemplate: true,
-					frontmatter: 'title: {pageTitle}',
-					backmatter: 'source: {pageTitle}',
-					imagePrefix: '{pageTitle}/images',
-					disallowedChars: '',
-					tableFormatting: {},
-				});
-
-				expect(global.snipSnipTemplateUtils.textReplace).toHaveBeenCalled();
-				expect(derived.frontmatter).toBe('title: Injected Title\n');
-				expect(derived.imagePrefix).toBe('Injected Title/images');
+			const derived = createEffectiveMarkdownOptions(article, {
+				includeTemplate: true,
+				frontmatter: 'title: {pageTitle}',
+				backmatter: 'source: {pageTitle}',
+				imagePrefix: '{pageTitle}/images',
+				disallowedChars: '',
+				tableFormatting: {},
 			});
+
+			expect(global.snipSnipTemplateUtils.textReplace).toHaveBeenCalled();
+			expect(derived.frontmatter).toBe('title: Injected Title\n');
+			expect(derived.imagePrefix).toBe('Injected Title/images');
 		} finally {
 			global.snipSnipTemplateUtils = originalHelper;
-			jest.resetModules();
+			mock.module('../../shared/template-utils', () => actualTemplateUtils);
 		}
 	});
 
 	test('falls back to inert helpers when template utils cannot be required', () => {
 		const originalHelper = global.snipSnipTemplateUtils;
+		const actualTemplateUtils = require('../../shared/template-utils');
 		delete global.snipSnipTemplateUtils;
-		jest.resetModules();
-		jest.doMock('../../shared/template-utils', () => {
-			throw new Error('template utils unavailable');
-		});
+		mock.module('../../shared/template-utils', () => ({}));
 
 		try {
-			jest.isolateModules(() => {
-				const { createEffectiveMarkdownOptions: fallbackOptions } = require('../../shared/markdown-options');
-				const derived = fallbackOptions(article, {
-					includeTemplate: true,
-					frontmatter: 'front',
-					backmatter: 'back',
-					imagePrefix: 'images/',
-					disallowedChars: '',
-					tableFormatting: {},
-				});
-
-				expect(derived.frontmatter).toBe('front\n');
-				expect(derived.backmatter).toBe('\nback');
-				expect(derived.imagePrefix).toBe('images/');
+			const derived = createEffectiveMarkdownOptions(article, {
+				includeTemplate: true,
+				frontmatter: 'front',
+				backmatter: 'back',
+				imagePrefix: 'images/',
+				disallowedChars: '',
+				tableFormatting: {},
 			});
+
+			expect(derived.frontmatter).toBe('front\n');
+			expect(derived.backmatter).toBe('\nback');
+			expect(derived.imagePrefix).toBe('images/');
 		} finally {
-			jest.dontMock('../../shared/template-utils');
 			global.snipSnipTemplateUtils = originalHelper;
-			jest.resetModules();
+			mock.module('../../shared/template-utils', () => actualTemplateUtils);
 		}
 	});
 });

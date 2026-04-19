@@ -4,9 +4,7 @@ function notifyExtension() {
 }
 
 function getHTMLOfDocument() {
-	const clonedDocument = document.implementation.createHTMLDocument('');
-	const clonedHtml = document.documentElement.cloneNode(true);
-	clonedDocument.replaceChild(clonedHtml, clonedDocument.documentElement);
+	const clonedDocument = new DOMParser().parseFromString(document.documentElement.outerHTML, 'text/html');
 
 	// make sure a title tag exists so that pageTitle is not empty and
 	// a filename can be generated.
@@ -62,11 +60,6 @@ function removeHiddenNodes(sourceRoot, clonedRoot) {
 
 		const nodeName = sourceChild.nodeName.toLowerCase();
 		if (nodeName === 'script' || nodeName === 'style' || nodeName === 'noscript' || nodeName === 'math') {
-			continue;
-		}
-
-		if (sourceChild.offsetParent === void 0) {
-			clonedChild.remove();
 			continue;
 		}
 

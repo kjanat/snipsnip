@@ -3,7 +3,7 @@
  * Uses the shared production helper.
  */
 
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('../helpers/jsdom-shim');
 const { convertToFencedCodeBlock } = require('../../shared/code-block-utils');
 
 describe('Code Block Conversion', () => {

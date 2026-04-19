@@ -12,23 +12,22 @@
 		"start:chromedevwin": "web-ext run -t chromium --chromium-binary 'C:\\Program Files\\Google\\Chrome Dev\\Application\\chrome.exe' -u 'https://en.wikipedia.org/wiki/Special:Random' --bc",
 		"start:firefoxdeveloper": "web-ext run -f firefoxdeveloperedition -u 'https://en.wikipedia.org/wiki/Special:Random' --bc",
 		"start:waveboxwin": "web-ext run -t chromium --chromium-binary %localappdata%/WaveboxApp/Application/wavebox.exe",
-		"test": "jest",
+		"test": "bun test",
 		"test:all": "bun run test && bun run test:e2e",
-		"test:coverage": "jest --coverage",
+		"test:coverage": "bun test --coverage",
 		"test:e2e": "playwright test",
 		"test:e2e:ci": "playwright test tests/e2e/extension.spec.js tests/e2e/notifications.spec.js tests/e2e/batch-processing.spec.js tests/e2e/command-download-regression.spec.js",
-		"test:integration": "jest --testPathPattern=tests/integration",
-		"test:unit": "jest --testPathPattern=tests/unit",
-		"test:verbose": "jest --verbose",
-		"test:watch": "jest --watch"
+		"test:integration": "bun test tests/integration",
+		"test:unit": "bun test tests/unit",
+		"test:verbose": "bun test",
+		"test:watch": "bun test --watch"
 	},
 	"devDependencies": {
+		"@happy-dom/global-registrator": "latest",
 		"@playwright/test": "catalog:",
-		"@types/jest": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-prettier": "catalog:",
-		"jest": "catalog:",
-		"jest-environment-jsdom": "catalog:",
+		"happy-dom": "latest",
 		"web-ext": "catalog:"
 	}
 }

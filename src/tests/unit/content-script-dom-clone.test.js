@@ -3,6 +3,17 @@ const path = require('path');
 
 describe('Content Script DOM Capture', () => {
 	beforeAll(() => {
+		window.snipsnipCaptureState = {
+			pageContextLoadPromise: Promise.resolve(true),
+			pageContextScriptLoaded: true,
+			pageContextScriptFailed: false,
+			lastPageContextFailureAt: 0,
+			pageContextRetryCooldownMs: 5000,
+			latexAttrName: 'snipsnip-latex',
+			mathJaxSyncEventName: 'snipsnip:mathjax-sync',
+			mathJaxSyncRequestEventName: 'snipsnip:mathjax-sync-request',
+		};
+
 		const scriptPath = path.join(__dirname, '../../contentScript/contentScript.js');
 		const scriptSource = fs.readFileSync(scriptPath, 'utf8');
 		window.eval(scriptSource);

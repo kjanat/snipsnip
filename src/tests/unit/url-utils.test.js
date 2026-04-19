@@ -1,3 +1,5 @@
+const { describe, test, expect, beforeEach, afterEach, mock, jest } = require('bun:test');
+
 const {
 	safeParseUrl,
 	resolveArticleUrl,
@@ -51,6 +53,7 @@ describe('URL utils', () => {
 
 	describe('getImageFilename', () => {
 		const realTemplateUtils = global.snipSnipTemplateUtils;
+		const actualTemplateUtils = require('../../shared/template-utils');
 
 		beforeEach(() => {
 			global.snipSnipTemplateUtils = {
@@ -104,38 +107,28 @@ describe('URL utils', () => {
 		test('falls back to the bundled template utils when no runtime helper is present', () => {
 			delete global.snipSnipTemplateUtils;
 
-			jest.isolateModules(() => {
-				const { getImageFilename } = require('../../shared/url-utils');
-				const filename = getImageFilename('https://example.com/path/image.png', {
-					title: 'Docs',
-					imagePrefix: 'gallery/',
-				});
-
-				expect(filename).toBe('Docs/gallery/image.png');
+			const filename = getImageFilename('https://example.com/path/image.png', {
+				title: 'Docs',
+				imagePrefix: 'gallery/',
 			});
+
+			expect(filename).toBe('Docs/gallery/image.png');
 		});
 
 		test('falls back to identity sanitizers when template utils cannot be required', () => {
 			const previousTemplateUtils = global.snipSnipTemplateUtils;
 			delete global.snipSnipTemplateUtils;
-			jest.resetModules();
-			jest.doMock('../../shared/template-utils', () => {
-				throw new Error('template utils unavailable');
-			});
+			mock.module('../../shared/template-utils', () => ({}));
 
 			try {
-				jest.isolateModules(() => {
-					const { getImageFilename } = require('../../shared/url-utils');
-					const filename = getImageFilename('https://example.com/path/image', {
-						title: 'Docs',
-						imagePrefix: 'gallery/',
-					});
-
-					expect(filename).toBe('Docs/gallery/image.idunno');
+				const filename = getImageFilename('https://example.com/path/image', {
+					title: 'Docs',
+					imagePrefix: 'gallery/',
 				});
+
+				expect(filename).toBe('Docs/gallery/image.idunno');
 			} finally {
-				jest.dontMock('../../shared/template-utils');
-				jest.resetModules();
+				mock.module('../../shared/template-utils', () => actualTemplateUtils);
 				global.snipSnipTemplateUtils = previousTemplateUtils;
 			}
 		});

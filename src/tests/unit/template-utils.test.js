@@ -1,3 +1,5 @@
+const { describe, test, expect, afterEach, mock } = require('bun:test');
+
 describe('Template utils helpers', () => {
 	describe('generateValidFileName', () => {
 		const { generateValidFileName } = require('../../shared/template-utils');
@@ -23,26 +25,21 @@ describe('Template utils helpers', () => {
 
 	describe('formatDate fallback', () => {
 		const originalMoment = global.moment;
+		const actualMoment = require('../../background/moment.min.js');
 
 		afterEach(() => {
-			jest.resetModules();
-			jest.dontMock('../../background/moment.min.js');
+			mock.module('../../background/moment.min.js', () => actualMoment);
 			global.moment = originalMoment;
 		});
 
 		test('falls back to ISO date when moment cannot be loaded', () => {
-			jest.resetModules();
-			jest.doMock('../../background/moment.min.js', () => {
-				throw new Error('Moment unavailable');
-			});
+			mock.module('../../background/moment.min.js', () => ({}));
 			delete global.moment;
 
-			jest.isolateModules(() => {
-				const { textReplace } = require('../../shared/template-utils');
-				const result = textReplace('Date: {date:YYYY-MM-DD}', {});
+			const { textReplace } = require('../../shared/template-utils');
+			const result = textReplace('Date: {date:YYYY-MM-DD}', {});
 
-				expect(result).toMatch(/^Date: \d{4}-\d{2}-\d{2}$/);
-			});
+			expect(result).toMatch(/^Date: \d{4}-\d{2}-\d{2}$/);
 		});
 	});
 });

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('../helpers/jsdom-shim');
 
 const popupHtml = fs.readFileSync(
 	path.join(__dirname, '../../popup/popup.html'),

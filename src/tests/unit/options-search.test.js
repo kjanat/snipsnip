@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('../helpers/jsdom-shim');
 
 // Load search-core first — options-search depends on globalThis.snipSnipSearchCore
 require('../../shared/search-core.js');

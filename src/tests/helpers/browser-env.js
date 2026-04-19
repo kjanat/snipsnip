@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('./jsdom-shim');
 const turndownFactory = require('../../shared/turndown-factory');
 
 /**
@@ -39,15 +39,13 @@ function createBrowserEnvironment() {
 	const readabilityRecoveryPath = path.join(__dirname, '../../shared/readability-recovery.js');
 	const readabilityRecoveryCode = fs.readFileSync(readabilityRecoveryPath, 'utf8');
 
-	// Execute in JSDOM context
-	const script = dom.window.document.createElement('script');
-	script.textContent = `
-    ${turndownCode}
-    ${gfmCode}
-    ${readabilityCode}
-    ${readabilityRecoveryCode}
-  `;
-	dom.window.document.head.appendChild(script);
+	// Execute library sources directly inside the test window.
+	dom.window.eval(`
+		${turndownCode}
+		${gfmCode}
+		${readabilityCode}
+		${readabilityRecoveryCode}
+	`);
 
 	return {
 		window,

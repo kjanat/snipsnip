@@ -3,7 +3,7 @@
  * Tests for actual bugs found in production use
  */
 
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('../helpers/jsdom-shim');
 const { createBrowserEnvironment, createTurndownService, parseArticle } = require('../helpers/browser-env');
 const htmlSamples = require('../fixtures/html-samples');
 

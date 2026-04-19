@@ -1,4 +1,4 @@
-const { JSDOM } = require('jsdom');
+const { JSDOM } = require('../helpers/jsdom-shim');
 const { COMMAND_LABELS, COMMAND_ORDER, splitShortcut, groupCommands, buildShortcutsFragment } = require(
 	'../../shared/popup-shortcuts.js',
 );

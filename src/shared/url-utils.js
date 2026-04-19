@@ -13,11 +13,11 @@
 
 		if (typeof require === 'function') {
 			try {
-				return require('./template-utils');
+				const templateUtils = require('./template-utils');
+				if (templateUtils && typeof templateUtils.generateValidFileName === 'function') {
+					return templateUtils;
+				}
 			} catch {
-				return {
-					generateValidFileName: (value) => value,
-				};
 			}
 		}
 

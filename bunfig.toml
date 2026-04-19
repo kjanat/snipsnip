@@ -1,0 +1,3 @@
+[test]
+preload = ["./src/tests/setup-bun.ts"]
+pathIgnorePatterns = ["src/tests/e2e/**", "src/test-results/**"]
