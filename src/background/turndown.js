@@ -1001,8 +1001,4 @@ var TurndownService = (() => {
 	return TurndownService;
 })();
 
-if (typeof module === 'object') {
-	/* eslint-disable-next-line no-redeclare */
-	/* global module */
-	module.exports = TurndownService;
-}
+export default TurndownService;

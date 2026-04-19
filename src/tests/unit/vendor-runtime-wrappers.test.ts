@@ -33,7 +33,7 @@ describe('vendor runtime wrappers', () => {
 		expect(importModule).not.toHaveBeenCalled();
 	});
 
-	test('moment wrapper installs a default export exactly once across concurrent loads', async () => {
+	test('moment wrapper installs a export default exactly once across concurrent loads', async () => {
 		globalThis.moment = undefined;
 		const momentApi = mock((value?: Date | number | string | null) => ({
 			format: () => String(value ?? 'now'),

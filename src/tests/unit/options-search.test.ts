@@ -560,7 +560,7 @@ describe('Options page search UI', () => {
 		expect(document.getElementById('export-text').checked).toBe(true);
 	});
 
-	test('restores and saves the popup default export format', async () => {
+	test('restores and saves the popup export default format', async () => {
 		const { dom, browser } = createOptionsPageDom({ defaultExportType: 'pdf' });
 		const { document } = dom.window;
 

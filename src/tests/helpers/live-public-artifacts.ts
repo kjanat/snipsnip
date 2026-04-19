@@ -321,7 +321,7 @@ async function attachSnapshotArtifacts(testInfo, persistedArtifacts) {
 	}
 }
 
-module.exports = {
+export default {
 	createSnapshotRecord,
 	loadLatestSuccessfulRun,
 	buildComparison,

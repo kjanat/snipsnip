@@ -229,7 +229,7 @@ function parseArticle(html, url = 'https://example.com') {
 	return { article, env };
 }
 
-module.exports = {
+export default {
 	createBrowserEnvironment,
 	createTurndownService,
 	parseArticle,

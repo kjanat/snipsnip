@@ -124,7 +124,7 @@ if (require.main === module) {
 	}
 }
 
-module.exports = {
+export default {
 	buildReleaseHighlightsAsset,
 	extractReleaseSections,
 	generateReleaseHighlights,

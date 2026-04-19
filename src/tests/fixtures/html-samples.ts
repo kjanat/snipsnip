@@ -3,7 +3,7 @@
  * Sample HTML documents for testing conversion to Markdown
  */
 
-module.exports = {
+export default {
 	// Simple article with basic formatting
 	simpleArticle: {
 		html: `

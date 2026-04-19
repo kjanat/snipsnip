@@ -81,7 +81,7 @@ describe('options-state helpers', () => {
 		expect(normalized.colorBlindTheme).toBe('deuteranopia');
 	});
 
-	test('normalizeImportedOptions preserves default export type when omitted', () => {
+	test('normalizeImportedOptions preserves export default type when omitted', () => {
 		const normalized = optionsState.normalizeImportedOptions({}, defaultOptions);
 		expect(normalized.defaultExportType).toBe('markdown');
 	});

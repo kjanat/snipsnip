@@ -336,4 +336,4 @@ const browserAPI = {
 // Initialize with some default data
 tabsMock._reset();
 
-module.exports = browserAPI;
+export default browserAPI;

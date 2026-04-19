@@ -147,8 +147,4 @@ var turndownPluginGfm = ((exports) => {
 	return exports;
 })({});
 
-if (typeof module === 'object') {
-	/* eslint-disable-next-line no-redeclare */
-	/* global module */
-	module.exports = turndownPluginGfm;
-}
+export default turndownPluginGfm;

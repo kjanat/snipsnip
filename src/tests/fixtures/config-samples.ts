@@ -3,7 +3,7 @@
  * Sample configuration options for testing different conversion scenarios
  */
 
-module.exports = {
+export default {
 	// Default configuration
 	defaultConfig: {
 		headingStyle: 'atx',
