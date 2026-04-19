@@ -3,7 +3,7 @@
 	"version": "4.5.0",
 	"private": true,
 	"scripts": {
-		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.js",
+		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.ts",
 		"build": "bun run generate:release-highlights && bun run build:wxt:firefox",
 		"build:all": "bun run build:chrome && bun run build",
 		"build:chrome": "bun run generate:release-highlights && bun run build:wxt",
@@ -12,8 +12,7 @@
 		"dev:wxt": "wxt",
 		"dev:wxt:firefox": "wxt -b firefox --mv3",
 		"fmt": "dprint fmt",
-		"generate:legacy-shared": "bun src/scripts/generate-legacy-shared-mods.js",
-		"generate:release-highlights": "bun src/scripts/generate-release-highlights.js",
+		"generate:release-highlights": "bun src/scripts/generate-release-highlights.ts",
 		"postinstall": "wxt prepare",
 		"lint:js": "eslint --config src/.eslintrc.json --ignore-pattern 'src/background/**' --ignore-pattern 'src/browser-polyfill.min.js' --ignore-pattern 'src/highlight.min.js' --ignore-pattern 'src/popup/lib/**' src",
 		"start:androidwin11": "adb connect 127.0.0.1:58526 && web-ext run -s src -t firefox-android --adb-device 127.0.0.1:58526 --firefox-apk org.mozilla.fenix",
@@ -23,14 +22,14 @@
 		"test": "bun test",
 		"test:all": "bun run test && bun run test:e2e",
 		"test:coverage": "bun test --coverage",
-		"test:e2e": "bun run build:wxt && playwright test --config playwright.config.js src/tests/e2e/wxt-smoke.spec.js",
+		"test:e2e": "bun run build:wxt && playwright test --config playwright.config.ts src/tests/e2e/wxt-smoke.spec.ts",
 		"test:e2e:ci": "bun run test:e2e",
-		"test:e2e:legacy": "bun run build:wxt && playwright test --config playwright.config.js src/tests/e2e/extension.spec.js src/tests/e2e/notifications.spec.js src/tests/e2e/batch-processing.spec.js src/tests/e2e/command-download-regression.spec.js src/tests/e2e/live-public.spec.js",
+		"test:e2e:legacy": "bun run build:wxt && playwright test --config playwright.config.ts src/tests/e2e/extension.spec.ts src/tests/e2e/notifications.spec.ts src/tests/e2e/batch-processing.spec.ts src/tests/e2e/command-download-regression.spec.ts src/tests/e2e/live-public.spec.ts",
 		"test:integration": "bun test src/tests/integration",
 		"test:unit": "bun test src/tests/unit",
 		"test:verbose": "bun test",
 		"test:watch": "bun test --watch",
-		"typecheck": "tsc --project tsconfig.typecheck.json --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@happy-dom/global-registrator": "latest",
@@ -39,7 +38,7 @@
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^10.1.8",
 		"happy-dom": "latest",
-		"typescript": ">=5,<6",
+		"typescript": "^6.0.3",
 		"web-ext": "^7.4.0",
 		"wxt": "^0.20.20"
 	},
