@@ -39,6 +39,12 @@ declare global {
 	var snipSnipNotifications: Record<string, unknown> | undefined;
 	var snipSnipObsidian: SnipSnipObsidianApi | undefined;
 	var snipSnipOptionsState: SnipSnipOptionsStateApi | undefined;
+	var snipSnipPagePaths:
+		| {
+			guide: string;
+			options: string;
+		}
+		| undefined;
 	var snipSnipPopupAssets: Record<string, string> | undefined;
 	var snipSnipSiteRules:
 		| {

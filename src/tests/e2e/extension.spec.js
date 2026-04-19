@@ -1308,7 +1308,7 @@ test.describe('SnipSnip Extension E2E', () => {
 
 		const optionsPage = await context.newPage();
 		try {
-			await optionsPage.goto(`chrome-extension://${extensionId}/options/options.html`);
+			await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
 			await optionsPage.locator('#tab-library').click();
 			await optionsPage.locator('#libraryItemsToKeep').fill('2');
 			await optionsPage.locator('#libraryItemsToKeep').press('Tab');

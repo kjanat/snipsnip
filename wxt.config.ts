@@ -39,7 +39,7 @@ export default defineConfig({
 			},
 		},
 		options_ui: {
-			page: 'options/options.html',
+			page: 'options.html',
 			browser_style: false,
 			open_in_tab: true,
 		},

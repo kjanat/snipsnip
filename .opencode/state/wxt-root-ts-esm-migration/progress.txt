@@ -30,6 +30,7 @@ Started: 2026-04-19
 - WXT page entrypoints only work as a top-level file or one-level-deep `index.html`; if a legacy runtime path must stay different, adapt the caller with a small path helper instead of forcing a deeper entrypoint tree.
 - For migrated legacy HTML shells, preload vendored globals through the existing wrapper layer before importing the legacy runtime module; this keeps Bun tests and WXT builds aligned.
 - For legacy popup-style pages with huge static HTML and classic scripts, keep the old HTML as a raw template, inject its body into a tiny WXT entrypoint, and load legacy scripts/assets through a runtime URL map instead of duplicating the whole page.
+- For legacy options/guide-style pages, keep the source HTML unchanged for old-path compatibility, then have the WXT bootstrap inject the raw shell, install globals/styles, and patch only the path-sensitive links at runtime.
 
 ---
 
@@ -322,3 +323,36 @@ Started: 2026-04-19
 - Learnings:
   - Raw-template shell injection is a good bridge when a legacy page's HTML is large but its runtime can still be kept on the old classic-script path.
   - Popup asset paths need an explicit resolver once WXT flattens the page to `popup.html`; otherwise lazy `lib/...` and `print/...` fetches silently point at the wrong place.
+
+## Task - [migrate-options-guide-pages]
+
+- Added real WXT-managed options and guide page entrypoints at `src/entrypoints/options/index.html` and `src/entrypoints/guide/index.html`, each with a tiny TS bootstrap.
+- Added `src/lib/options/bootstrap.ts` and `src/lib/guide/bootstrap.ts` to inject the legacy HTML shells, install shared globals/styles, and load the classic page runtimes in controlled order.
+- Kept the legacy `src/options/options.html` and `src/guide/guide.html` source shells intact for old-path compatibility, then patched WXT-only page links at runtime through a shared page-path helper.
+- Updated WXT manifest config and runtime callers so WXT outputs now use flattened `options.html` / `guide.html` paths while background install onboarding and popup links still resolve correctly.
+- Added focused unit coverage for the new options/guide bootstraps and updated WXT-facing E2E expectations.
+- Verified `bun run fmt`, `bun run typecheck`, `bun run test`, `bun run lint:js`, `bun run build:wxt`, and `bun run build:wxt:firefox` all pass. `bun run lint:js` still reports the repo's pre-existing warnings only.
+- Files changed:
+  - `src/lib/page-paths.ts`
+  - `src/global.d.ts`
+  - `src/lib/background/bootstrap.ts`
+  - `src/lib/popup/bootstrap.ts`
+  - `src/lib/options/bootstrap.ts`
+  - `src/lib/guide/bootstrap.ts`
+  - `src/entrypoints/options/index.html`
+  - `src/entrypoints/options/main.ts`
+  - `src/entrypoints/guide/index.html`
+  - `src/entrypoints/guide/main.ts`
+  - `wxt.config.ts`
+  - `src/service-worker.js`
+  - `src/guide/guide.js`
+  - `src/tests/unit/popup-bootstrap.test.ts`
+  - `src/tests/unit/options-bootstrap.test.ts`
+  - `src/tests/unit/guide-bootstrap.test.ts`
+  - `src/tests/e2e/extension.spec.js`
+  - `src/tests/e2e/notifications.spec.js`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Flattened WXT page outputs can coexist with legacy source HTML if runtime callers resolve page paths through one small shared map.
+  - For page migrations that still rely on old classic scripts, loading only the minimum remaining legacy scripts from the bootstrap keeps the blast radius small and the shell diff tiny.

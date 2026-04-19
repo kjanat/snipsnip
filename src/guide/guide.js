@@ -322,7 +322,8 @@
 			if (typeof browser !== 'undefined' && browser.runtime?.openOptionsPage) {
 				browser.runtime.openOptionsPage();
 			} else {
-				window.open('/options/options.html', '_blank');
+				const optionsPagePath = Reflect.get(globalThis, 'snipSnipPagePaths')?.options || 'options/options.html';
+				window.open('/' + optionsPagePath, '_blank');
 			}
 		});
 	}

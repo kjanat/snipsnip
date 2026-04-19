@@ -15,6 +15,7 @@ const originalCountUtils = globalThis.snipSnipCountUtils;
 const originalLibraryState = globalThis.snipSnipLibraryState;
 const originalObsidian = globalThis.snipSnipObsidian;
 const originalOptionsState = globalThis.snipSnipOptionsState;
+const originalPagePaths = globalThis.snipSnipPagePaths;
 const originalPopupAssets = globalThis.snipSnipPopupAssets;
 const originalPopupBatchUtils = Reflect.get(globalThis, 'snipSnipPopupBatchUtils');
 
@@ -42,6 +43,7 @@ afterEach(() => {
 	globalThis.snipSnipLibraryState = originalLibraryState;
 	globalThis.snipSnipObsidian = originalObsidian;
 	globalThis.snipSnipOptionsState = originalOptionsState;
+	globalThis.snipSnipPagePaths = originalPagePaths;
 	globalThis.snipSnipPopupAssets = originalPopupAssets;
 	if (originalPopupBatchUtils == null) {
 		Reflect.deleteProperty(globalThis, 'snipSnipPopupBatchUtils');
@@ -83,12 +85,19 @@ describe('popup runtime bootstrap', () => {
 		expect(document.getElementById('popup-fonts-stylesheet')).not.toBeNull();
 		expect(document.getElementById('popup-codemirror-stylesheet')).not.toBeNull();
 		expect(document.getElementById('popup-shell-stylesheet')).not.toBeNull();
+		expect((document.getElementById('guideLink') as HTMLAnchorElement | null)?.getAttribute('href')).toBe(
+			'/guide.html',
+		);
+		expect((document.getElementById('options') as HTMLAnchorElement | null)?.getAttribute('href')).toBe(
+			'/options.html',
+		);
 		expect(globalThis.browser).toBeDefined();
 		expect(globalThis.snipSnipAgentBridgeState).toBeDefined();
 		expect(globalThis.snipSnipCountUtils).toBeDefined();
 		expect(globalThis.snipSnipLibraryState).toBeDefined();
 		expect(globalThis.snipSnipObsidian).toBeDefined();
 		expect(globalThis.snipSnipOptionsState).toBeDefined();
+		expect(globalThis.snipSnipPagePaths).toEqual({ guide: 'guide.html', options: 'options.html' });
 		expect(Reflect.get(globalThis, 'snipSnipPopupBatchUtils')).toBeDefined();
 		expect(typeof globalThis.snipSnipPopupAssets?.['lib/marked.min.js']).toBe('string');
 		expect(typeof globalThis.snipSnipPopupAssets?.['popup/lib/github-markdown.css']).toBe('string');

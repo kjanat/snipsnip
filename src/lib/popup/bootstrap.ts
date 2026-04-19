@@ -7,6 +7,8 @@ import obsidianUtils from '../../shared/obsidian-utils.ts';
 import optionsState from '../../shared/options-state.ts';
 import popupBatchUtils from '../../shared/popup-batch-utils.ts';
 
+import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '../page-paths.ts';
+
 const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
 const codeMirrorCssUrl = new URL('../../popup/lib/codemirror.css', import.meta.url).href;
 const popupCssUrl = new URL('../../popup/popup.css', import.meta.url).href;
@@ -81,6 +83,7 @@ function appendStylesheet(href: string, id: string): void {
 }
 
 function installPopupGlobals(): void {
+	installWxtPagePaths();
 	globalThis.browser ??= browserApi;
 	globalThis.snipSnipAgentBridgeState ??= agentBridgeState;
 	globalThis.snipSnipLibraryState ??= libraryState;
@@ -93,6 +96,18 @@ function installPopupGlobals(): void {
 		'snipSnipPopupBatchUtils',
 		Reflect.get(globalThis, 'snipSnipPopupBatchUtils') ?? popupBatchUtils,
 	);
+}
+
+function syncPopupPageLinks(): void {
+	const guideLink = document.getElementById('guideLink');
+	if (guideLink instanceof HTMLAnchorElement) {
+		guideLink.href = getGuidePageHref();
+	}
+
+	const optionsLink = document.getElementById('options');
+	if (optionsLink instanceof HTMLAnchorElement) {
+		optionsLink.href = getOptionsPageHref();
+	}
 }
 
 function installPopupStyles(): void {
@@ -158,6 +173,7 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			installPopupGlobals();
 			installPopupStyles();
 			installPopupShell(options.loadTemplate ?? (() => popupTemplate));
+			syncPopupPageLinks();
 
 			const loadScript = options.loadScript ?? loadClassicScript;
 			await loadScript(themeBootstrapScriptUrl, 'popup-theme-bootstrap');

@@ -585,6 +585,7 @@ async function dismissPendingNotification(notificationId) {
 
 async function handleInstalled(details) {
 	const currentVersion = browser.runtime.getManifest().version;
+	const guidePagePath = globalThis.snipSnipPagePaths?.guide || 'guide/guide.html';
 
 	await runNotificationStateTask(async () => {
 		let state = await loadNotificationState();
@@ -597,7 +598,7 @@ async function handleInstalled(details) {
 
 		if (details.reason === 'install') {
 			await browser.tabs.create({
-				url: browser.runtime.getURL('guide/guide.html?welcome=true'),
+				url: browser.runtime.getURL(`${guidePagePath}?welcome=true`),
 			});
 		}
 

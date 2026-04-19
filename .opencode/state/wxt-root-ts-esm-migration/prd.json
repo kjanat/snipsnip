@@ -109,7 +109,7 @@
 			"description": "Convert options and guide bootstraps to WXT-managed TS/ESM entrypoints, preserving current HTML/CSS structure and replacing global bootstrap order with imports. Acceptance: options restore/save/search/import/export flows work, guide page still loads and behaves correctly, and duplicate popup/options defaults are reduced to shared typed sources where applicable.",
 			"depends": ["convert-stateful-shared-mods", "migrate-background-msgs"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "remove-legacy-build-paths",

@@ -118,7 +118,7 @@ async function queueVersionUpdateNotification(serviceWorker, previousVersion) {
 
 async function triggerInstallOnboarding(serviceWorker) {
 	return await serviceWorker.evaluate(async () => {
-		const guideUrl = browser.runtime.getURL('guide/guide.html?welcome=true');
+		const guideUrl = browser.runtime.getURL('guide.html?welcome=true');
 		await handleInstalled({
 			reason: 'install',
 		});
