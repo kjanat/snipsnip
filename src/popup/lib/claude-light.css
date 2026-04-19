@@ -1,6 +1,6 @@
 .cm-s-claude-light.CodeMirror {
-	background: #fffdf9;
 	color: #342a24;
+	background: #fffdf9;
 }
 
 .cm-s-claude-light div.CodeMirror-selected {
@@ -20,9 +20,9 @@
 }
 
 .cm-s-claude-light .CodeMirror-gutters {
+	color: #8f867a;
 	background: #f4f3ee;
 	border-right: 1px solid #ddd6c9;
-	color: #8f867a;
 }
 
 .cm-s-claude-light .CodeMirror-linenumber {
@@ -38,17 +38,17 @@
 }
 
 .cm-s-claude-light .CodeMirror-matchingbracket {
-	color: #7f3b23 !important;
+	color: #7f3b23;
 	outline: 1px solid #c9c0b2;
 }
 
 .cm-s-claude-light span.cm-header {
-	color: #a24e30;
 	font-weight: 700;
+	color: #a24e30;
 }
 .cm-s-claude-light span.cm-quote {
-	color: #8f867a;
 	font-style: italic;
+	color: #8f867a;
 }
 .cm-s-claude-light span.cm-comment {
 	color: #8f867a;
@@ -77,10 +77,10 @@
 	color: #b1ada1;
 }
 .cm-s-claude-light span.cm-strong {
-	color: #342a24;
 	font-weight: 700;
+	color: #342a24;
 }
 .cm-s-claude-light span.cm-em {
-	color: #6b6258;
 	font-style: italic;
+	color: #6b6258;
 }

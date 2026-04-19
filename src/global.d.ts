@@ -1,7 +1,6 @@
 /// <reference types="bun-types/test-globals" />
 
 import type {
-	ExtensionOptions,
 	HighlightApi,
 	MomentApi,
 	ReadabilityApi,
@@ -65,5 +64,3 @@ declare global {
 	var TurndownService: TurndownServiceApi | undefined;
 	var turndownPluginGfm: TurndownPluginGfmApi | undefined;
 }
-
-export {};

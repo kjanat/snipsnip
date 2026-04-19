@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { JSDOM } = require('@/tests/helpers/jsdom-shim');
 
 const searchCore = require('@/shared/search-core');
@@ -30,14 +30,14 @@ function buildGuideIndex(document) {
 		const title = el.getAttribute('data-guide-section');
 		const field = searchCore.createField(title, { source: 'title', primary: true, qualifies: true });
 		if (field) {
-			entry.fieldKeys.add('p|f|' + field.normalized);
+			entry.fieldKeys.add(`p|f|${field.normalized}`);
 			entry.fields.push(field);
 		}
 
 		const summary = el.getAttribute('data-guide-summary');
 		const sf = searchCore.createField(summary, { source: 'summary', primary: true, qualifies: true });
-		if (sf && !entry.fieldKeys.has('p|f|' + sf.normalized)) {
-			entry.fieldKeys.add('p|f|' + sf.normalized);
+		if (sf && !entry.fieldKeys.has(`p|f|${sf.normalized}`)) {
+			entry.fieldKeys.add(`p|f|${sf.normalized}`);
 			entry.fields.push(sf);
 		}
 
@@ -51,8 +51,8 @@ function buildGuideIndex(document) {
 					isAlias: true,
 					allowFuzzy: true,
 				});
-				if (af && !entry.fieldKeys.has('p|a|' + af.normalized)) {
-					entry.fieldKeys.add('p|a|' + af.normalized);
+				if (af && !entry.fieldKeys.has(`p|a|${af.normalized}`)) {
+					entry.fieldKeys.add(`p|a|${af.normalized}`);
 					entry.fields.push(af);
 				}
 			});

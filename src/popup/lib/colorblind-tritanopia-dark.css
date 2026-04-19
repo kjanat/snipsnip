@@ -1,6 +1,6 @@
 .cm-s-colorblind-tritanopia-dark.CodeMirror {
-	background: #1b1326;
 	color: #fbf7ff;
+	background: #1b1326;
 }
 
 .cm-s-colorblind-tritanopia-dark div.CodeMirror-selected {
@@ -22,9 +22,9 @@
 }
 
 .cm-s-colorblind-tritanopia-dark .CodeMirror-gutters {
+	color: #a89dc0;
 	background: #241b33;
 	border-right: 1px solid #3a2c52;
-	color: #a89dc0;
 }
 
 .cm-s-colorblind-tritanopia-dark .CodeMirror-linenumber {
@@ -40,17 +40,17 @@
 }
 
 .cm-s-colorblind-tritanopia-dark .CodeMirror-matchingbracket {
-	color: #d6a5ff !important;
+	color: #d6a5ff;
 	outline: 1px solid #564174;
 }
 
 .cm-s-colorblind-tritanopia-dark span.cm-header {
-	color: #d6a5ff;
 	font-weight: 700;
+	color: #d6a5ff;
 }
 .cm-s-colorblind-tritanopia-dark span.cm-quote {
-	color: #d4c8e6;
 	font-style: italic;
+	color: #d4c8e6;
 }
 .cm-s-colorblind-tritanopia-dark span.cm-comment {
 	color: #a89dc0;
@@ -68,8 +68,8 @@
 }
 .cm-s-colorblind-tritanopia-dark span.cm-keyword,
 .cm-s-colorblind-tritanopia-dark span.cm-atom {
-	color: #d6a5ff;
 	font-weight: 700;
+	color: #d6a5ff;
 }
 .cm-s-colorblind-tritanopia-dark span.cm-number,
 .cm-s-colorblind-tritanopia-dark span.cm-tag {
@@ -80,10 +80,10 @@
 	color: #76579c;
 }
 .cm-s-colorblind-tritanopia-dark span.cm-strong {
-	color: #fbf7ff;
 	font-weight: 700;
+	color: #fbf7ff;
 }
 .cm-s-colorblind-tritanopia-dark span.cm-em {
-	color: #d4c8e6;
 	font-style: italic;
+	color: #d4c8e6;
 }

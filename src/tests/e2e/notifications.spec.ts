@@ -4,9 +4,10 @@
  */
 
 import { getExtensionLaunchArgs } from '@/tests/helpers/extension-target';
-import fs from 'fs';
-import path from 'path';
-import { BrowserContext, chromium, expect, test, Worker } from 'playwright/test';
+import fs from 'node:fs';
+import path from 'node:path';
+import { type BrowserContext, chromium, expect, test, type Worker } from 'playwright/test';
+
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const notificationHostPath = '/notifications/host.html';
 const notificationHostUrl = `${fixtureHost}${notificationHostPath}`;

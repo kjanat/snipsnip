@@ -1,6 +1,4 @@
-'use strict';
-
-(function() {
+(() => {
 	if (window.top !== window) {
 		return;
 	}
@@ -79,7 +77,7 @@
 		}
 
 		buildStyles() {
-			const isVersionUpdate = this.notification.type === 'version-update';
+			const _isVersionUpdate = this.notification.type === 'version-update';
 			const style = document.createElement('style');
 			style.textContent = `
         :host {
@@ -622,7 +620,7 @@
 				await delay(DISPLAY_DELAY_MS);
 
 				const notification = await sendRuntimeMessage({ type: 'get-pending-notification' }).catch(() => null);
-				if (!notification || !notification.id) {
+				if (!notification?.id) {
 					return false;
 				}
 

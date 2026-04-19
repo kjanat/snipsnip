@@ -1,6 +1,6 @@
-import { createHash } from 'crypto';
-import { existsSync, mkdirSync, PathLike, PathOrFileDescriptor, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, type PathLike, type PathOrFileDescriptor, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 function sha256(value) {
 	return createHash('sha256')

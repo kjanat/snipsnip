@@ -1,11 +1,9 @@
-var TurndownService = function() {
-	'use strict';
-
+var TurndownService = (() => {
 	function extend(destination) {
 		for (var i = 1; i < arguments.length; i++) {
 			var source = arguments[i];
 			for (var key in source) {
-				if (source.hasOwnProperty(key)) destination[key] = source[key];
+				if (Object.hasOwn(source, key)) destination[key] = source[key];
 			}
 		}
 		return destination;
@@ -138,9 +136,7 @@ var TurndownService = function() {
 	function has(node, tagNames) {
 		return (
 			node.getElementsByTagName
-			&& tagNames.some(function(tagName) {
-				return node.getElementsByTagName(tagName).length;
-			})
+			&& tagNames.some((tagName) => node.getElementsByTagName(tagName).length)
 		);
 	}
 
@@ -149,32 +145,28 @@ var TurndownService = function() {
 	rules.paragraph = {
 		filter: 'p',
 
-		replacement: function(content) {
-			return '\n\n' + content + '\n\n';
-		},
+		replacement: (content) => `\n\n${content}\n\n`,
 	};
 
 	rules.lineBreak = {
 		filter: 'br',
 
-		replacement: function(content, node, options) {
-			return options.br + '\n';
-		},
+		replacement: (_content, _node, options) => `${options.br}\n`,
 	};
 
 	rules.heading = {
 		filter: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
 
-		replacement: function(content, node, options) {
+		replacement: (content, node, options) => {
 			var hLevel = Number(node.nodeName.charAt(1));
 
 			if (options.headingStyle === 'setext' && hLevel < 3) {
 				var underline = repeat(hLevel === 1 ? '=' : '-', content.length);
 				return (
-					'\n\n' + content + '\n' + underline + '\n\n'
+					`\n\n${content}\n${underline}\n\n`
 				);
 			} else {
-				return '\n\n' + repeat('#', hLevel) + ' ' + content + '\n\n';
+				return `\n\n${repeat('#', hLevel)} ${content}\n\n`;
 			}
 		},
 	};
@@ -182,22 +174,22 @@ var TurndownService = function() {
 	rules.blockquote = {
 		filter: 'blockquote',
 
-		replacement: function(content) {
+		replacement: (content) => {
 			content = content.replace(/^\n+|\n+$/g, '');
 			content = content.replace(/^/gm, '> ');
-			return '\n\n' + content + '\n\n';
+			return `\n\n${content}\n\n`;
 		},
 	};
 
 	rules.list = {
 		filter: ['ul', 'ol'],
 
-		replacement: function(content, node) {
+		replacement: (content, node) => {
 			var parent = node.parentNode;
 			if (parent.nodeName === 'LI' && parent.lastElementChild === node) {
-				return '\n' + content;
+				return `\n${content}`;
 			} else {
-				return '\n\n' + content + '\n\n';
+				return `\n\n${content}\n\n`;
 			}
 		},
 	};
@@ -205,17 +197,17 @@ var TurndownService = function() {
 	rules.listItem = {
 		filter: 'li',
 
-		replacement: function(content, node, options) {
+		replacement: (content, node, options) => {
 			content = content
 				.replace(/^\n+/, '') // remove leading newlines
 				.replace(/\n+$/, '\n') // replace trailing newlines with just a single one
 				.replace(/\n/gm, '\n    '); // indent
-			var prefix = options.bulletListMarker + '   ';
+			var prefix = `${options.bulletListMarker}   `;
 			var parent = node.parentNode;
 			if (parent.nodeName === 'OL') {
 				var start = parent.getAttribute('start');
 				var index = Array.prototype.indexOf.call(parent.children, node);
-				prefix = (start ? Number(start) + index : index + 1) + '.  ';
+				prefix = `${start ? Number(start) + index : index + 1}.  `;
 			}
 			return (
 				prefix + content + (node.nextSibling && !/\n$/.test(content) ? '\n' : '')
@@ -224,42 +216,36 @@ var TurndownService = function() {
 	};
 
 	rules.indentedCodeBlock = {
-		filter: function(node, options) {
-			return (
-				options.codeBlockStyle === 'indented'
-				&& node.nodeName === 'PRE'
-				&& node.firstChild
-				&& node.firstChild.nodeName === 'CODE'
-			);
-		},
+		filter: (node, options) => (
+			options.codeBlockStyle === 'indented'
+			&& node.nodeName === 'PRE'
+			&& node.firstChild
+			&& node.firstChild.nodeName === 'CODE'
+		),
 
-		replacement: function(content, node, options) {
-			return (
-				'\n\n    '
-				+ node.firstChild.textContent.replace(/\n/g, '\n    ')
-				+ '\n\n'
-			);
-		},
+		replacement: (_content, node, _options) => (
+			'\n\n    '
+			+ node.firstChild.textContent.replace(/\n/g, '\n    ')
+			+ '\n\n'
+		),
 	};
 
 	rules.fencedCodeBlock = {
-		filter: function(node, options) {
-			return (
-				options.codeBlockStyle === 'fenced'
-				&& node.nodeName === 'PRE'
-				&& node.firstChild
-				&& node.firstChild.nodeName === 'CODE'
-			);
-		},
+		filter: (node, options) => (
+			options.codeBlockStyle === 'fenced'
+			&& node.nodeName === 'PRE'
+			&& node.firstChild
+			&& node.firstChild.nodeName === 'CODE'
+		),
 
-		replacement: function(content, node, options) {
+		replacement: (_content, node, options) => {
 			var className = node.firstChild.getAttribute('class') || '';
 			var language = (className.match(/language-(\S+)/) || [null, ''])[1];
 			var code = node.firstChild.textContent;
 
 			var fenceChar = options.fence.charAt(0);
 			var fenceSize = 3;
-			var fenceInCodeRegex = new RegExp('^' + fenceChar + '{3,}', 'gm');
+			var fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
 			var match;
 			while ((match = fenceInCodeRegex.exec(code))) {
@@ -281,57 +267,52 @@ var TurndownService = function() {
 	rules.horizontalRule = {
 		filter: 'hr',
 
-		replacement: function(content, node, options) {
-			return '\n\n' + options.hr + '\n\n';
-		},
+		replacement: (_content, _node, options) => `\n\n${options.hr}\n\n`,
 	};
 
 	rules.inlineLink = {
-		filter: function(node, options) {
-			return (
-				options.linkStyle === 'inlined'
-				&& node.nodeName === 'A'
-				&& node.getAttribute('href')
-			);
-		},
+		filter: (node, options) => (
+			options.linkStyle === 'inlined'
+			&& node.nodeName === 'A'
+			&& node.getAttribute('href')
+		),
 
-		replacement: function(content, node) {
+		replacement: (content, node) => {
 			var href = node.getAttribute('href');
 			var title = cleanAttribute(node.getAttribute('title'));
-			if (title) title = ' "' + title + '"';
-			return '[' + content + '](' + href + title + ')';
+			if (title) title = ` "${title}"`;
+			return `[${content}](${href}${title})`;
 		},
 	};
 
 	rules.referenceLink = {
-		filter: function(node, options) {
-			return (
-				options.linkStyle === 'referenced'
-				&& node.nodeName === 'A'
-				&& node.getAttribute('href')
-			);
-		},
+		filter: (node, options) => (
+			options.linkStyle === 'referenced'
+			&& node.nodeName === 'A'
+			&& node.getAttribute('href')
+		),
 
 		replacement: function(content, node, options) {
 			var href = node.getAttribute('href');
 			var title = cleanAttribute(node.getAttribute('title'));
-			if (title) title = ' "' + title + '"';
+			if (title) title = ` "${title}"`;
 			var replacement;
 			var reference;
 
 			switch (options.linkReferenceStyle) {
 				case 'collapsed':
-					replacement = '[' + content + '][]';
-					reference = '[' + content + ']: ' + href + title;
+					replacement = `[${content}][]`;
+					reference = `[${content}]: ${href}${title}`;
 					break;
 				case 'shortcut':
-					replacement = '[' + content + ']';
-					reference = '[' + content + ']: ' + href + title;
+					replacement = `[${content}]`;
+					reference = `[${content}]: ${href}${title}`;
 					break;
-				default:
+				default: {
 					var id = this.references.length + 1;
-					replacement = '[' + content + '][' + id + ']';
-					reference = '[' + id + ']: ' + href + title;
+					replacement = `[${content}][${id}]`;
+					reference = `[${id}]: ${href}${title}`;
+				}
 			}
 
 			this.references.push(reference);
@@ -340,10 +321,10 @@ var TurndownService = function() {
 
 		references: [],
 
-		append: function(options) {
+		append: function(_options) {
 			var references = '';
 			if (this.references.length) {
-				references = '\n\n' + this.references.join('\n') + '\n\n';
+				references = `\n\n${this.references.join('\n')}\n\n`;
 				this.references = []; // Reset references
 			}
 			return references;
@@ -353,7 +334,7 @@ var TurndownService = function() {
 	rules.emphasis = {
 		filter: ['em', 'i'],
 
-		replacement: function(content, node, options) {
+		replacement: (content, _node, options) => {
 			if (!content.trim()) return '';
 			return options.emDelimiter + content + options.emDelimiter;
 		},
@@ -362,28 +343,28 @@ var TurndownService = function() {
 	rules.strong = {
 		filter: ['strong', 'b'],
 
-		replacement: function(content, node, options) {
+		replacement: (content, _node, options) => {
 			if (!content.trim()) return '';
 			return options.strongDelimiter + content + options.strongDelimiter;
 		},
 	};
 
 	rules.code = {
-		filter: function(node) {
+		filter: (node) => {
 			var hasSiblings = node.previousSibling || node.nextSibling;
 			var isCodeBlock = node.parentNode.nodeName === 'PRE' && !hasSiblings;
 
 			return node.nodeName === 'CODE' && !isCodeBlock;
 		},
 
-		replacement: function(content) {
+		replacement: (content) => {
 			if (!content) return '';
 			content = content.replace(/\r?\n|\r/g, ' ');
 
 			var extraSpace = /^`|^ .*?[^ ].* $|`$/.test(content) ? ' ' : '';
 			var delimiter = '`';
 			var matches = content.match(/`+/gm) || [];
-			while (matches.indexOf(delimiter) !== -1) delimiter = delimiter + '`';
+			while (matches.indexOf(delimiter) !== -1) delimiter = `${delimiter}\``;
 
 			return delimiter + extraSpace + content + extraSpace + delimiter;
 		},
@@ -392,12 +373,12 @@ var TurndownService = function() {
 	rules.image = {
 		filter: 'img',
 
-		replacement: function(content, node) {
+		replacement: (_content, node) => {
 			var alt = cleanAttribute(node.getAttribute('alt'));
 			var src = node.getAttribute('src') || '';
 			var title = cleanAttribute(node.getAttribute('title'));
-			var titlePart = title ? ' "' + title + '"' : '';
-			return src ? '![' + alt + ']' + '(' + src + titlePart + ')' : '';
+			var titlePart = title ? ` "${title}"` : '';
+			return src ? `![${alt}](${src}${titlePart})` : '';
 		},
 	};
 
@@ -429,7 +410,7 @@ var TurndownService = function() {
 	}
 
 	Rules.prototype = {
-		add: function(key, rule) {
+		add: function(_key, rule) {
 			this.array.unshift(rule);
 		},
 
@@ -443,9 +424,7 @@ var TurndownService = function() {
 		remove: function(filter) {
 			this._remove.unshift({
 				filter: filter,
-				replacement: function() {
-					return '';
-				},
+				replacement: () => '',
 			});
 		},
 
@@ -522,9 +501,7 @@ var TurndownService = function() {
 		var element = options.element;
 		var isBlock = options.isBlock;
 		var isVoid = options.isVoid;
-		var isPre = options.isPre || function(node) {
-			return node.nodeName === 'PRE';
-		};
+		var isPre = options.isPre || ((node) => node.nodeName === 'PRE');
 
 		if (!element.firstChild || isPre(element)) return;
 
@@ -641,33 +618,30 @@ var TurndownService = function() {
 			if (new Parser().parseFromString('', 'text/html')) {
 				canParse = true;
 			}
-		} catch (e) {}
+		} catch (_e) {}
 
 		return canParse;
 	}
 
 	function createHTMLParser() {
-		var Parser = function() {};
-
-		{
-			if (shouldUseActiveX()) {
-				Parser.prototype.parseFromString = function(string) {
-					var doc = new window.ActiveXObject('htmlfile');
-					doc.designMode = 'on'; // disable on-page scripts
-					doc.open();
-					doc.write(string);
-					doc.close();
-					return doc;
-				};
-			} else {
-				Parser.prototype.parseFromString = function(string) {
-					var doc = document.implementation.createHTMLDocument('');
-					doc.open();
-					doc.write(string);
-					doc.close();
-					return doc;
-				};
-			}
+		var Parser = () => {};
+		if (shouldUseActiveX()) {
+			Parser.prototype.parseFromString = (string) => {
+				var doc = new window.ActiveXObject('htmlfile');
+				doc.designMode = 'on'; // disable on-page scripts
+				doc.open();
+				doc.write(string);
+				doc.close();
+				return doc;
+			};
+		} else {
+			Parser.prototype.parseFromString = (string) => {
+				var doc = document.implementation.createHTMLDocument('');
+				doc.open();
+				doc.write(string);
+				doc.close();
+				return doc;
+			};
 		}
 		return Parser;
 	}
@@ -676,7 +650,7 @@ var TurndownService = function() {
 		var useActiveX = false;
 		try {
 			document.implementation.createHTMLDocument('').open();
-		} catch (e) {
+		} catch (_e) {
 			if (root.ActiveXObject) useActiveX = true;
 		}
 		return useActiveX;
@@ -691,7 +665,7 @@ var TurndownService = function() {
 				// DOM parsers arrange elements in the <head> and <body>.
 				// Wrapping in a custom element ensures elements are reliably arranged in
 				// a single element.
-				'<x-turndown id="turndown-root">' + input + '</x-turndown>',
+				`<x-turndown id="turndown-root">${input}</x-turndown>`,
 				'text/html',
 			);
 			root = doc.getElementById('turndown-root');
@@ -826,15 +800,9 @@ var TurndownService = function() {
 			linkReferenceStyle: 'full',
 			br: '  ',
 			preformattedCode: false,
-			blankReplacement: function(content, node) {
-				return node.isBlock ? '\n\n' : '';
-			},
-			keepReplacement: function(content, node) {
-				return node.isBlock ? '\n\n' + node.outerHTML + '\n\n' : node.outerHTML;
-			},
-			defaultReplacement: function(content, node) {
-				return node.isBlock ? '\n\n' + content + '\n\n' : content;
-			},
+			blankReplacement: (_content, node) => node.isBlock ? '\n\n' : '',
+			keepReplacement: (_content, node) => node.isBlock ? `\n\n${node.outerHTML}\n\n` : node.outerHTML,
+			defaultReplacement: (content, node) => node.isBlock ? `\n\n${content}\n\n` : content,
 		};
 		this.options = extend({}, defaults, options);
 		this.rules = new Rules(this.options);
@@ -852,7 +820,7 @@ var TurndownService = function() {
 		turndown: function(input) {
 			if (!canConvert(input)) {
 				throw new TypeError(
-					input + ' is not a string, or an element/document/fragment node.',
+					`${input} is not a string, or an element/document/fragment node.`,
 				);
 			}
 
@@ -929,11 +897,7 @@ var TurndownService = function() {
 		 * @type String
 		 */
 
-		escape: function(string) {
-			return escapes.reduce(function(accumulator, escape) {
-				return accumulator.replace(escape[0], escape[1]);
-			}, string);
-		},
+		escape: (string) => escapes.reduce((accumulator, escape) => accumulator.replace(escape[0], escape[1]), string),
 	};
 
 	/**
@@ -945,15 +909,14 @@ var TurndownService = function() {
 	 */
 
 	function process(parentNode) {
-		var self = this;
-		return reduce.call(parentNode.childNodes, function(output, node) {
-			node = new Node(node, self.options);
+		return reduce.call(parentNode.childNodes, (output, node) => {
+			node = new Node(node, this.options);
 
 			var replacement = '';
 			if (node.nodeType === 3) {
-				replacement = node.isCode ? node.nodeValue : self.escape(node.nodeValue);
+				replacement = node.isCode ? node.nodeValue : this.escape(node.nodeValue);
 			} else if (node.nodeType === 1) {
-				replacement = replacementForNode.call(self, node);
+				replacement = replacementForNode.call(this, node);
 			}
 
 			return join(output, replacement);
@@ -969,10 +932,9 @@ var TurndownService = function() {
 	 */
 
 	function postProcess(output) {
-		var self = this;
-		this.rules.forEach(function(rule) {
+		this.rules.forEach((rule) => {
 			if (typeof rule.append === 'function') {
-				output = join(output, rule.append(self.options));
+				output = join(output, rule.append(this.options));
 			}
 		});
 
@@ -1037,7 +999,7 @@ var TurndownService = function() {
 	}
 
 	return TurndownService;
-}();
+})();
 
 if (typeof module === 'object') {
 	/* eslint-disable-next-line no-redeclare */

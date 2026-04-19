@@ -1,11 +1,9 @@
-var turndownPluginGfm = function(exports) {
-	'use strict';
-
+var turndownPluginGfm = ((exports) => {
 	var highlightRegExp = /highlight-(?:text|source)-([a-z0-9]+)/;
 
 	function highlightedCodeBlock(turndownService) {
 		turndownService.addRule('highlightedCodeBlock', {
-			filter: function(node) {
+			filter: (node) => {
 				var firstChild = node.firstChild;
 				return (
 					node.nodeName === 'DIV'
@@ -14,7 +12,7 @@ var turndownPluginGfm = function(exports) {
 					&& firstChild.nodeName === 'PRE'
 				);
 			},
-			replacement: function(content, node, options) {
+			replacement: (_content, node, options) => {
 				var className = node.className || '';
 				var language = (className.match(highlightRegExp) || [null, ''])[1];
 
@@ -30,9 +28,7 @@ var turndownPluginGfm = function(exports) {
 	function strikethrough(turndownService) {
 		turndownService.addRule('strikethrough', {
 			filter: ['del', 's', 'strike'],
-			replacement: function(content) {
-				return '~' + content + '~';
-			},
+			replacement: (content) => `~${content}~`,
 		});
 	}
 
@@ -42,14 +38,12 @@ var turndownPluginGfm = function(exports) {
 
 	rules.tableCell = {
 		filter: ['th', 'td'],
-		replacement: function(content, node) {
-			return cell(content, node);
-		},
+		replacement: (content, node) => cell(content, node),
 	};
 
 	rules.tableRow = {
 		filter: 'tr',
-		replacement: function(content, node) {
+		replacement: (content, node) => {
 			var borderCells = '';
 			var alignMap = { left: ':--', right: '--:', center: ':-:' };
 
@@ -65,29 +59,25 @@ var turndownPluginGfm = function(exports) {
 					borderCells += cell(border, node.childNodes[i]);
 				}
 			}
-			return '\n' + content + (borderCells ? '\n' + borderCells : '');
+			return `\n${content}${borderCells ? `\n${borderCells}` : ''}`;
 		},
 	};
 
 	rules.table = {
 		// Only convert tables with a heading row.
 		// Tables with no heading row are kept using `keep` (see below).
-		filter: function(node) {
-			return node.nodeName === 'TABLE' && isHeadingRow(node.rows[0]);
-		},
+		filter: (node) => node.nodeName === 'TABLE' && isHeadingRow(node.rows[0]),
 
-		replacement: function(content) {
+		replacement: (content) => {
 			// Ensure there are no blank lines
 			content = content.replace('\n\n', '\n');
-			return '\n\n' + content + '\n\n';
+			return `\n\n${content}\n\n`;
 		},
 	};
 
 	rules.tableSection = {
 		filter: ['thead', 'tbody', 'tfoot'],
-		replacement: function(content) {
-			return content;
-		},
+		replacement: (content) => content,
 	};
 
 	// A tr is a heading row if:
@@ -102,9 +92,7 @@ var turndownPluginGfm = function(exports) {
 			|| (
 				parentNode.firstChild === tr
 				&& (parentNode.nodeName === 'TABLE' || isFirstTbody(parentNode))
-				&& every.call(tr.childNodes, function(n) {
-					return n.nodeName === 'TH';
-				})
+				&& every.call(tr.childNodes, (n) => n.nodeName === 'TH')
 			)
 		);
 	}
@@ -126,24 +114,18 @@ var turndownPluginGfm = function(exports) {
 		var index = indexOf.call(node.parentNode.childNodes, node);
 		var prefix = ' ';
 		if (index === 0) prefix = '| ';
-		return prefix + content + ' |';
+		return `${prefix + content} |`;
 	}
 
 	function tables(turndownService) {
-		turndownService.keep(function(node) {
-			return node.nodeName === 'TABLE' && !isHeadingRow(node.rows[0]);
-		});
+		turndownService.keep((node) => node.nodeName === 'TABLE' && !isHeadingRow(node.rows[0]));
 		for (var key in rules) turndownService.addRule(key, rules[key]);
 	}
 
 	function taskListItems(turndownService) {
 		turndownService.addRule('taskListItems', {
-			filter: function(node) {
-				return node.type === 'checkbox' && node.parentNode.nodeName === 'LI';
-			},
-			replacement: function(content, node) {
-				return (node.checked ? '[x]' : '[ ]') + ' ';
-			},
+			filter: (node) => node.type === 'checkbox' && node.parentNode.nodeName === 'LI',
+			replacement: (_content, node) => `${node.checked ? '[x]' : '[ ]'} `,
 		});
 	}
 
@@ -163,7 +145,7 @@ var turndownPluginGfm = function(exports) {
 	exports.taskListItems = taskListItems;
 
 	return exports;
-}({});
+})({});
 
 if (typeof module === 'object') {
 	/* eslint-disable-next-line no-redeclare */

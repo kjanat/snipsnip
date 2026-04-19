@@ -69,8 +69,8 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 	background-color: #002b36;
 }
 .cm-s-solarized.cm-s-light {
-	background-color: #fdf6e3;
 	color: #657b83;
+	background-color: #fdf6e3;
 }
 
 .cm-s-solarized .CodeMirror-widget {
@@ -115,8 +115,8 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 }
 
 .cm-s-solarized .cm-comment {
-	color: #586e75;
 	font-style: italic;
+	color: #586e75;
 }
 
 .cm-s-solarized .cm-string {
@@ -151,9 +151,9 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 	color: #2aa198;
 }
 .cm-s-solarized .cm-hr {
+	display: block;
 	color: transparent;
 	border-top: 1px solid #586e75;
-	display: block;
 }
 .cm-s-solarized .cm-link {
 	color: #93a1a1;

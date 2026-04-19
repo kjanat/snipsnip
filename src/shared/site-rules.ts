@@ -175,25 +175,25 @@ export function normalizeSiteRuleOverrides(overrides: unknown = {}): SiteRuleOve
 	const normalized: SiteRuleOverrides = {};
 
 	BOOLEAN_OVERRIDE_KEYS.forEach((key) => {
-		if (Object.prototype.hasOwnProperty.call(overrides, key) && typeof overrides[key] === 'boolean') {
+		if (Object.hasOwn(overrides, key) && typeof overrides[key] === 'boolean') {
 			normalized[key] = overrides[key];
 		}
 	});
 
 	TEXT_OVERRIDE_KEYS.forEach((key) => {
-		if (Object.prototype.hasOwnProperty.call(overrides, key) && overrides[key] != null) {
+		if (Object.hasOwn(overrides, key) && overrides[key] != null) {
 			normalized[key] = String(overrides[key]);
 		}
 	});
 
-	if (Object.prototype.hasOwnProperty.call(overrides, 'imageStyle')) {
+	if (Object.hasOwn(overrides, 'imageStyle')) {
 		const value = String(overrides.imageStyle ?? '').trim();
 		if (isImageStyle(value)) {
 			normalized.imageStyle = value;
 		}
 	}
 
-	if (Object.prototype.hasOwnProperty.call(overrides, 'imageRefStyle')) {
+	if (Object.hasOwn(overrides, 'imageRefStyle')) {
 		const value = String(overrides.imageRefStyle ?? '').trim();
 		if (isImageRefStyle(value)) {
 			normalized.imageRefStyle = value;
@@ -205,7 +205,7 @@ export function normalizeSiteRuleOverrides(overrides: unknown = {}): SiteRuleOve
 		const normalizedTableFormatting: NonNullable<SiteRuleOverrides['tableFormatting']> = {};
 
 		TABLE_FORMATTING_KEYS.forEach((key) => {
-			if (Object.prototype.hasOwnProperty.call(tableFormatting, key) && typeof tableFormatting[key] === 'boolean') {
+			if (Object.hasOwn(tableFormatting, key) && typeof tableFormatting[key] === 'boolean') {
 				normalizedTableFormatting[key] = tableFormatting[key];
 			}
 		});
@@ -270,14 +270,14 @@ export function collectOverrideKeys(overrides: SiteRuleOverrides = {}): string[]
 	const keys: string[] = [];
 
 	[...BOOLEAN_OVERRIDE_KEYS, ...TEXT_OVERRIDE_KEYS, ...ENUM_OVERRIDE_KEYS].forEach((key) => {
-		if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+		if (Object.hasOwn(overrides, key)) {
 			keys.push(key);
 		}
 	});
 
 	if (isPlainObject(overrides.tableFormatting)) {
 		TABLE_FORMATTING_KEYS.forEach((key) => {
-			if (Object.prototype.hasOwnProperty.call(overrides.tableFormatting, key)) {
+			if (Object.hasOwn(overrides.tableFormatting, key)) {
 				keys.push(`tableFormatting.${key}`);
 			}
 		});
@@ -295,7 +295,7 @@ export function applySiteRuleOverrides(
 	delete nextOptions.siteRules;
 
 	[...BOOLEAN_OVERRIDE_KEYS, ...TEXT_OVERRIDE_KEYS, ...ENUM_OVERRIDE_KEYS].forEach((key) => {
-		if (Object.prototype.hasOwnProperty.call(overrides, key)) {
+		if (Object.hasOwn(overrides, key)) {
 			nextOptions[key] = structuredClone(overrides[key]);
 		}
 	});

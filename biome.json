@@ -14,8 +14,10 @@
 			"recommended": true
 		},
 		"domains": {
-			"types": "recommended",
-			"project": "recommended"
+			"playwright": "recommended",
+			"project": "recommended",
+			"test": "recommended",
+			"types": "recommended"
 		}
 	},
 	"javascript": {

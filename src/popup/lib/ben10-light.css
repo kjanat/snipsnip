@@ -1,6 +1,6 @@
 .cm-s-ben10-light.CodeMirror {
-	background: #ffffff;
 	color: #1a2e1a;
+	background: #ffffff;
 }
 
 .cm-s-ben10-light div.CodeMirror-selected {
@@ -20,9 +20,9 @@
 }
 
 .cm-s-ben10-light .CodeMirror-gutters {
+	color: #7aaa7a;
 	background: #eaf4e0;
 	border-right: 1px solid #c8ddb8;
-	color: #7aaa7a;
 }
 
 .cm-s-ben10-light .CodeMirror-linenumber {
@@ -38,17 +38,17 @@
 }
 
 .cm-s-ben10-light .CodeMirror-matchingbracket {
-	color: #1a7a1a !important;
+	color: #1a7a1a;
 	outline: 1px solid #b8d4a8;
 }
 
 .cm-s-ben10-light span.cm-header {
-	color: #1a7a1a;
 	font-weight: 700;
+	color: #1a7a1a;
 }
 .cm-s-ben10-light span.cm-quote {
-	color: #4a6e4a;
 	font-style: italic;
+	color: #4a6e4a;
 }
 .cm-s-ben10-light span.cm-comment {
 	color: #7aaa7a;
@@ -66,8 +66,8 @@
 }
 .cm-s-ben10-light span.cm-keyword,
 .cm-s-ben10-light span.cm-atom {
-	color: #328336;
 	font-weight: 700;
+	color: #328336;
 }
 .cm-s-ben10-light span.cm-number,
 .cm-s-ben10-light span.cm-tag {
@@ -78,10 +78,10 @@
 	color: #a8c490;
 }
 .cm-s-ben10-light span.cm-strong {
-	color: #1a2e1a;
 	font-weight: 700;
+	color: #1a2e1a;
 }
 .cm-s-ben10-light span.cm-em {
-	color: #4a6e4a;
 	font-style: italic;
+	color: #4a6e4a;
 }

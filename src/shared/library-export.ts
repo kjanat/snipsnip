@@ -5,12 +5,14 @@ function padNumber(value: number): string {
 }
 
 export function createLibraryExportZipFilename(date = new Date(), prefix = 'SnipSnip-library'): string {
-	return [
-		prefix,
-		`${date.getFullYear()}${padNumber(date.getMonth() + 1)}${padNumber(date.getDate())}-${padNumber(date.getHours())}${
-			padNumber(date.getMinutes())
-		}${padNumber(date.getSeconds())}`,
-	].join('-') + '.zip';
+	return `${
+		[
+			prefix,
+			`${date.getFullYear()}${padNumber(date.getMonth() + 1)}${padNumber(date.getDate())}-${
+				padNumber(date.getHours())
+			}${padNumber(date.getMinutes())}${padNumber(date.getSeconds())}`,
+		].join('-')
+	}.zip`;
 }
 
 export function ensureUniqueLibraryExportPath(filePath: string, usedPaths = new Set<string>()): string {

@@ -1,11 +1,11 @@
-(function(root, factory) {
+((root, factory) => {
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory(root);
 		return;
 	}
 
 	root.snipSnipCodeBlockUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
 	function repeat(character, count) {
 		return Array(count + 1).join(character);
 	}
@@ -100,7 +100,7 @@
 
 		const fenceChar = options.fence.charAt(0);
 		let fenceSize = 3;
-		const fenceInCodeRegex = new RegExp('^' + fenceChar + '{3,}', 'gm');
+		const fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
 		let match;
 		while ((match = fenceInCodeRegex.exec(code))) {

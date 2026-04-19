@@ -370,15 +370,15 @@ async function disconnectAgentBridge(options = {}) {
 
 		try {
 			port.onMessage.removeListener(handleAgentBridgeNativeMessage);
-		} catch (error) {}
+		} catch (_error) {}
 
 		try {
 			port.onDisconnect.removeListener(handleAgentBridgeDisconnect);
-		} catch (error) {}
+		} catch (_error) {}
 
 		try {
 			port.disconnect();
-		} catch (error) {}
+		} catch (_error) {}
 	}
 
 	await saveAgentBridgeStatus({
@@ -667,7 +667,7 @@ const downloadTrackerApi = globalThis.snipSnipDownloadTracker || {
 				}
 			},
 			cleanupTrackedDownload: (downloadId, url, downloadInfo) => {
-				if (url && url.startsWith('blob:chrome-extension://')) {
+				if (url?.startsWith('blob:chrome-extension://')) {
 					options.sendCleanupBlobUrl?.(url);
 				}
 				localActiveDownloads.delete(downloadId);
@@ -684,7 +684,7 @@ const downloadTrackerApi = globalThis.snipSnipDownloadTracker || {
 				const downloadInfo = localSnipSnipDownloads.get(delta.id);
 				const url = localActiveDownloads.get(delta.id) || downloadInfo?.url || null;
 				const cleanup = () => {
-					if (url && url.startsWith('blob:chrome-extension://')) {
+					if (url?.startsWith('blob:chrome-extension://')) {
 						options.sendCleanupBlobUrl?.(url);
 					}
 					localActiveDownloads.delete(delta.id);
@@ -805,7 +805,7 @@ async function handleMessages(message, sender, _sendResponse) {
 				tabId: Number.isInteger(message.tabId) ? message.tabId : null,
 			});
 			// Also track as our blob URL if it's a blob URL
-			if (message.url && message.url.startsWith('blob:')) {
+			if (message.url?.startsWith('blob:')) {
 				snipSnipBlobUrls.add(message.url);
 				console.log(`📝 Added blob URL to tracking set: ${message.url}`);
 			}
@@ -943,7 +943,7 @@ async function waitForTabLoadCompleteBatch(tabId, timeoutMs = 45000, signal = nu
 				settled = true;
 				cleanup();
 				resolve();
-			} catch (error) {
+			} catch (_error) {
 				// Tab may not be available yet or may have been closed; keep waiting until timeout.
 			}
 		}
@@ -1306,7 +1306,7 @@ async function updateBatchProgressOverlay(tabId, current, total, url, pageTitle,
 			},
 			args: [current, total, url, pageTitle, statusText],
 		});
-	} catch (e) {
+	} catch (_e) {
 		// Tab may have navigated or closed
 	}
 }
@@ -1320,7 +1320,7 @@ async function _removeBatchProgressOverlay(tabId) {
 				document.getElementById('snipsnip-batch-overlay-style')?.remove();
 			},
 		});
-	} catch (e) { /* ignore */ }
+	} catch (_e) { /* ignore */ }
 }
 
 async function processBatchTab(
@@ -1359,7 +1359,7 @@ async function processBatchTab(
 		try {
 			const tabInfo = await browser.tabs.get(tab.id);
 			pageTitle = tabInfo.title || null;
-		} catch (e) { /* ignore */ }
+		} catch (_e) { /* ignore */ }
 
 		await sendBatchProgressUpdate({
 			status: 'loading',
@@ -1620,7 +1620,7 @@ async function getTabContentForOffscreen(tabId, selection, requestId) {
 
 		console.log(`Script execution results for tab ${tabId}:`, results);
 
-		if (results && results[0]?.result) {
+		if (results?.[0]?.result) {
 			console.log(`Sending content result for tab ${tabId}`);
 			await browser.runtime.sendMessage({
 				type: 'article-content-result',
@@ -1669,7 +1669,7 @@ async function forwardGetArticleContent(tabId, selection, originalRequestId) {
 			},
 		});
 
-		if (results && results[0]?.result) {
+		if (results?.[0]?.result) {
 			// Forward the DOM data to the offscreen document for processing
 			await browser.runtime.sendMessage({
 				type: 'article-dom-data',
@@ -1723,7 +1723,7 @@ async function handleImageDownloads(message) {
 
 		// Calculate the destination path for images
 		const destPath = mdClipsFolder + title.substring(0, title.lastIndexOf('/'));
-		const adjustedDestPath = destPath && !destPath.endsWith('/') ? destPath + '/' : destPath;
+		const adjustedDestPath = destPath && !destPath.endsWith('/') ? `${destPath}/` : destPath;
 
 		// Download each image
 		for (const [src, filename] of Object.entries(imageList)) {
@@ -2356,23 +2356,23 @@ async function handleCommands(command) {
 			return;
 		}
 
-		if (command == 'download_tab_as_markdown') {
+		if (command === 'download_tab_as_markdown') {
 			const info = { menuItemId: 'download-markdown-all' };
 			await downloadMarkdownFromContext(info, tab);
-		} else if (command == 'copy_tab_as_markdown') {
+		} else if (command === 'copy_tab_as_markdown') {
 			const info = { menuItemId: 'copy-markdown-all' };
 			await copyMarkdownFromContext(info, tab);
-		} else if (command == 'copy_selection_as_markdown') {
+		} else if (command === 'copy_selection_as_markdown') {
 			const info = { menuItemId: 'copy-markdown-selection' };
 			await copyMarkdownFromContext(info, tab);
-		} else if (command == 'copy_tab_as_markdown_link') {
+		} else if (command === 'copy_tab_as_markdown_link') {
 			await copyTabAsMarkdownLink(tab);
-		} else if (command == 'copy_selected_tab_as_markdown_link') {
+		} else if (command === 'copy_selected_tab_as_markdown_link') {
 			await copySelectedTabAsMarkdownLink(tab);
-		} else if (command == 'copy_selection_to_obsidian') {
+		} else if (command === 'copy_selection_to_obsidian') {
 			const info = { menuItemId: 'copy-markdown-obsidian' };
 			await copyMarkdownFromContext(info, tab);
-		} else if (command == 'copy_tab_to_obsidian') {
+		} else if (command === 'copy_tab_to_obsidian') {
 			const info = { menuItemId: 'copy-markdown-obsall' };
 			await copyMarkdownFromContext(info, tab);
 		}
@@ -2411,7 +2411,7 @@ async function openObsidianUri(vault, folder, title) {
 		}
 
 		// Ensure title has .md extension
-		const filename = title.endsWith('.md') ? title : title + '.md';
+		const filename = title.endsWith('.md') ? title : `${title}.md`;
 		const filepath = folderPath + filename;
 
 		// Use correct URI scheme: adv-uri (not advanced-uri)
@@ -2455,7 +2455,7 @@ async function handleObsidianIntegration(message) {
 
 				try {
 					const success = document.execCommand('copy');
-					console.log('[Tab] ' + (success ? '✅' : '❌') + ' Copied to clipboard using execCommand');
+					console.log(`[Tab] ${success ? '✅' : '❌'} Copied to clipboard using execCommand`);
 					return success;
 				} catch (e) {
 					console.error('[Tab] ❌ Failed to copy:', e);
@@ -2495,7 +2495,7 @@ async function toggleSetting(setting, options = null) {
 	} else {
 		options[setting] = !options[setting];
 		await browser.storage.sync.set(options);
-		if (setting == 'includeTemplate') {
+		if (setting === 'includeTemplate') {
 			browser.contextMenus.update('toggle-includeTemplate', {
 				checked: options.includeTemplate,
 			});
@@ -2506,7 +2506,7 @@ async function toggleSetting(setting, options = null) {
 			} catch {}
 		}
 
-		if (setting == 'downloadImages') {
+		if (setting === 'downloadImages') {
 			browser.contextMenus.update('toggle-downloadImages', {
 				checked: options.downloadImages,
 			});
@@ -2525,19 +2525,19 @@ async function toggleSetting(setting, options = null) {
 function textReplace(string, article, disallowedChars = null) {
 	// Replace values from article object
 	for (const key in article) {
-		if (article.hasOwnProperty(key) && key != 'content') {
-			let s = (article[key] || '') + '';
+		if (Object.hasOwn(article, key) && key !== 'content') {
+			let s = `${article[key] || ''}`;
 			if (s && disallowedChars) s = generateValidFileName(s, disallowedChars);
 
-			string = string.replace(new RegExp('{' + key + '}', 'g'), s)
-				.replace(new RegExp('{' + key + ':kebab}', 'g'), s.replace(/ /g, '-').toLowerCase())
-				.replace(new RegExp('{' + key + ':snake}', 'g'), s.replace(/ /g, '_').toLowerCase())
+			string = string.replace(new RegExp(`{${key}}`, 'g'), s)
+				.replace(new RegExp(`{${key}:kebab}`, 'g'), s.replace(/ /g, '-').toLowerCase())
+				.replace(new RegExp(`{${key}:snake}`, 'g'), s.replace(/ /g, '_').toLowerCase())
 				.replace(
-					new RegExp('{' + key + ':camel}', 'g'),
+					new RegExp(`{${key}:camel}`, 'g'),
 					s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toLowerCase()),
 				)
 				.replace(
-					new RegExp('{' + key + ':pascal}', 'g'),
+					new RegExp(`{${key}:pascal}`, 'g'),
 					s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toUpperCase()),
 				);
 		}
@@ -2547,7 +2547,7 @@ function textReplace(string, article, disallowedChars = null) {
 	const now = new Date();
 	const dateRegex = /{date:(.+?)}/g;
 	const matches = string.match(dateRegex);
-	if (matches && matches.forEach) {
+	if (matches?.forEach) {
 		matches.forEach(match => {
 			const format = match.substring(6, match.length - 1);
 			const dateString = moment(now).format(format);
@@ -2558,7 +2558,7 @@ function textReplace(string, article, disallowedChars = null) {
 	// Replace keywords
 	const keywordRegex = /{keywords:?(.*)?}/g;
 	const keywordMatches = string.match(keywordRegex);
-	if (keywordMatches && keywordMatches.forEach) {
+	if (keywordMatches?.forEach) {
 		keywordMatches.forEach(match => {
 			let seperator = match.substring(10, match.length - 1);
 			try {
@@ -2581,11 +2581,11 @@ function textReplace(string, article, disallowedChars = null) {
  */
 function generateValidFileName(title, disallowedChars = null) {
 	if (!title) return title;
-	else title = title + '';
+	else title = `${title}`;
 	// Remove < > : " / \ | ? *
-	var illegalRe = /[\/\?<>\\:\*\|":]/g;
+	var illegalRe = /[/?<>\\:*|":]/g;
 	// And non-breaking spaces
-	var name = title.replace(illegalRe, '').replace(new RegExp('\u00A0', 'g'), ' ');
+	var name = title.replace(illegalRe, '').replace(/\u00A0/g, ' ');
 
 	if (disallowedChars) {
 		for (let c of disallowedChars) {
@@ -2599,7 +2599,7 @@ function generateValidFileName(title, disallowedChars = null) {
 
 async function formatTitle(article, providedOptions = null) {
 	const options = providedOptions || getRuntimeDefaultOptions();
-	let title = textReplace(options.title, article, options.disallowedChars + '/');
+	let title = textReplace(options.title, article, `${options.disallowedChars}/`);
 	title = title.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
 	return title;
 }
@@ -2638,7 +2638,7 @@ async function ensureScripts(tabId) {
 		});
 
 		// If either script is missing, inject both in correct order
-		if (!results || !results[0]?.result) {
+		if (!results?.[0]?.result) {
 			await browser.scripting.executeScript({
 				target: { tabId: tabId },
 				files: [
@@ -2953,7 +2953,7 @@ async function handleDownloadWithBlobUrl(
 	// CRITICAL: Ensure filename is never empty
 	if (!filename || filename.trim() === '' || filename === '.md') {
 		console.warn('⚠️ [Service Worker] Empty filename detected, using fallback');
-		filename = 'Untitled-' + Date.now() + '.md';
+		filename = `Untitled-${Date.now()}.md`;
 	}
 
 	console.log(`🚀 [Service Worker] Using Downloads API with blob URL: ${blobUrl} -> ${filename}`);
@@ -2984,7 +2984,7 @@ async function handleDownloadWithBlobUrl(
 				`✅ [Service Worker] Download started with ID: ${id} for file: ${filename} (saveAs: ${!!options.saveAs})`,
 			);
 			console.log(`🔧 [Service Worker] Download options used:`, {
-				url: blobUrl.substring(0, 50) + '...',
+				url: `${blobUrl.substring(0, 50)}...`,
 				filename: filename,
 				saveAs: !!options.saveAs,
 			});
@@ -3040,7 +3040,7 @@ async function _handleDownloadDirectly(markdown, title, tabId, imageList = {}, m
 	// CRITICAL: Ensure title is never empty
 	if (!title || title.trim() === '') {
 		console.warn('⚠️ [Service Worker] Empty title detected, using fallback');
-		title = 'Untitled-' + Date.now();
+		title = `Untitled-${Date.now()}`;
 	}
 
 	console.log(`🚀 [Service Worker] Handling download directly: title="${title}", folder="${mdClipsFolder}"`);
@@ -3059,7 +3059,7 @@ async function _handleDownloadDirectly(markdown, title, tabId, imageList = {}, m
 
 			if (mdClipsFolder && !mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
 
-			const fullFilename = mdClipsFolder + title + '.md';
+			const fullFilename = `${mdClipsFolder + title}.md`;
 
 			console.log(`🎯 [Service Worker] Starting Downloads API: URL=${url}, filename="${fullFilename}"`);
 
@@ -3104,7 +3104,7 @@ async function _handleDownloadDirectly(markdown, title, tabId, imageList = {}, m
 
 			// Final fallback: content script method
 			await ensureScripts(tabId);
-			const filename = mdClipsFolder + generateValidFileName(title, options.disallowedChars) + '.md';
+			const filename = `${mdClipsFolder + generateValidFileName(title, options.disallowedChars)}.md`;
 			const base64Content = base64EncodeUnicode(markdown);
 
 			await browser.scripting.executeScript({
@@ -3125,7 +3125,7 @@ async function _handleDownloadDirectly(markdown, title, tabId, imageList = {}, m
 		console.log(`🔗 [Service Worker] Using content script fallback`);
 
 		await ensureScripts(tabId);
-		const filename = mdClipsFolder + generateValidFileName(title, options.disallowedChars) + '.md';
+		const filename = `${mdClipsFolder + generateValidFileName(title, options.disallowedChars)}.md`;
 		const base64Content = base64EncodeUnicode(markdown);
 
 		await browser.scripting.executeScript({
@@ -3274,11 +3274,11 @@ function isRuntimeOptionsPayload(value) {
 		return false;
 	}
 
-	return Object.prototype.hasOwnProperty.call(value, 'downloadMode')
-		|| Object.prototype.hasOwnProperty.call(value, 'saveAs')
-		|| Object.prototype.hasOwnProperty.call(value, 'downloadImages')
-		|| Object.prototype.hasOwnProperty.call(value, 'disallowedChars')
-		|| Object.prototype.hasOwnProperty.call(value, 'siteRules');
+	return Object.hasOwn(value, 'downloadMode')
+		|| Object.hasOwn(value, 'saveAs')
+		|| Object.hasOwn(value, 'downloadImages')
+		|| Object.hasOwn(value, 'disallowedChars')
+		|| Object.hasOwn(value, 'siteRules');
 }
 
 async function downloadMarkdown(
@@ -3301,7 +3301,7 @@ async function downloadMarkdown(
 	// CRITICAL: Ensure title is never empty
 	if (!title || title.trim() === '') {
 		console.warn('⚠️ [Service Worker] Empty title detected, using fallback');
-		title = 'Untitled-' + Date.now();
+		title = `Untitled-${Date.now()}`;
 	}
 
 	console.log(
@@ -3341,7 +3341,7 @@ async function downloadMarkdown(
 
 			if (mdClipsFolder && !mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
 
-			const fullFilename = mdClipsFolder + title + '.md';
+			const fullFilename = `${mdClipsFolder + title}.md`;
 
 			console.log(`🚀 [Service Worker] Starting Downloads API download: URL=${url}, filename="${fullFilename}"`);
 
@@ -3389,7 +3389,7 @@ async function downloadMarkdown(
 		// Content link mode - use content script
 		try {
 			await ensureScripts(tabId);
-			const filename = mdClipsFolder + generateValidFileName(title, options.disallowedChars) + '.md';
+			const filename = `${mdClipsFolder + generateValidFileName(title, options.disallowedChars)}.md`;
 			const base64Content = base64EncodeUnicode(markdown);
 
 			console.log(`🔗 [Service Worker] Using content script download: ${filename}`);
@@ -3419,7 +3419,7 @@ async function downloadMarkdown(
  */
 async function handleImageDownloadsDirectly(imageList, mdClipsFolder, title, _options) {
 	const destPath = mdClipsFolder + title.substring(0, title.lastIndexOf('/'));
-	const adjustedDestPath = destPath && !destPath.endsWith('/') ? destPath + '/' : destPath;
+	const adjustedDestPath = destPath && !destPath.endsWith('/') ? `${destPath}/` : destPath;
 
 	for (const [src, filename] of Object.entries(imageList)) {
 		try {
@@ -3464,9 +3464,7 @@ if (!String.prototype.replaceAll) {
  */
 function base64EncodeUnicode(str) {
 	// Encode UTF-8 string to base64
-	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-		return String.fromCharCode('0x' + p1);
-	});
+	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => String.fromCharCode(`0x${p1}`));
 
 	return btoa(utf8Bytes);
 }

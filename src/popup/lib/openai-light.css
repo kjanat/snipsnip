@@ -1,6 +1,6 @@
 .cm-s-openai-light.CodeMirror {
-	background: #ffffff;
 	color: #080808;
+	background: #ffffff;
 }
 
 .cm-s-openai-light div.CodeMirror-selected {
@@ -20,9 +20,9 @@
 }
 
 .cm-s-openai-light .CodeMirror-gutters {
+	color: #6a7280;
 	background: #f6f6f3;
 	border-right: 1px solid #e3e4e8;
-	color: #6a7280;
 }
 
 .cm-s-openai-light .CodeMirror-linenumber {
@@ -38,17 +38,17 @@
 }
 
 .cm-s-openai-light .CodeMirror-matchingbracket {
-	color: #080808 !important;
+	color: #080808;
 	outline: 1px solid #cdd1d8;
 }
 
 .cm-s-openai-light span.cm-header {
-	color: #080808;
 	font-weight: 700;
+	color: #080808;
 }
 .cm-s-openai-light span.cm-quote {
-	color: #6a7280;
 	font-style: italic;
+	color: #6a7280;
 }
 .cm-s-openai-light span.cm-comment {
 	color: #8c93a1;
@@ -77,10 +77,10 @@
 	color: #9aa3b2;
 }
 .cm-s-openai-light span.cm-strong {
-	color: #080808;
 	font-weight: 700;
+	color: #080808;
 }
 .cm-s-openai-light span.cm-em {
-	color: #3d4452;
 	font-style: italic;
+	color: #3d4452;
 }

@@ -133,7 +133,7 @@ function buildDomWithSelection(domString, selectionHtml, shouldUseSelection = tr
 /**
  * Handle messages from service worker
  */
-function handleMessages(message, sender) {
+function handleMessages(message, _sender) {
 	// Handle messages that aren't specifically targeted at offscreen
 	if (!message.target || message.target !== 'offscreen') {
 		if (message.type === 'article-dom-data') {
@@ -326,7 +326,7 @@ async function handleBridgeCapture(message) {
  * Handle context menu download action
  */
 function isLikelyIncompleteMarkdown(markdown) {
-	if (!markdown || !markdown.trim()) return true;
+	if (!markdown?.trim()) return true;
 
 	const normalized = markdown.replace(/\r/g, '');
 	const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
@@ -368,7 +368,7 @@ async function handleContextMenuDownload(
 			throw new Error(`Failed to get valid article content from tab ${tabId}`);
 		}
 
-		if (customTitle && customTitle.trim()) {
+		if (customTitle?.trim()) {
 			article.title = customTitle.trim();
 			article.pageTitle = customTitle.trim();
 		}
@@ -387,7 +387,7 @@ async function handleContextMenuDownload(
 		const mdClipsFolder = await formatMdClipsFolder(article, effectiveOptions);
 		let fullFilename = mdClipsFolder;
 		if (fullFilename && !fullFilename.endsWith('/')) fullFilename += '/';
-		fullFilename = (fullFilename || '') + title + '.md';
+		fullFilename = `${(fullFilename || '') + title}.md`;
 		const likelyIncomplete = isLikelyIncompleteMarkdown(markdown);
 
 		if (!collectOnly) {
@@ -421,7 +421,7 @@ async function handleContextMenuDownload(
  */
 async function handleContextMenuCopy(info, tabId, providedOptions = null) {
 	const platformOS = navigator.platform;
-	const folderSeparator = platformOS.indexOf('Win') === 0 ? '\\' : '/';
+	const _folderSeparator = platformOS.indexOf('Win') === 0 ? '\\' : '/';
 	const options = providedOptions || defaultOptions;
 
 	if (info.menuItemId === 'copy-markdown-link') {
@@ -490,12 +490,12 @@ async function handleContextMenuCopy(info, tabId, providedOptions = null) {
  */
 async function copyToClipboard(text) {
 	// Try modern Clipboard API first (but it usually fails in offscreen documents)
-	if (navigator.clipboard && navigator.clipboard.writeText) {
+	if (navigator.clipboard?.writeText) {
 		try {
 			await navigator.clipboard.writeText(text);
 			console.log(
 				'✅ [Offscreen] Successfully copied to clipboard using Clipboard API:',
-				text.substring(0, 100) + '...',
+				`${text.substring(0, 100)}...`,
 			);
 			return true;
 		} catch (clipboardError) {
@@ -523,7 +523,7 @@ async function copyToClipboard(text) {
 		const success = document.execCommand('copy');
 
 		if (success) {
-			console.log('✅ [Offscreen] Successfully copied to clipboard using execCommand:', text.substring(0, 100) + '...');
+			console.log('✅ [Offscreen] Successfully copied to clipboard using execCommand:', `${text.substring(0, 100)}...`);
 			return true;
 		} else {
 			console.error('❌ [Offscreen] Failed to copy to clipboard using execCommand');
@@ -554,8 +554,8 @@ function createEffectiveMarkdownOptions(article, providedOptions = null, downloa
 	}
 
 	if (options.includeTemplate) {
-		options.frontmatter = textReplace(options.frontmatter, article) + '\n';
-		options.backmatter = '\n' + textReplace(options.backmatter, article);
+		options.frontmatter = `${textReplace(options.frontmatter, article)}\n`;
+		options.backmatter = `\n${textReplace(options.backmatter, article)}`;
 	} else {
 		options.frontmatter = '';
 		options.backmatter = '';
@@ -598,7 +598,7 @@ function processCodeBlock(node, options) {
 	}
 
 	// Get the raw text content
-	let code = node.textContent.trim();
+	const code = node.textContent.trim();
 
 	// Detect language
 	let language = getCodeLanguage(node);
@@ -732,14 +732,12 @@ function turndown(content, options, article) {
 	// Add rule to convert <mark> tags to inline code
 	turndownService.addRule('mark', {
 		filter: ['mark'],
-		replacement: function(content) {
-			return '`' + content + '`';
-		},
+		replacement: (content) => `\`${content}\``,
 	});
 
 	// Add rule to prevent wrapping headings in links
 	turndownService.addRule('headingLinks', {
-		filter: function(node) {
+		filter: (node) => {
 			// Check if this is a link containing a heading
 			if (node.nodeName === 'A') {
 				const hasHeading = Array.from(node.children).some(child => /^H[1-6]$/.test(child.nodeName));
@@ -747,7 +745,7 @@ function turndown(content, options, article) {
 			}
 			return false;
 		},
-		replacement: function(content) {
+		replacement: (content) => {
 			// Just return the content (the heading) without link syntax
 			return content;
 		},
@@ -756,7 +754,7 @@ function turndown(content, options, article) {
 	// Add our custom table rule
 	turndownService.addRule('table', {
 		filter: 'table',
-		replacement: function(content, node) {
+		replacement: (content, node) => {
 			try {
 				// Create a mini-turndown instance for cell content processing
 				const cellTurndownService = new TurndownService({
@@ -776,9 +774,7 @@ function turndown(content, options, article) {
 				});
 
 				// Disable escaping in table cells to prevent underscore escaping
-				cellTurndownService.escape = function(text) {
-					return text;
-				};
+				cellTurndownService.escape = (text) => text;
 
 				// Apply necessary plugins
 				cellTurndownService.use([
@@ -789,9 +785,7 @@ function turndown(content, options, article) {
 				// Handle <br> tags in table cells - convert to <br> HTML (Markdown tables support this)
 				cellTurndownService.addRule('tableBr', {
 					filter: 'br',
-					replacement: function() {
-						return '<br>';
-					},
+					replacement: () => '<br>',
 				});
 
 				// Add custom rules for images, links, etc. to the cell turndown instance
@@ -804,10 +798,10 @@ function turndown(content, options, article) {
 
 				if (options.tableFormatting?.stripLinks) {
 					cellTurndownService.addRule('links', {
-						filter: (node, tdopts) => {
+						filter: (node, _tdopts) => {
 							return node.nodeName === 'A' && node.getAttribute('href');
 						},
-						replacement: (content, node, tdopts) => {
+						replacement: (content, _node, _tdopts) => {
 							return content;
 						},
 					});
@@ -821,8 +815,8 @@ function turndown(content, options, article) {
 					? [headerRow, ...(tbody ? Array.from(tbody.children) : [])]
 					: (tbody ? Array.from(tbody.children) : Array.from(node.querySelectorAll('tr')));
 
-				let tableMatrix = Array.from({ length: rows.length }, () => []);
-				let columnWidths = [];
+				const tableMatrix = Array.from({ length: rows.length }, () => []);
+				const columnWidths = [];
 
 				// Process each row
 				rows.forEach((row, rowIndex) => {
@@ -850,8 +844,8 @@ function turndown(content, options, article) {
 						processedContent = cellTurndownService.turndown(cellContainer.innerHTML);
 
 						// Handle rowspan and colspan (keeping original behavior)
-						const colspan = parseInt(cell.getAttribute('colspan')) || 1;
-						const rowspan = parseInt(cell.getAttribute('rowspan')) || 1;
+						const colspan = parseInt(cell.getAttribute('colspan'), 10) || 1;
+						const rowspan = parseInt(cell.getAttribute('rowspan'), 10) || 1;
 
 						// Add content to the matrix - keep existing behavior for rowspan/colspan
 						for (let i = 0; i < rowspan; i++) {
@@ -925,7 +919,7 @@ function turndown(content, options, article) {
 				// Build header row and separator
 				if (tableMatrix.length > 0 && tableMatrix[0] && Array.isArray(tableMatrix[0])) {
 					const headerContent = tableMatrix[0].map((cell, i) => formatCell(cell, i)).join('|');
-					markdown += '|' + headerContent + '|\n';
+					markdown += `|${headerContent}|\n`;
 
 					// Build separator with proper column widths
 					const separator = columnWidths.map(width => {
@@ -933,13 +927,13 @@ function turndown(content, options, article) {
 						return '-'.repeat(minWidth + 2); // +2 for padding
 					}).join('|');
 
-					markdown += '|' + separator + '|\n';
+					markdown += `|${separator}|\n`;
 
 					// Build data rows
 					for (let i = 1; i < tableMatrix.length; i++) {
 						if (tableMatrix[i] && Array.isArray(tableMatrix[i])) {
 							const row = tableMatrix[i].map((cell, j) => formatCell(cell, j)).join('|');
-							markdown += '|' + row + '|\n';
+							markdown += `|${row}|\n`;
 						}
 					}
 				} else {
@@ -957,14 +951,14 @@ function turndown(content, options, article) {
 
 	turndownService.keep(['iframe', 'sub', 'sup', 'u', 'ins', 'del', 'small', 'big']);
 
-	let imageList = {};
+	const imageList = {};
 	// add an image rule
 	turndownService.addRule('images', {
-		filter: function(node, tdopts) {
+		filter: (node, _tdopts) => {
 			// if we're looking at an img node with a src
-			if (node.nodeName == 'IMG' && node.getAttribute('src')) {
+			if (node.nodeName === 'IMG' && node.getAttribute('src')) {
 				// get the original src
-				let src = node.getAttribute('src');
+				const src = node.getAttribute('src');
 				const resolvedSrc = validateUri(src, uriBase);
 				// set the new src
 				node.setAttribute('src', resolvedSrc);
@@ -973,12 +967,12 @@ function turndown(content, options, article) {
 				if (options.downloadImages) {
 					// generate a file name for the image
 					let imageFilename = getImageFilename(resolvedSrc, options, false);
-					if (!imageList[resolvedSrc] || imageList[resolvedSrc] != imageFilename) {
+					if (!imageList[resolvedSrc] || imageList[resolvedSrc] !== imageFilename) {
 						// if the imageList already contains this file, add a number to differentiate
 						let i = 1;
 						while (Object.values(imageList).includes(imageFilename)) {
 							const parts = imageFilename.split('.');
-							if (i == 1) parts.splice(parts.length - 1, 0, i++);
+							if (i === 1) parts.splice(parts.length - 1, 0, i++);
 							else parts.splice(parts.length - 2, 1, i++);
 							imageFilename = parts.join('.');
 						}
@@ -995,7 +989,7 @@ function turndown(content, options, article) {
 						: imageFilename.split('/').map(s => obsidianLink ? s : encodeURI(s)).join('/');
 
 					// set the new src attribute to be the local filename
-					if (options.imageStyle != 'originalSource' && options.imageStyle != 'base64') {
+					if (options.imageStyle !== 'originalSource' && options.imageStyle !== 'base64') {
 						node.setAttribute('src', localSrc);
 					}
 					// pass the filter if we're making an obsidian link (or stripping links)
@@ -1005,9 +999,9 @@ function turndown(content, options, article) {
 			// don't pass the filter, just output a normal markdown link
 			return false;
 		},
-		replacement: function(content, node, tdopts) {
+		replacement: function(_content, node, _tdopts) {
 			// if we're stripping images, output nothing
-			if (options.imageStyle == 'noImage') return '';
+			if (options.imageStyle === 'noImage') return '';
 			// if this is an obsidian link, so output that
 			else if (options.imageStyle.startsWith('obsidian')) return `![[${node.getAttribute('src')}]]`;
 			// otherwise, output the normal markdown link
@@ -1015,19 +1009,19 @@ function turndown(content, options, article) {
 				var alt = cleanAttribute(node.getAttribute('alt'));
 				var src = node.getAttribute('src') || '';
 				var title = cleanAttribute(node.getAttribute('title'));
-				var titlePart = title ? ' "' + title + '"' : '';
-				if (options.imageRefStyle == 'referenced') {
+				var titlePart = title ? ` "${title}"` : '';
+				if (options.imageRefStyle === 'referenced') {
 					var id = this.references.length + 1;
-					this.references.push('[fig' + id + ']: ' + src + titlePart);
-					return '![' + alt + '][fig' + id + ']';
-				} else return src ? '![' + alt + ']' + '(' + src + titlePart + ')' : '';
+					this.references.push(`[fig${id}]: ${src}${titlePart}`);
+					return `![${alt}][fig${id}]`;
+				} else return src ? `![${alt}](${src}${titlePart})` : '';
 			}
 		},
 		references: [],
-		append: function(options) {
+		append: function(_options) {
 			var references = '';
 			if (this.references.length) {
-				references = '\n\n' + this.references.join('\n') + '\n\n';
+				references = `\n\n${this.references.join('\n')}\n\n`;
 				this.references = []; // Reset references
 			}
 			return references;
@@ -1051,11 +1045,11 @@ function turndown(content, options, article) {
 		filter: (node, tdopts) => {
 			// Only process links if linkStyle is NOT 'referenced'
 			// This allows the built-in referenceLink rule to handle referenced links
-			return node.nodeName == 'A'
+			return node.nodeName === 'A'
 				&& node.getAttribute('href')
 				&& tdopts.linkStyle !== 'referenced';
 		},
-		replacement: (content, node, tdopts) => {
+		replacement: (content, node, _tdopts) => {
 			// get the href
 			const href = validateUri(node.getAttribute('href'), uriBase);
 
@@ -1077,10 +1071,10 @@ function turndown(content, options, article) {
 
 	// handle multiple lines math
 	turndownService.addRule('mathjax', {
-		filter(node, options) {
-			return article.math.hasOwnProperty(node.id);
+		filter(node, _options) {
+			return Object.hasOwn(article.math, node.id);
 		},
-		replacement(content, node, options) {
+		replacement(_content, node, _options) {
 			const math = article.math[node.id];
 			let tex = math.tex.trim().replaceAll('\xa0', '');
 
@@ -1191,7 +1185,7 @@ function turndown(content, options, article) {
 
 		var fenceChar = options.fence.charAt(0);
 		var fenceSize = 3;
-		var fenceInCodeRegex = new RegExp('^' + fenceChar + '{3,}', 'gm');
+		var fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
 		var match;
 		while ((match = fenceInCodeRegex.exec(code))) {
@@ -1210,15 +1204,13 @@ function turndown(content, options, article) {
 	}
 
 	turndownService.addRule('fencedCodeBlock', {
-		filter: function(node, options) {
-			return (
-				options.codeBlockStyle === 'fenced'
-				&& node.nodeName === 'PRE'
-				&& node.firstChild
-				&& node.firstChild.nodeName === 'CODE'
-			);
-		},
-		replacement: function(content, node, options) {
+		filter: (node, options) => (
+			options.codeBlockStyle === 'fenced'
+			&& node.nodeName === 'PRE'
+			&& node.firstChild
+			&& node.firstChild.nodeName === 'CODE'
+		),
+		replacement: (_content, node, options) => {
 			const codeNode = node.firstChild;
 			const processedCode = processCodeBlock(codeNode, options);
 
@@ -1241,8 +1233,8 @@ function turndown(content, options, article) {
 
 	// handle <pre> as code blocks
 	turndownService.addRule('pre', {
-		filter: (node, tdopts) => node.nodeName == 'PRE' && (!node.firstChild || node.firstChild.nodeName != 'CODE'),
-		replacement: (content, node, tdopts) => {
+		filter: (node, _tdopts) => node.nodeName === 'PRE' && (!node.firstChild || node.firstChild.nodeName !== 'CODE'),
+		replacement: (_content, node, tdopts) => {
 			return convertToFencedCodeBlock(node, tdopts);
 		},
 	});
@@ -1371,7 +1363,7 @@ function prepareDomForReadability(dom, options, recoveryApi) {
 		});
 	}
 
-	if (dom.documentElement.nodeName == 'parsererror') {
+	if (dom.documentElement.nodeName === 'parsererror') {
 		console.error('Error while parsing DOM');
 	}
 
@@ -1449,7 +1441,7 @@ function prepareDomForReadability(dom, options, recoveryApi) {
 	// Process code highlight elements
 	dom.body.querySelectorAll('[class*=highlight-text],[class*=highlight-source]')?.forEach(codeSource => {
 		const language = codeSource.className.match(/highlight-(?:text|source)-([a-z0-9]+)/)?.[1];
-		if (codeSource.firstChild && codeSource.firstChild.nodeName == 'PRE') {
+		if (codeSource.firstChild && codeSource.firstChild.nodeName === 'PRE') {
 			codeSource.firstChild.id = `code-lang-${language}`;
 		}
 	});
@@ -1738,7 +1730,7 @@ async function getArticleFromContent(tabId, selection = false, options = null) {
 async function formatTitle(article, providedOptions = null) {
 	const options = providedOptions || defaultOptions;
 
-	let title = textReplace(options.title, article, options.disallowedChars + '/');
+	let title = textReplace(options.title, article, `${options.disallowedChars}/`);
 	title = title.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
 	return title;
 }
@@ -1750,7 +1742,7 @@ async function formatMdClipsFolder(article, providedOptions = null) {
 	const options = providedOptions || defaultOptions;
 
 	let mdClipsFolder = '';
-	if (options.mdClipsFolder && options.downloadMode == 'downloadsApi') {
+	if (options.mdClipsFolder && options.downloadMode === 'downloadsApi') {
 		mdClipsFolder = textReplace(options.mdClipsFolder, article, options.disallowedChars);
 		mdClipsFolder = mdClipsFolder.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
 		if (!mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
@@ -1785,19 +1777,19 @@ function textReplace(string, article, disallowedChars = null) {
 
 	// Same implementation as original
 	for (const key in article) {
-		if (article.hasOwnProperty(key) && key != 'content') {
-			let s = (article[key] || '') + '';
+		if (Object.hasOwn(article, key) && key !== 'content') {
+			let s = `${article[key] || ''}`;
 			if (s && disallowedChars) s = generateValidFileName(s, disallowedChars);
 
-			string = string.replace(new RegExp('{' + key + '}', 'g'), s)
-				.replace(new RegExp('{' + key + ':kebab}', 'g'), s.replace(/ /g, '-').toLowerCase())
-				.replace(new RegExp('{' + key + ':snake}', 'g'), s.replace(/ /g, '_').toLowerCase())
+			string = string.replace(new RegExp(`{${key}}`, 'g'), s)
+				.replace(new RegExp(`{${key}:kebab}`, 'g'), s.replace(/ /g, '-').toLowerCase())
+				.replace(new RegExp(`{${key}:snake}`, 'g'), s.replace(/ /g, '_').toLowerCase())
 				.replace(
-					new RegExp('{' + key + ':camel}', 'g'),
+					new RegExp(`{${key}:camel}`, 'g'),
 					s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toLowerCase()),
 				)
 				.replace(
-					new RegExp('{' + key + ':pascal}', 'g'),
+					new RegExp(`{${key}:pascal}`, 'g'),
 					s.replace(/ ./g, (str) => str.trim().toUpperCase()).replace(/^./, (str) => str.toUpperCase()),
 				);
 		}
@@ -1807,7 +1799,7 @@ function textReplace(string, article, disallowedChars = null) {
 	const now = new Date();
 	const dateRegex = /{date:(.+?)}/g;
 	const matches = string.match(dateRegex);
-	if (matches && matches.forEach) {
+	if (matches?.forEach) {
 		matches.forEach(match => {
 			const format = match.substring(6, match.length - 1);
 			const dateString = moment(now).format(format);
@@ -1818,7 +1810,7 @@ function textReplace(string, article, disallowedChars = null) {
 	// Replace keywords
 	const keywordRegex = /{keywords:?(.*)?}/g;
 	const keywordMatches = string.match(keywordRegex);
-	if (keywordMatches && keywordMatches.forEach) {
+	if (keywordMatches?.forEach) {
 		keywordMatches.forEach(match => {
 			let seperator = match.substring(10, match.length - 1);
 			try {
@@ -1845,11 +1837,11 @@ function generateValidFileName(title, disallowedChars = null) {
 	}
 
 	if (!title) return title;
-	else title = title + '';
+	else title = `${title}`;
 	// Remove < > : " / \ | ? *
-	var illegalRe = /[\/\?<>\\:\*\|":]/g;
+	var illegalRe = /[/?<>\\:*|":]/g;
 	// And non-breaking spaces
-	var name = title.replace(illegalRe, '').replace(new RegExp('\u00A0', 'g'), ' ');
+	var name = title.replace(illegalRe, '').replace(/\u00A0/g, ' ');
 
 	if (disallowedChars) {
 		for (let c of disallowedChars) {
@@ -1918,13 +1910,13 @@ function getImageFilename(src, options, prependFilePath = true) {
 
 	if (filename.includes(';base64,')) {
 		// This is a base64 encoded image
-		filename = 'image.' + filename.substring(0, filename.indexOf(';'));
+		filename = `image.${filename.substring(0, filename.indexOf(';'))}`;
 	}
 
-	let extension = filename.substring(filename.lastIndexOf('.'));
-	if (extension == filename) {
+	const extension = filename.substring(filename.lastIndexOf('.'));
+	if (extension === filename) {
 		// There is no extension, give it an 'idunno' extension
-		filename = filename + '.idunno';
+		filename = `${filename}.idunno`;
 	}
 
 	filename = generateValidFileName(filename, options.disallowedChars);
@@ -1937,8 +1929,8 @@ function getImageFilename(src, options, prependFilePath = true) {
  */
 async function preDownloadImages(imageList, markdown, providedOptions = null) {
 	const options = providedOptions || defaultOptions;
-	let newImageList = {};
-	let sourceImageMap = {};
+	const newImageList = {};
+	const sourceImageMap = {};
 
 	// Process all images in parallel
 	await Promise.all(
@@ -1952,7 +1944,7 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 					}
 					const blob = await response.blob();
 
-					if (options.imageStyle == 'base64') {
+					if (options.imageStyle === 'base64') {
 						// Convert to base64
 						const reader = new FileReader();
 						reader.onloadend = () => {
@@ -2019,7 +2011,7 @@ async function downloadMarkdown(
 	// CRITICAL: Ensure title is never empty to prevent download failures
 	if (!title || title.trim() === '') {
 		console.warn('⚠️ [Offscreen] Empty title detected, using fallback');
-		title = 'Untitled-' + Date.now();
+		title = `Untitled-${Date.now()}`;
 	}
 
 	console.log(
@@ -2043,7 +2035,7 @@ async function downloadMarkdown(
 
 			if (mdClipsFolder && !mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
 
-			const fullFilename = mdClipsFolder + title + '.md';
+			const fullFilename = `${mdClipsFolder + title}.md`;
 
 			console.log(`🚀 [Offscreen] Starting Downloads API download: URL=${url}, filename="${fullFilename}"`);
 
@@ -2118,7 +2110,7 @@ async function downloadMarkdown(
 			const url = URL.createObjectURL(blob);
 
 			if (mdClipsFolder && !mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
-			const fullFilename = mdClipsFolder + title + '.md';
+			const fullFilename = `${mdClipsFolder + title}.md`;
 
 			console.log(`🎯 [Offscreen] Created blob URL: ${url}, delegating to service worker`);
 
@@ -2235,7 +2227,7 @@ async function downloadViaContentScript(
 			filename = `${mdClipsFolder.replace(/\//g, '_')}${generateValidFileName(title, options.disallowedChars)}.md`;
 			console.log(`🔗 [Offscreen] Flattening subfolder path: "${mdClipsFolder}" + "${title}" -> "${filename}"`);
 		} else {
-			filename = generateValidFileName(title, options.disallowedChars) + '.md';
+			filename = `${generateValidFileName(title, options.disallowedChars)}.md`;
 		}
 
 		const base64Content = base64EncodeUnicode(markdown);
@@ -2270,9 +2262,7 @@ async function downloadViaContentScript(
  */
 function base64EncodeUnicode(str) {
 	// Encode UTF-8 string to base64
-	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
-		return String.fromCharCode('0x' + p1);
-	});
+	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => String.fromCharCode(`0x${p1}`));
 
 	return btoa(utf8Bytes);
 }
@@ -2280,7 +2270,7 @@ function base64EncodeUnicode(str) {
 /**
  * Convert to fenced code block
  */
-function convertToFencedCodeBlock(node, options) {
+function _convertToFencedCodeBlock(node, options) {
 	const sharedApi = getCodeBlockUtilsApi();
 	if (sharedApi?.convertToFencedCodeBlock) {
 		return sharedApi.convertToFencedCodeBlock(node, options);
@@ -2374,7 +2364,7 @@ function convertToFencedCodeBlock(node, options) {
 
 	var fenceChar = options.fence.charAt(0);
 	var fenceSize = 3;
-	var fenceInCodeRegex = new RegExp('^' + fenceChar + '{3,}', 'gm');
+	var fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
 	var match;
 	while ((match = fenceInCodeRegex.exec(code))) {

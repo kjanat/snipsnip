@@ -1,4 +1,4 @@
-(function(global) {
+((global) => {
 	const ANCHOR_ATTRIBUTE = 'data-snipsnip-node-id';
 	const STRUCTURAL_SELECTOR = 'article, section, main, div, aside, blockquote, pre, table, ul, ol';
 	const WRAPPER_TAGS = new Set(['DIV', 'SECTION', 'ARTICLE', 'ASIDE']);

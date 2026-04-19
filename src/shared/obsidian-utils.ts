@@ -97,7 +97,7 @@ export function prepareMarkdownForObsidian(markdown: string, sourceImageMap: Sou
 
 	let nextMarkdown = markdown;
 
-	nextMarkdown = nextMarkdown.replace(/!\[\[([^\]\|]+)(?:\|[^\]]+)?\]\]/g, (match, target: string) => {
+	nextMarkdown = nextMarkdown.replace(/!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, (match, target: string) => {
 		const resolved = resolveImageTarget(target, sourceImageMap);
 		return resolved !== null ? `![](${resolved})` : match;
 	});

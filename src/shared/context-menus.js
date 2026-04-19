@@ -1,5 +1,5 @@
 // create the context menus
-async function createMenus() {
+async function _createMenus() {
 	const options = await getOptions();
 
 	browser.contextMenus.removeAll();

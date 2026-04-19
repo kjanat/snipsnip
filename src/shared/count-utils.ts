@@ -21,13 +21,13 @@ export function estimateTokens(text: unknown): number {
 
 	let total = 0;
 
-	normalized = normalized.replace(/!?\[([^\]]*)\]\((https?:\/\/[^\s\)]+)\)/g, (_, label: string, url: string) => {
+	normalized = normalized.replace(/!?\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g, (_, label: string, url: string) => {
 		total += Math.ceil(url.length / 2.5);
 		total += 2;
 		return label;
 	});
 
-	normalized = normalized.replace(/https?:\/\/[^\s\)>\]]+/g, (url: string) => {
+	normalized = normalized.replace(/https?:\/\/[^\s)>\]]+/g, (url: string) => {
 		total += Math.ceil(url.length / 2.5);
 		return '';
 	});
@@ -52,7 +52,7 @@ export function estimateTokens(text: unknown): number {
 		return '';
 	});
 
-	normalized = normalized.replace(/\b\d[\d.,:\-\/]*\b/g, (num: string) => {
+	normalized = normalized.replace(/\b\d[\d.,:\-/]*\b/g, (num: string) => {
 		total += Math.ceil(num.length / 2);
 		return '';
 	});
@@ -65,7 +65,7 @@ export function estimateTokens(text: unknown): number {
 		total += 1;
 		return '';
 	});
-	normalized = normalized.replace(/^[\-\*\+]\s/gm, () => {
+	normalized = normalized.replace(/^[-*+]\s/gm, () => {
 		total += 1;
 		return '';
 	});

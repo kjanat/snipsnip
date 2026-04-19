@@ -1,11 +1,11 @@
-(function(root, factory) {
+((root, factory) => {
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory(root);
 		return;
 	}
 
 	root.snipSnipTurndownFactory = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
 	const defaultOptions = {
 		headingStyle: 'atx',
 		hr: '---',
@@ -31,9 +31,7 @@
 		const service = new TurndownService(mergedOptions);
 
 		if (mergedOptions.turndownEscape === false) {
-			service.escape = function(text) {
-				return text;
-			};
+			service.escape = (text) => text;
 		}
 
 		if (turndownPluginGfm) {
@@ -46,27 +44,23 @@
 
 		service.addRule('mark', {
 			filter: ['mark'],
-			replacement: function(content) {
-				return '`' + content + '`';
-			},
+			replacement: (content) => `\`${content}\``,
 		});
 
 		service.addRule('headingLinks', {
-			filter: function(node) {
+			filter: (node) => {
 				if (node.nodeName === 'A') {
 					const hasHeading = Array.from(node.children).some((child) => /^H[1-6]$/.test(child.nodeName));
 					return hasHeading;
 				}
 				return false;
 			},
-			replacement: function(content) {
-				return content;
-			},
+			replacement: (content) => content,
 		});
 
 		service.addRule('customTables', {
 			filter: 'table',
-			replacement: function(content, node) {
+			replacement: (_content, node) => {
 				const rows = Array.from(node.querySelectorAll('tr'));
 				if (rows.length === 0) return '';
 
@@ -76,15 +70,11 @@
 					const cells = Array.from(row.querySelectorAll('th, td'));
 					const cellContents = cells.map((cell) => {
 						const tempService = new TurndownService(mergedOptions);
-						tempService.escape = function(text) {
-							return text;
-						};
+						tempService.escape = (text) => text;
 
 						tempService.addRule('mark', {
 							filter: ['mark'],
-							replacement: function(content) {
-								return '`' + content + '`';
-							},
+							replacement: (content) => `\`${content}\``,
 						});
 
 						if (mergedOptions.imageStyle === 'noImage') {
@@ -97,11 +87,11 @@
 						return tempService.turndown(cell.innerHTML).trim().replace(/\n/g, '<br>');
 					});
 
-					markdown += '| ' + cellContents.join(' | ') + ' |\n';
+					markdown += `| ${cellContents.join(' | ')} |\n`;
 
 					if (rowIndex === 0) {
 						const separator = cellContents.map(() => '---').join(' | ');
-						markdown += '| ' + separator + ' |\n';
+						markdown += `| ${separator} |\n`;
 					}
 				});
 

@@ -1,8 +1,8 @@
 /* Based on Sublime Text's Monokai theme */
 
 .cm-s-monokai.CodeMirror {
-	background: #272822;
 	color: #f8f8f2;
+	background: #272822;
 }
 .cm-s-monokai div.CodeMirror-selected {
 	background: #49483e;
@@ -95,14 +95,14 @@
 	color: #ae81ff;
 }
 .cm-s-monokai span.cm-error {
-	background: #f92672;
 	color: #f8f8f0;
+	background: #f92672;
 }
 
 .cm-s-monokai .CodeMirror-activeline-background {
 	background: #373831;
 }
 .cm-s-monokai .CodeMirror-matchingbracket {
+	color: white;
 	text-decoration: underline;
-	color: white !important;
 }

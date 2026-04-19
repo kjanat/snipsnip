@@ -1,6 +1,6 @@
 .cm-s-colorblind-deuteranopia-dark.CodeMirror {
-	background: #0b1b2b;
 	color: #f4f9ff;
+	background: #0b1b2b;
 }
 
 .cm-s-colorblind-deuteranopia-dark div.CodeMirror-selected {
@@ -22,9 +22,9 @@
 }
 
 .cm-s-colorblind-deuteranopia-dark .CodeMirror-gutters {
+	color: #8ea9c2;
 	background: #102033;
 	border-right: 1px solid #1e3a56;
-	color: #8ea9c2;
 }
 
 .cm-s-colorblind-deuteranopia-dark .CodeMirror-linenumber {
@@ -40,17 +40,17 @@
 }
 
 .cm-s-colorblind-deuteranopia-dark .CodeMirror-matchingbracket {
-	color: #72c4ff !important;
+	color: #72c4ff;
 	outline: 1px solid #305273;
 }
 
 .cm-s-colorblind-deuteranopia-dark span.cm-header {
-	color: #72c4ff;
 	font-weight: 700;
+	color: #72c4ff;
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-quote {
-	color: #bdd1e3;
 	font-style: italic;
+	color: #bdd1e3;
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-comment {
 	color: #8ea9c2;
@@ -68,8 +68,8 @@
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-keyword,
 .cm-s-colorblind-deuteranopia-dark span.cm-atom {
-	color: #72c4ff;
 	font-weight: 700;
+	color: #72c4ff;
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-number,
 .cm-s-colorblind-deuteranopia-dark span.cm-tag {
@@ -80,10 +80,10 @@
 	color: #4b7198;
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-strong {
-	color: #f4f9ff;
 	font-weight: 700;
+	color: #f4f9ff;
 }
 .cm-s-colorblind-deuteranopia-dark span.cm-em {
-	color: #bdd1e3;
 	font-style: italic;
+	color: #bdd1e3;
 }

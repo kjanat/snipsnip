@@ -1,11 +1,11 @@
-(function(root, factory) {
+((root, factory) => {
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory(root);
 		return;
 	}
 
 	root.snipSnipSelectionUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
 	function buildDomWithSelection(domString, selectionHtml, shouldUseSelection = true) {
 		if (!shouldUseSelection || typeof selectionHtml !== 'string' || !selectionHtml.trim()) {
 			return domString;
@@ -27,7 +27,7 @@
 				dom.body.innerHTML = selectionHtml;
 				return dom.documentElement.outerHTML;
 			}
-		} catch (error) {
+		} catch (_error) {
 			return domString;
 		}
 

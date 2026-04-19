@@ -4,10 +4,11 @@
  */
 
 import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
-import fs from 'fs';
-import http from 'http';
-import path from 'path';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
+
 const fixturePathMap = {
 	'/batch/alpha.html': path.join(__dirname, '../fixtures/e2e-pages/batch/alpha.html'),
 	'/batch/beta.html': path.join(__dirname, '../fixtures/e2e-pages/batch/beta.html'),
@@ -225,7 +226,7 @@ async function withTemporarySyncOptions(serviceWorker, overrides, callback) {
 			const toRemove = [];
 
 			targetKeys.forEach((key) => {
-				if (Object.prototype.hasOwnProperty.call(previousOptions, key)) {
+				if (Object.hasOwn(previousOptions, key)) {
 					toSet[key] = previousOptions[key];
 				} else {
 					toRemove.push(key);

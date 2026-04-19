@@ -1,11 +1,11 @@
-(function(root, factory) {
+((root, factory) => {
 	if (typeof module === 'object' && module.exports) {
 		module.exports = factory(root);
 		return;
 	}
 
 	root.snipSnipHashtagUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
 	const hashtagEscapeSentinel = '\uE000';
 
 	function normalizeHashtagHandlingMode(mode) {

@@ -1,3 +1,4 @@
+import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
 import popupTemplate from '@/popup/popup.html?raw';
 import agentBridgeState from '@/shared/agent-bridge-state.ts';
 import countUtils from '@/shared/count-utils.ts';
@@ -5,8 +6,6 @@ import libraryState from '@/shared/library-state.ts';
 import obsidianUtils from '@/shared/obsidian-utils.ts';
 import optionsState from '@/shared/options-state.ts';
 import popupBatchUtils from '@/shared/popup-batch-utils.ts';
-
-import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
 
 const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const codeMirrorCssUrl = new URL('@/popup/lib/codemirror.css', import.meta.url).href;

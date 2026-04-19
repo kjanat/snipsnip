@@ -9,7 +9,7 @@
  *   normalizeSearchText(value)    → string
  *   searchSettings(index, query)  → { query, tokens, stage, results, matches }
  */
-(function(root) {
+((root) => {
 	const core = root.snipSnipSearchCore;
 
 	/* Re-export helpers the options page already depends on */

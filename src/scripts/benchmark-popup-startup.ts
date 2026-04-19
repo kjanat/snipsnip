@@ -1,6 +1,6 @@
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const { chromium } = require('playwright/test');
 
 const fixtureHost = 'https://fixtures.snipsnip.test';
@@ -36,7 +36,6 @@ function parseArgs(argv) {
 		}
 		if (arg === '--extension-path') {
 			options.targets.push({ label: 'target', extensionPath: path.resolve(argv[++i]) });
-			continue;
 		}
 	}
 

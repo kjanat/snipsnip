@@ -35,8 +35,8 @@ export function generateValidFileName(title: unknown, disallowedChars: string | 
 		return title === null ? null : String(title ?? '');
 	}
 
-	let normalizedTitle = String(title);
-	const illegalCharacters = /[\/\?<>\\:\*\|":]/g;
+	const normalizedTitle = String(title);
+	const illegalCharacters = /[/?<>\\:*|":]/g;
 	let name = normalizedTitle.replace(illegalCharacters, '').replace(/\u00A0/g, ' ');
 
 	if (disallowedChars !== null && disallowedChars !== '') {
@@ -60,7 +60,7 @@ export function textReplace(
 	let nextValue = String(value ?? '');
 
 	for (const key in article) {
-		if (!Object.prototype.hasOwnProperty.call(article, key) || key === 'content') {
+		if (!Object.hasOwn(article, key) || key === 'content') {
 			continue;
 		}
 

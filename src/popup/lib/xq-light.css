@@ -21,8 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 .cm-s-xq-light span.cm-keyword {
-	line-height: 1em;
 	font-weight: bold;
+	line-height: 1em;
 	color: #5a5cad;
 }
 .cm-s-xq-light span.cm-atom {
@@ -46,8 +46,8 @@ THE SOFTWARE.
 .cm-s-xq-light span.cm-property {}
 .cm-s-xq-light span.cm-operator {}
 .cm-s-xq-light span.cm-comment {
-	color: #0080ff;
 	font-style: italic;
+	color: #0080ff;
 }
 .cm-s-xq-light span.cm-string {
 	color: red;
@@ -78,7 +78,7 @@ THE SOFTWARE.
 	background: #e8f2ff;
 }
 .cm-s-xq-light .CodeMirror-matchingbracket {
+	color: black;
 	outline: 1px solid grey;
-	color: black !important;
 	background: yellow;
 }

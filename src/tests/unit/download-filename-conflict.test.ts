@@ -226,10 +226,10 @@ describe('Download Filename Conflict Handling', () => {
 describe('Empty Filename Handling', () => {
 	const generateValidFileName = (title, disallowedChars = null) => {
 		if (!title) return title;
-		else title = title + '';
+		else title = `${title}`;
 
-		var illegalRe = /[\/\?<>\\:\*\|":]/g;
-		var name = title.replace(illegalRe, '').replace(new RegExp('\u00A0', 'g'), ' ');
+		var illegalRe = /[/?<>\\:*|":]/g;
+		var name = title.replace(illegalRe, '').replace(/\u00A0/g, ' ');
 
 		if (disallowedChars) {
 			for (let c of disallowedChars) {
@@ -243,7 +243,7 @@ describe('Empty Filename Handling', () => {
 
 	const validateAndFixFilename = (title) => {
 		if (!title || title.trim() === '') {
-			return 'Untitled-' + Date.now();
+			return `Untitled-${Date.now()}`;
 		}
 		return title;
 	};
@@ -539,7 +539,7 @@ describe('Article PageTitle Fallback', () => {
 describe('Download Full Filename Construction', () => {
 	const buildFullFilename = (mdClipsFolder, title) => {
 		if (!title || title.trim() === '') {
-			title = 'Untitled-' + Date.now();
+			title = `Untitled-${Date.now()}`;
 		}
 
 		let folder = mdClipsFolder || '';
@@ -547,7 +547,7 @@ describe('Download Full Filename Construction', () => {
 			folder += '/';
 		}
 
-		return folder + title + '.md';
+		return `${folder + title}.md`;
 	};
 
 	test('should build filename with folder and title', () => {

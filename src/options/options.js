@@ -1,7 +1,7 @@
 const browser = globalThis.browser;
 const createMenus = globalThis.createMenus;
 const defaultOptions = globalThis.defaultOptions || {};
-const moment = globalThis.moment;
+const _moment = globalThis.moment;
 
 let options = defaultOptions;
 let librarySettings = {
@@ -1226,7 +1226,7 @@ function normalizeImportedOptionsState(importedOptions) {
 		...(importedOptions || {}),
 		tableFormatting: {
 			...(defaultOptions.tableFormatting || {}),
-			...((importedOptions && importedOptions.tableFormatting) || {}),
+			...((importedOptions?.tableFormatting) || {}),
 		},
 	};
 
@@ -1318,7 +1318,7 @@ function buildExportFilenameState(date) {
 	}
 
 	const d = date instanceof Date ? date : new Date(date);
-	const datestring = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+	const datestring = `${d.getFullYear()}-${(`0${d.getMonth() + 1}`).slice(-2)}-${(`0${d.getDate()}`).slice(-2)}`;
 	return `SnipSnip-export-${datestring}.json`;
 }
 
@@ -1362,7 +1362,7 @@ function normalizeColorBlindTheme(value) {
 }
 
 function getColorBlindThemeClassName(value = options?.colorBlindTheme) {
-	return 'colorblind-theme-' + normalizeColorBlindTheme(value);
+	return `colorblind-theme-${normalizeColorBlindTheme(value)}`;
 }
 
 const CB_DROPDOWN_LABELS = { deuteranopia: 'Deuteranopia', protanopia: 'Protanopia', tritanopia: 'Tritanopia' };
@@ -1402,12 +1402,12 @@ function applyThemeSettings() {
 
 	// Apply theme mode
 	root.classList.remove('theme-light', 'theme-dark', 'theme-system');
-	root.classList.add('theme-' + (options.popupTheme || 'system'));
+	root.classList.add(`theme-${options.popupTheme || 'system'}`);
 
 	root.classList.remove(...SPECIAL_THEME_CLASS_NAMES);
 	root.classList.remove(...COLORBLIND_VARIANT_CLASS_NAMES);
 	if (specialTheme !== 'none') {
-		root.classList.add('special-theme-' + specialTheme);
+		root.classList.add(`special-theme-${specialTheme}`);
 		if (specialTheme === 'colorblind') {
 			root.classList.add(getColorBlindThemeClassName(options.colorBlindTheme));
 		}
@@ -1419,7 +1419,7 @@ function applyThemeSettings() {
 	root.classList.remove(...ACCENT_CLASS_NAMES);
 	const accent = options.popupAccent || 'sage';
 	if (specialTheme === 'none' && accent !== 'sage') {
-		root.classList.add('accent-' + accent);
+		root.classList.add(`accent-${accent}`);
 	}
 
 	persistPopupThemeCache(options);
@@ -1492,7 +1492,7 @@ function configureReviewLink() {
 	reviewLink.href = isFirefox ? firefoxUrl : chromeUrl;
 }
 
-const saveOptions = e => {
+const _saveOptions = e => {
 	e.preventDefault();
 
 	const customSendToTargets = normalizeCustomSendToTargetsState(options.sendToCustomTargets);
@@ -1616,7 +1616,7 @@ const save = (feedback = { message: 'Options Saved 💾', type: 'success' }) => 
 function showToast(message, type) {
 	const toast = document.getElementById('status');
 	toast.textContent = message;
-	toast.className = 'toast ' + type + ' visible';
+	toast.className = `toast ${type} visible`;
 	clearTimeout(toast._hideTimeout);
 	toast._hideTimeout = setTimeout(() => {
 		toast.classList.remove('visible');
@@ -1722,9 +1722,9 @@ const setCurrentChoice = result => {
 		document.querySelector('#downloadMode .card-desc').innerText = 'The Downloads API is unavailable in this browser.';
 	}
 
-	const downloadImages = options.downloadImages && options.downloadMode == 'downloadsApi';
+	const downloadImages = options.downloadImages && options.downloadMode === 'downloadsApi';
 
-	if (!downloadImages && (options.imageStyle == 'markdown' || options.imageStyle.startsWith('obsidian'))) {
+	if (!downloadImages && (options.imageStyle === 'markdown' || options.imageStyle.startsWith('obsidian'))) {
 		options.imageStyle = 'originalSource';
 	}
 
@@ -1913,21 +1913,21 @@ const refreshElements = () => {
 	updateSpecialThemeControlState();
 
 	document.getElementById('downloadModeGroup').querySelectorAll('.setting-card').forEach(container => {
-		show(container, options.downloadMode == 'downloadsApi');
+		show(container, options.downloadMode === 'downloadsApi');
 	});
 
-	show(document.getElementById('mdClipsFolder'), options.downloadMode == 'downloadsApi');
+	show(document.getElementById('mdClipsFolder'), options.downloadMode === 'downloadsApi');
 
-	show(document.getElementById('linkReferenceStyle'), options.linkStyle == 'referenced');
+	show(document.getElementById('linkReferenceStyle'), options.linkStyle === 'referenced');
 
 	show(
 		document.getElementById('imageRefOptions'),
-		!options.imageStyle.startsWith('obsidian') && options.imageStyle != 'noImage',
+		!options.imageStyle.startsWith('obsidian') && options.imageStyle !== 'noImage',
 	);
 
-	show(document.getElementById('fence'), options.codeBlockStyle == 'fenced');
+	show(document.getElementById('fence'), options.codeBlockStyle === 'fenced');
 
-	const downloadImages = options.downloadImages && options.downloadMode == 'downloadsApi';
+	const downloadImages = options.downloadImages && options.downloadMode === 'downloadsApi';
 
 	show(document.getElementById('imagePrefix'), downloadImages);
 
@@ -1944,12 +1944,12 @@ const refreshElements = () => {
 
 const inputChange = async (e) => {
 	if (e) {
-		let key = e.target.name;
+		const key = e.target.name;
 		let value = e.target.value;
-		if (key == 'import-file') {
+		if (key === 'import-file') {
 			fr = new FileReader();
 			fr.onload = async (ev) => {
-				let lines = ev.target.result;
+				const lines = ev.target.result;
 				const importedPayload = JSON.parse(lines);
 				const importedLibrarySettings = importedPayload?.librarySettings;
 				const importedOptions = { ...importedPayload };
@@ -1968,7 +1968,7 @@ const inputChange = async (e) => {
 			};
 			fr.readAsText(e.target.files[0]);
 		} else if (key === 'libraryEnabled' || key === 'libraryAutoSaveOnPopupOpen' || key === 'libraryItemsToKeep') {
-			if (e.target.type == 'checkbox') value = e.target.checked;
+			if (e.target.type === 'checkbox') value = e.target.checked;
 
 			if (key === 'libraryEnabled') {
 				librarySettings.enabled = Boolean(value);
@@ -1988,7 +1988,7 @@ const inputChange = async (e) => {
 			showToast('Library settings saved', 'success');
 		} else if (key === 'agentBridgeEnabled') {
 			const nextEnabled = Boolean(e.target.checked);
-			let reloadRequired = false;
+			const reloadRequired = false;
 
 			if (nextEnabled && usesOptionalNativeMessagingPermission() && !agentBridgeStatus.permissionGranted) {
 				// Don't immediately request permission — show the preflight panel
@@ -2008,7 +2008,7 @@ const inputChange = async (e) => {
 			setCurrentAgentBridgeChoice(agentBridgeSettings, refreshedStatus);
 			showToast(nextEnabled ? 'Agent Bridge enabled' : 'Agent Bridge disabled', 'success');
 		} else {
-			if (e.target.type == 'checkbox') value = e.target.checked;
+			if (e.target.type === 'checkbox') value = e.target.checked;
 			if (key === 'sendToMaxUrlLength') {
 				value = normalizeSendToMaxUrlLengthState(value, defaultOptions?.sendToMaxUrlLength);
 				e.target.value = value;
@@ -2023,7 +2023,7 @@ const inputChange = async (e) => {
 				options[key] = value;
 			}
 
-			if (key == 'contextMenus') {
+			if (key === 'contextMenus') {
 				if (value) createMenus();
 				else browser.contextMenus.removeAll();
 			}
@@ -2040,9 +2040,9 @@ const inputKeyup = (e) => {
 };
 
 const buttonClick = async (e) => {
-	if (e.target.id == 'import' || e.target.closest('#import')) {
+	if (e.target.id === 'import' || e.target.closest('#import')) {
 		document.getElementById('import-file').click();
-	} else if (e.target.id == 'export' || e.target.closest('#export')) {
+	} else if (e.target.id === 'export' || e.target.closest('#export')) {
 		console.log('export');
 		const json = JSON.stringify(buildExportPayload(), null, 2);
 		var blob = new Blob([json], { type: 'text/json' });
@@ -2052,9 +2052,9 @@ const buttonClick = async (e) => {
 			saveAs: true,
 			filename: buildExportFilenameState(new Date()),
 		});
-	} else if (e.target.id == 'clear-library' || e.target.closest('#clear-library')) {
+	} else if (e.target.id === 'clear-library' || e.target.closest('#clear-library')) {
 		clearLibraryItems();
-	} else if (e.target.id == 'refreshAgentBridgeStatus' || e.target.closest('#refreshAgentBridgeStatus')) {
+	} else if (e.target.id === 'refreshAgentBridgeStatus' || e.target.closest('#refreshAgentBridgeStatus')) {
 		const refreshBtn = document.getElementById('refreshAgentBridgeStatus');
 		const needsPermission = usesOptionalNativeMessagingPermission() && agentBridgeSettings.enabled
 			&& !agentBridgeStatus.permissionGranted;
@@ -2124,7 +2124,7 @@ const buttonClick = async (e) => {
 					document.getElementById('agent-bridge-container')?.dataset.bridgeState || 'disabled',
 				);
 			});
-	} else if (e.target.id == 'copyAgentBridgeCommand' || e.target.closest('#copyAgentBridgeCommand')) {
+	} else if (e.target.id === 'copyAgentBridgeCommand' || e.target.closest('#copyAgentBridgeCommand')) {
 		const command = document.getElementById('agentBridgeInstallCommand')?.textContent?.trim()
 			|| agentBridgeInstallCommand;
 		navigator.clipboard.writeText(command)
@@ -2190,7 +2190,7 @@ function initSidebar() {
 		}
 
 		const searchInput = document.getElementById('settings-search');
-		if (searchInput && searchInput.value) {
+		if (searchInput?.value) {
 			searchInput.value = '';
 			searchInput.dispatchEvent(new Event('input'));
 		}
@@ -2363,12 +2363,12 @@ const loaded = () => {
 		) return;
 		// Skip colorblind theme dropdown (has its own handlers)
 		if (input.id === 'colorBlindThemeBtn' || input.closest('#colorBlindThemePanel')) return;
-		if (input.tagName == 'TEXTAREA' || input.type == 'text') {
+		if (input.tagName === 'TEXTAREA' || input.type === 'text') {
 			input.addEventListener('keyup', inputKeyup);
-		} else if (input.type == 'number') {
+		} else if (input.type === 'number') {
 			input.addEventListener('keyup', inputKeyup);
 			input.addEventListener('change', inputChange);
-		} else if (input.tagName == 'BUTTON') {
+		} else if (input.tagName === 'BUTTON') {
 			input.addEventListener('click', buttonClick);
 		} else input.addEventListener('change', inputChange);
 	});
@@ -2476,14 +2476,14 @@ function initSearch() {
 			item.setAttribute('aria-selected', String(isActive));
 			item.tabIndex = isActive ? 0 : -1;
 		});
-		const activeItem = document.querySelector(`.sidebar-item[data-section="${activeTab}"]`);
+		const _activeItem = document.querySelector(`.sidebar-item[data-section="${activeTab}"]`);
 
 		allSections.forEach(section => {
 			const isActive = section.id === `section-${activeTab}`;
 			section.classList.toggle('active', isActive);
 			section.setAttribute('aria-hidden', String(!isActive));
 		});
-		const activeSection = document.getElementById(`section-${activeTab}`);
+		const _activeSection = document.getElementById(`section-${activeTab}`);
 
 		refreshElements();
 	}
@@ -2527,7 +2527,7 @@ function initSearch() {
 					|| section.dataset.sectionLabel || '';
 				const cardTitle = card.querySelector('.card-title')?.textContent?.trim() || '';
 				if (sectionLabel) {
-					card.dataset.searchBreadcrumb = sectionLabel + (cardTitle ? ' \u203a ' + cardTitle : '');
+					card.dataset.searchBreadcrumb = sectionLabel + (cardTitle ? ` \u203a ${cardTitle}` : '');
 				}
 
 				const aliasSources = tokenMatches.filter(m => m.fieldSource === 'alias');
@@ -2539,7 +2539,7 @@ function initSearch() {
 						return aliasSources.some(m => normKw.includes(m.token) || normKw.startsWith(m.token));
 					});
 					if (matchedKeywords.length > 0) {
-						card.dataset.searchAlias = 'matched via: ' + matchedKeywords.slice(0, 2).join(', ');
+						card.dataset.searchAlias = `matched via: ${matchedKeywords.slice(0, 2).join(', ')}`;
 					}
 				}
 
@@ -2592,12 +2592,12 @@ function initSearch() {
 	});
 }
 
-function initSearchLegacy() {
+function _initSearchLegacy() {
 	const searchInput = document.getElementById('settings-search');
 	const contentPanel = document.querySelector('.content-panel');
 	const noResults = document.getElementById('search-no-results');
 	const noResultsQuery = document.getElementById('search-no-results-query');
-	const shortcutHint = document.getElementById('search-shortcut-hint');
+	const _shortcutHint = document.getElementById('search-shortcut-hint');
 
 	// Build search index: collect all setting-cards with their searchable text
 	// Also include the downloadModeGroup's inner cards as individual entries
@@ -2732,7 +2732,7 @@ function getCheckedValue(radioObj) {
 		return '';
 	}
 	var radioLength = radioObj.length;
-	if (radioLength == undefined) {
+	if (radioLength === undefined) {
 		if (radioObj.checked) {
 			return radioObj.value;
 		} else {
@@ -2756,13 +2756,13 @@ function setCheckedValue(radioObj, newValue) {
 		return;
 	}
 	var radioLength = radioObj.length;
-	if (radioLength == undefined) {
-		radioObj.checked = radioObj.value == newValue.toString();
+	if (radioLength === undefined) {
+		radioObj.checked = radioObj.value === newValue.toString();
 		return;
 	}
 	for (var i = 0; i < radioLength; i++) {
 		radioObj[i].checked = false;
-		if (radioObj[i].value == newValue.toString()) {
+		if (radioObj[i].value === newValue.toString()) {
 			radioObj[i].checked = true;
 		}
 	}

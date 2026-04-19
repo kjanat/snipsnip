@@ -73,7 +73,7 @@ function getSiteRulesApi() {
 }
 
 // function to get the options from storage and substitute default options if it fails
-async function getOptions() {
+async function _getOptions() {
 	let options = defaultOptions;
 	try {
 		options = await browser.storage.sync.get(defaultOptions);

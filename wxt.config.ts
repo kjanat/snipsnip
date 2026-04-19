@@ -1,4 +1,4 @@
-import { AutoIconsOptions } from '@wxt-dev/auto-icons';
+import type { AutoIconsOptions } from '@wxt-dev/auto-icons';
 import { defineConfig } from 'wxt';
 
 const autoIcons: AutoIconsOptions = {

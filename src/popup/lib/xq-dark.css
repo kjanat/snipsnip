@@ -21,8 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 .cm-s-xq-dark.CodeMirror {
-	background: #0a001f;
 	color: #f8f8f8;
+	background: #0a001f;
 }
 .cm-s-xq-dark div.CodeMirror-selected {
 	background: #27007a;
@@ -110,6 +110,6 @@ THE SOFTWARE.
 	background: #27282e;
 }
 .cm-s-xq-dark .CodeMirror-matchingbracket {
+	color: white;
 	outline: 1px solid grey;
-	color: white !important;
 }

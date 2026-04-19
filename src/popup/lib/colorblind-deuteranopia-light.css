@@ -1,6 +1,6 @@
 .cm-s-colorblind-deuteranopia-light.CodeMirror {
-	background: #ffffff;
 	color: #102033;
+	background: #ffffff;
 }
 
 .cm-s-colorblind-deuteranopia-light div.CodeMirror-selected {
@@ -22,9 +22,9 @@
 }
 
 .cm-s-colorblind-deuteranopia-light .CodeMirror-gutters {
+	color: #52677d;
 	background: #eef4f9;
 	border-right: 1px solid #c5d7e6;
-	color: #52677d;
 }
 
 .cm-s-colorblind-deuteranopia-light .CodeMirror-linenumber {
@@ -40,17 +40,17 @@
 }
 
 .cm-s-colorblind-deuteranopia-light .CodeMirror-matchingbracket {
-	color: #0a365b !important;
+	color: #0a365b;
 	outline: 1px solid #afc6da;
 }
 
 .cm-s-colorblind-deuteranopia-light span.cm-header {
-	color: #0f4c81;
 	font-weight: 700;
+	color: #0f4c81;
 }
 .cm-s-colorblind-deuteranopia-light span.cm-quote {
-	color: #27435c;
 	font-style: italic;
+	color: #27435c;
 }
 .cm-s-colorblind-deuteranopia-light span.cm-comment {
 	color: #52677d;
@@ -68,8 +68,8 @@
 }
 .cm-s-colorblind-deuteranopia-light span.cm-keyword,
 .cm-s-colorblind-deuteranopia-light span.cm-atom {
-	color: #0f4c81;
 	font-weight: 700;
+	color: #0f4c81;
 }
 .cm-s-colorblind-deuteranopia-light span.cm-number,
 .cm-s-colorblind-deuteranopia-light span.cm-tag {
@@ -80,10 +80,10 @@
 	color: #839db7;
 }
 .cm-s-colorblind-deuteranopia-light span.cm-strong {
-	color: #102033;
 	font-weight: 700;
+	color: #102033;
 }
 .cm-s-colorblind-deuteranopia-light span.cm-em {
-	color: #27435c;
 	font-style: italic;
+	color: #27435c;
 }

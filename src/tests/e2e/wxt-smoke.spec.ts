@@ -1,5 +1,5 @@
 import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
-import { BrowserContext, chromium, expect, test } from 'playwright/test';
+import { type BrowserContext, chromium, expect, test } from 'playwright/test';
 
 test.describe('WXT smoke', () => {
 	let context: BrowserContext;

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { join, resolve } from 'path';
+import fs from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
 const defaultExtensionPath = join(repoRoot, '.output', 'chrome-mv3');

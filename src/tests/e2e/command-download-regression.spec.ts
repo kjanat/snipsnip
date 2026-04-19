@@ -4,9 +4,10 @@
  */
 
 import { getExtensionLaunchArgs } from '@/tests/helpers/extension-target';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
+
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixturePath = '/command-download/host.html';
 const fixtureFile = path.join(__dirname, '../fixtures/e2e-pages/command-download/host.html');

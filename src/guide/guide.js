@@ -8,8 +8,7 @@
  *  - Keyboard navigation (/, Escape, anchor focus management)
  *  - Open Settings action
  */
-(function() {
-	'use strict';
+(() => {
 	const browser = globalThis.browser;
 	const defaultOptions = globalThis.defaultOptions || {};
 
@@ -40,20 +39,20 @@
 		const root = document.documentElement;
 		const specialTheme = opts.specialTheme || 'none';
 		root.classList.remove('theme-light', 'theme-dark', 'theme-system');
-		root.classList.add('theme-' + (opts.popupTheme || 'system'));
+		root.classList.add(`theme-${opts.popupTheme || 'system'}`);
 
 		root.classList.remove(...SPECIAL_THEME_CLASS_NAMES);
 		root.classList.remove(...COLORBLIND_VARIANT_CLASS_NAMES);
 		if (specialTheme !== 'none') {
-			root.classList.add('special-theme-' + specialTheme);
+			root.classList.add(`special-theme-${specialTheme}`);
 			if (specialTheme === 'colorblind') {
-				root.classList.add('colorblind-theme-' + normalizeColorBlindTheme(opts.colorBlindTheme));
+				root.classList.add(`colorblind-theme-${normalizeColorBlindTheme(opts.colorBlindTheme)}`);
 			}
 		}
 
 		root.classList.remove(...ACCENT_CLASS_NAMES);
 		const accent = opts.popupAccent || 'sage';
-		if (specialTheme === 'none' && accent !== 'sage') root.classList.add('accent-' + accent);
+		if (specialTheme === 'none' && accent !== 'sage') root.classList.add(`accent-${accent}`);
 	}
 
 	function loadSettings() {
@@ -180,7 +179,7 @@
 			noResults.style.display = 'none';
 			const sorted = result.matches.slice().sort((a, b) => b.score - a.score);
 
-			resultsCount.textContent = sorted.length + ' result' + (sorted.length !== 1 ? 's' : '');
+			resultsCount.textContent = `${sorted.length} result${sorted.length !== 1 ? 's' : ''}`;
 
 			resultsList.innerHTML = sorted.map(m => {
 				const el = m.element;
@@ -266,7 +265,7 @@
 				if (!entry.isIntersecting) return;
 				const id = entry.target.id;
 				tocLinks.forEach(link => {
-					link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+					link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
 				});
 			});
 		}, {
@@ -321,11 +320,11 @@
 		const btn = document.getElementById('open-settings');
 		if (!btn) return;
 		btn.addEventListener('click', () => {
-			if (typeof browser !== 'undefined' && browser.runtime?.openOptionsPage) {
+			if (browser?.runtime?.openOptionsPage) {
 				browser.runtime.openOptionsPage();
 			} else {
 				const optionsPagePath = Reflect.get(globalThis, 'snipSnipPagePaths')?.options || 'options/options.html';
-				window.open('/' + optionsPagePath, '_blank');
+				window.open(`/${optionsPagePath}`, '_blank');
 			}
 		});
 	}

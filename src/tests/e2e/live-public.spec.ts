@@ -12,7 +12,7 @@ import {
 	loadLatestSuccessfulRun,
 	persistSnapshotRun,
 } from '@/tests/helpers/live-public-artifacts';
-import path from 'path';
+import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
 
 const livePublicArtifactRoot = path.join(repoRoot, 'test-artifacts', 'live-public');

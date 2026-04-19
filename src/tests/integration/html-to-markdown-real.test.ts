@@ -4,13 +4,13 @@
  */
 
 const { createTurndownService } = require('@/tests/helpers/browser-env');
-const htmlSamples = require('@/tests/fixtures/html-samples');
+const _htmlSamples = require('@/tests/fixtures/html-samples');
 
 describe('Real HTML to Markdown Conversion', () => {
 	/**
 	 * Helper to normalize markdown for comparison
 	 */
-	function normalizeMarkdown(markdown) {
+	function _normalizeMarkdown(markdown) {
 		return markdown
 			.trim()
 			.replace(/\r\n/g, '\n')

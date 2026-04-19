@@ -243,7 +243,7 @@ export function resetOptionKeys(
 			const nextTableFormatting = isPlainObject(nextOptions.tableFormatting) ? nextOptions.tableFormatting : {};
 			nextOptions.tableFormatting = nextTableFormatting;
 
-			if (Object.prototype.hasOwnProperty.call(defaultTableFormatting, tableOption)) {
+			if (Object.hasOwn(defaultTableFormatting, tableOption)) {
 				nextTableFormatting[tableOption] = deepClone(defaultTableFormatting[tableOption]);
 			} else {
 				delete nextTableFormatting[tableOption];

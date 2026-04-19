@@ -4,9 +4,10 @@
  */
 
 import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
+
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixtureFiles = {
 	'/extension/deterministic-article.html': path.join(
@@ -313,7 +314,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				const themeLinks = await popupPage.evaluate(() => {
 					return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 						.map((link) => link.getAttribute('href'))
-						.filter((href) => href && href.startsWith('lib/') && href !== 'lib/codemirror.css');
+						.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 				});
 
 				expect(themeLinks).toEqual([`lib/${slug}-dark.css`]);
@@ -343,7 +344,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				const themeLinks = await popupPage.evaluate(() => {
 					return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 						.map((link) => link.getAttribute('href'))
-						.filter((href) => href && href.startsWith('lib/') && href !== 'lib/codemirror.css');
+						.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 				});
 
 				expect(themeLinks).toEqual([`lib/${slug}-light.css`]);
@@ -382,7 +383,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				const themeLinks = await popupPage.evaluate(() => {
 					return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 						.map((link) => link.getAttribute('href'))
-						.filter((href) => href && href.startsWith('lib/') && href !== 'lib/codemirror.css');
+						.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 				});
 
 				expect(themeLinks).toEqual([`lib/colorblind-${variant}-dark.css`]);
@@ -413,7 +414,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				const themeLinks = await popupPage.evaluate(() => {
 					return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 						.map((link) => link.getAttribute('href'))
-						.filter((href) => href && href.startsWith('lib/') && href !== 'lib/codemirror.css');
+						.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 				});
 
 				expect(themeLinks).toEqual([`lib/colorblind-${variant}-light.css`]);
@@ -444,7 +445,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			const themeLinks = await popupPage.evaluate(() => {
 				return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 					.map((link) => link.getAttribute('href'))
-					.filter((href) => href && href.startsWith('lib/') && href !== 'lib/codemirror.css');
+					.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 			});
 
 			expect(themeLinks).toEqual(['lib/nord.css']);

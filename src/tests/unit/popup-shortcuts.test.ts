@@ -82,8 +82,8 @@ describe('buildShortcutsFragment', () => {
 
 	test('uses COMMAND_LABELS for human-readable description', () => {
 		const div = getWrapper(mockCommands);
-		expect(div.textContent).toContain(COMMAND_LABELS['_execute_action']);
-		expect(div.textContent).toContain(COMMAND_LABELS['copy_selection_as_markdown']);
+		expect(div.textContent).toContain(COMMAND_LABELS._execute_action);
+		expect(div.textContent).toContain(COMMAND_LABELS.copy_selection_as_markdown);
 	});
 
 	test('adds a section label button before the unassigned table', () => {
@@ -110,7 +110,7 @@ describe('buildShortcutsFragment', () => {
 		const div = getWrapper([
 			{ name: 'download_tab_as_markdown', shortcut: '', description: 'fallback used if label missing' },
 		]);
-		expect(div.textContent).toContain(COMMAND_LABELS['download_tab_as_markdown']);
+		expect(div.textContent).toContain(COMMAND_LABELS.download_tab_as_markdown);
 	});
 });
 

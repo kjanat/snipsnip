@@ -180,12 +180,12 @@ function normalizeColorBlindTheme(value) {
 }
 
 function getColorBlindThemeClassName(value) {
-	return 'colorblind-theme-' + normalizeColorBlindTheme(value);
+	return `colorblind-theme-${normalizeColorBlindTheme(value)}`;
 }
 
 function getResolvedSpecialThemeKey(specialTheme, colorBlindTheme) {
 	if (specialTheme === 'colorblind') {
-		return 'colorblind-' + normalizeColorBlindTheme(colorBlindTheme);
+		return `colorblind-${normalizeColorBlindTheme(colorBlindTheme)}`;
 	}
 	return specialTheme;
 }
@@ -844,21 +844,21 @@ function formatCounterDisplay(text, mode) {
 
 	const normalized = String(text || '');
 	if (mode === 'words') {
-		return getFallbackWordCount(normalized).toLocaleString() + ' words';
+		return `${getFallbackWordCount(normalized).toLocaleString()} words`;
 	}
 
 	if (mode === 'minRead') {
 		const words = getFallbackWordCount(normalized);
 		const minutes = words === 0 ? 0 : Math.max(1, Math.ceil(words / 200));
-		return minutes.toLocaleString() + ' min read';
+		return `${minutes.toLocaleString()} min read`;
 	}
 
 	if (mode === 'tokens') {
 		const remaining = normalized.replace(/\s+/g, ' ').trim();
-		return Math.ceil((remaining.length || 0) / 4).toLocaleString() + ' tokens';
+		return `${Math.ceil((remaining.length || 0) / 4).toLocaleString()} tokens`;
 	}
 
-	return normalized.length.toLocaleString() + ' chars';
+	return `${normalized.length.toLocaleString()} chars`;
 }
 
 function afterNextPaint() {
@@ -1012,7 +1012,7 @@ function getEditorValue() {
 }
 
 function editorHasSelection() {
-	return Boolean(cm?.somethingSelected && cm.somethingSelected());
+	return Boolean(cm?.somethingSelected?.());
 }
 
 function getEditorSelection() {
@@ -1247,11 +1247,9 @@ function resolveSafePrintAssetHref(href) {
 function buildMarkedRenderer({ renderImages = false } = {}) {
 	const renderer = new marked.Renderer();
 
-	renderer.html = function({ text }) {
-		return escapeHtml(text || '');
-	};
+	renderer.html = ({ text }) => escapeHtml(text || '');
 
-	renderer.image = function({ href, title, text }) {
+	renderer.image = ({ href, title, text }) => {
 		const alt = escapeHtml(text || '');
 		const safeSrc = resolveSafePrintAssetHref(href);
 		const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
@@ -1304,7 +1302,7 @@ function renderPreviewContent() {
 	try {
 		body.innerHTML = renderMarkdownToHtml(raw);
 	} catch (err) {
-		body.textContent = 'Preview rendering failed: ' + err.message;
+		body.textContent = `Preview rendering failed: ${err.message}`;
 	}
 }
 
@@ -1691,12 +1689,12 @@ function applyThemeSettings(options) {
 
 	// Apply theme mode
 	dom.root.classList.remove('theme-light', 'theme-dark', 'theme-system');
-	dom.root.classList.add('theme-' + (options.popupTheme || 'system'));
+	dom.root.classList.add(`theme-${options.popupTheme || 'system'}`);
 
 	dom.root.classList.remove(...SPECIAL_THEME_CLASS_NAMES);
 	dom.root.classList.remove(...COLORBLIND_VARIANT_CLASS_NAMES);
 	if (specialTheme !== 'none') {
-		dom.root.classList.add('special-theme-' + specialTheme);
+		dom.root.classList.add(`special-theme-${specialTheme}`);
 		if (specialTheme === 'colorblind') {
 			dom.root.classList.add(getColorBlindThemeClassName(options.colorBlindTheme));
 		}
@@ -1709,7 +1707,7 @@ function applyThemeSettings(options) {
 	dom.root.classList.remove(...ACCENT_CLASS_NAMES);
 	const accent = options.popupAccent || 'sage';
 	if (specialTheme === 'none' && accent !== 'sage') {
-		dom.root.classList.add('accent-' + accent);
+		dom.root.classList.add(`accent-${accent}`);
 	}
 
 	// Compact mode
@@ -2909,13 +2907,13 @@ function normalizeUrl(url) {
 
 	// Add https:// if no protocol specified
 	if (!/^https?:\/\//i.test(url)) {
-		url = 'https://' + url;
+		url = `https://${url}`;
 	}
 
 	try {
 		const urlObj = new URL(url);
 		return urlObj.href;
-	} catch (e) {
+	} catch (_e) {
 		return null;
 	}
 }
@@ -3104,7 +3102,7 @@ function isLikelyIncompleteMarkdown(markdown) {
 		return sharedApi.isLikelyIncompleteMarkdown(markdown);
 	}
 
-	if (!markdown || !markdown.trim()) return true;
+	if (!markdown?.trim()) return true;
 
 	const normalized = markdown.replace(/\r/g, '');
 	const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
@@ -3302,7 +3300,7 @@ async function handleBatchConversion(e) {
 				progressUI.setStatus(`Error: ${error.message}`);
 				await new Promise(resolve => setTimeout(resolve, 2000)); // Show error briefly
 			} finally {
-				if (tab && tab.id) {
+				if (tab?.id) {
 					await browser.tabs.remove(tab.id).catch(() => {});
 				}
 			}
@@ -3429,9 +3427,9 @@ const clipSite = id => {
 			},
 		})
 			.then((result) => {
-				if (result && result[0]?.result) {
+				if (result?.[0]?.result) {
 					showOrHideClipOption(result[0].result.selection);
-					let message = {
+					const message = {
 						type: 'clip',
 						dom: result[0].result.dom,
 						selection: result[0].result.selection,
@@ -3610,12 +3608,12 @@ browser.storage.onChanged.addListener((changes, areaName) => {
 			'editorTheme',
 		];
 		const popupActionKeys = ['defaultExportType', 'defaultSendToTarget', 'sendToCustomTargets', 'sendToMaxUrlLength'];
-		if (themeSettingKeys.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
+		if (themeSettingKeys.some((key) => Object.hasOwn(changes, key))) {
 			currentOptions = normalizePopupOptions({
 				...defaultOptions,
 				...currentOptions,
 				...themeSettingKeys.reduce((nextOptions, key) => {
-					if (Object.prototype.hasOwnProperty.call(changes, key)) {
+					if (Object.hasOwn(changes, key)) {
 						nextOptions[key] = changes[key].newValue;
 					}
 					return nextOptions;
@@ -3630,11 +3628,11 @@ browser.storage.onChanged.addListener((changes, areaName) => {
 			});
 			updateBatchProcessButtonVisibility(currentOptions);
 		}
-		if (popupActionKeys.some((key) => Object.prototype.hasOwnProperty.call(changes, key))) {
+		if (popupActionKeys.some((key) => Object.hasOwn(changes, key))) {
 			currentOptions = normalizePopupOptions({
 				...currentOptions,
 				...popupActionKeys.reduce((nextOptions, key) => {
-					if (Object.prototype.hasOwnProperty.call(changes, key)) {
+					if (Object.hasOwn(changes, key)) {
 						nextOptions[key] = changes[key].newValue;
 					}
 					return nextOptions;
@@ -4182,7 +4180,7 @@ async function sendToObsidian(e) {
 // function that handles messages from the injected script into the site
 function notify(message) {
 	// message for displaying markdown
-	if (message.type == 'display.md') {
+	if (message.type === 'display.md') {
 		setActiveSiteRuleState(
 			message.matchedSiteRule,
 			message.overriddenKeys,

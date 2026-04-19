@@ -1,6 +1,6 @@
 .cm-s-twilight.CodeMirror {
-	background: #141414;
 	color: #f7f7f7;
+	background: #141414;
 }
 .cm-s-twilight div.CodeMirror-selected {
 	background: #323232;
@@ -57,20 +57,20 @@
 	color: #cda869;
 }
 .cm-s-twilight .cm-comment {
-	color: #777;
 	font-style: italic;
 	font-weight: normal;
+	color: #777;
 }
 .cm-s-twilight .cm-string {
-	color: #8f9d6a;
 	font-style: italic;
+	color: #8f9d6a;
 }
 .cm-s-twilight .cm-string-2 {
 	color: #bd6b18;
 }
 .cm-s-twilight .cm-meta {
-	background-color: #141414;
 	color: #f7f7f7;
+	background-color: #141414;
 }
 .cm-s-twilight .cm-builtin {
 	color: #cda869;
@@ -88,8 +88,8 @@
 	color: #aeaeae;
 }
 .cm-s-twilight .cm-link {
-	color: #ad9361;
 	font-style: italic;
+	color: #ad9361;
 	text-decoration: none;
 }
 .cm-s-twilight .cm-error {
@@ -100,6 +100,6 @@
 	background: #27282e;
 }
 .cm-s-twilight .CodeMirror-matchingbracket {
+	color: white;
 	outline: 1px solid grey;
-	color: white !important;
 }

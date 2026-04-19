@@ -113,7 +113,7 @@ const runtimeMock = {
 			removeListener: mock(),
 		},
 	})),
-	sendMessage: mock((message, callback) => {
+	sendMessage: mock((_message, callback) => {
 		if (callback) {
 			callback({ success: true });
 		}
@@ -172,13 +172,13 @@ const tabsMock = {
 		}
 		return Promise.resolve(newTab);
 	}),
-	sendMessage: mock((tabId, message, callback) => {
+	sendMessage: mock((_tabId, _message, callback) => {
 		if (callback) {
 			callback({ success: true });
 		}
 		return Promise.resolve({ success: true });
 	}),
-	executeScript: mock((tabId, details, callback) => {
+	executeScript: mock((_tabId, _details, callback) => {
 		if (callback) {
 			callback([]);
 		}
@@ -265,10 +265,10 @@ const contextMenusMock = {
 
 // Scripting mock
 const scriptingMock = {
-	executeScript: mock((injection) => {
+	executeScript: mock((_injection) => {
 		return Promise.resolve([{ result: null }]);
 	}),
-	insertCSS: mock((injection) => {
+	insertCSS: mock((_injection) => {
 		return Promise.resolve();
 	}),
 };
@@ -300,7 +300,7 @@ const permissionsMock = {
 
 // Offscreen mock
 const offscreenMock = {
-	createDocument: mock((parameters) => {
+	createDocument: mock((_parameters) => {
 		return Promise.resolve();
 	}),
 	closeDocument: mock(() => {

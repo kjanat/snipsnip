@@ -1,4 +1,4 @@
-(function() {
+(() => {
 	const CACHE_KEY = 'snipsnip-popup-theme-cache-v1';
 	const root = document.documentElement;
 	const specialThemeClassNames = [
@@ -107,14 +107,14 @@
 		const themeHref = resolvePopupAssetPath(getEditorThemeHref(themeName));
 
 		root.classList.remove('theme-light', 'theme-dark', 'theme-system');
-		root.classList.add('theme-' + popupTheme);
+		root.classList.add(`theme-${popupTheme}`);
 
 		root.classList.remove(...specialThemeClassNames);
 		root.classList.remove(...colorBlindVariantClassNames);
 		if (specialTheme !== 'none') {
-			root.classList.add('special-theme-' + specialTheme);
+			root.classList.add(`special-theme-${specialTheme}`);
 			if (specialTheme === 'colorblind') {
-				root.classList.add('colorblind-theme-' + colorBlindTheme);
+				root.classList.add(`colorblind-theme-${colorBlindTheme}`);
 			}
 		}
 
@@ -123,7 +123,7 @@
 
 		root.classList.remove(...accentClassNames);
 		if (specialTheme === 'none' && popupAccent !== 'sage') {
-			root.classList.add('accent-' + popupAccent);
+			root.classList.add(`accent-${popupAccent}`);
 		}
 
 		if (themeHref) {

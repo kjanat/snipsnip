@@ -1,4 +1,4 @@
-function notifyExtension() {
+function _notifyExtension() {
 	// send a message that the content should be clipped
 	browser.runtime.sendMessage({ type: 'clip', dom: content });
 }
@@ -33,7 +33,7 @@ function getHTMLOfDocument() {
 	// background context.
 	const href = baseEl.getAttribute('href');
 
-	if (!href || !href.startsWith(window.location.origin)) {
+	if (!href?.startsWith(window.location.origin)) {
 		baseEl.setAttribute('href', window.location.href);
 	}
 
@@ -80,7 +80,7 @@ function removeHiddenNodes(sourceRoot, clonedRoot) {
 // code taken from here: https://stackoverflow.com/a/5084044/304786
 function getHTMLOfSelection() {
 	var range;
-	if (document.selection && document.selection.createRange) {
+	if (document.selection?.createRange) {
 		range = document.selection.createRange();
 		return range.htmlText;
 	} else if (window.getSelection) {
@@ -127,7 +127,7 @@ function hasLatexTaggedMath() {
 function requestMathJaxSyncFromPageContext() {
 	try {
 		window.dispatchEvent(new CustomEvent(window.snipsnipCaptureState.mathJaxSyncRequestEventName));
-	} catch (error) {
+	} catch (_error) {
 		// Ignore event dispatch failures across contexts.
 	}
 }
@@ -301,8 +301,8 @@ function getSelectionAndDom() {
 
 // This function must be called in a visible page, such as a browserAction popup
 // or a content script. Calling it in a background page has no effect!
-function copyToClipboard(text) {
-	if (navigator.clipboard && navigator.clipboard.writeText) {
+function _copyToClipboard(text) {
+	if (navigator.clipboard?.writeText) {
 		navigator.clipboard.writeText(text);
 	} else {
 		// Fallback
@@ -317,15 +317,15 @@ function copyToClipboard(text) {
 	}
 }
 
-function downloadMarkdown(filename, text) {
-	let datauri = `data:text/markdown;base64,${text}`;
+function _downloadMarkdown(filename, text) {
+	const datauri = `data:text/markdown;base64,${text}`;
 	var link = document.createElement('a');
 	link.download = filename;
 	link.href = datauri;
 	link.click();
 }
 
-function downloadImage(filename, url) {
+function _downloadImage(_filename, _url) {
 	/* Link with a download attribute? CORS says no.
     var link = document.createElement('a');
     link.download = filename.substring(0, filename.lastIndexOf('.'));
@@ -389,7 +389,7 @@ if (typeof window.linkPickerState === 'undefined') {
 
 // Listen for link picker activation message
 if (!window.linkPickerMessageListenerAdded) {
-	browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	browser.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
 		if (message.type === 'ACTIVATE_LINK_PICKER') {
 			initLinkPickerMode();
 			return Promise.resolve({ success: true });
@@ -424,7 +424,7 @@ async function initLinkPickerMode() {
 		const data = await browser.storage.sync.get('popupAccent');
 		const accent = data.popupAccent || 'sage';
 		accentColors = ACCENT_COLORS[accent] || ACCENT_COLORS.sage;
-	} catch (e) { /* use default */ }
+	} catch (_e) { /* use default */ }
 
 	window.linkPickerState.accentColors = accentColors;
 
@@ -686,7 +686,7 @@ function injectLinkPickerStyles(colors) {
 	document.body.appendChild(overlay);
 }
 
-function createControlPanel(colors) {
+function createControlPanel(_colors) {
 	const panel = document.createElement('div');
 	panel.className = 'snipsnip-link-picker-panel';
 	panel.id = 'snipsnip-link-picker-panel';
@@ -727,7 +727,7 @@ function createControlPanel(colors) {
 
 function setupLinkPickerEventListeners() {
 	// Mouse move handler
-	window.linkPickerState.handlers.mousemove = function(e) {
+	window.linkPickerState.handlers.mousemove = (e) => {
 		// Ignore if hovering over control panel or its children
 		if (e.target.closest('#snipsnip-link-picker-panel')) {
 			removeHighlight();
@@ -748,7 +748,7 @@ function setupLinkPickerEventListeners() {
 	};
 
 	// Click handler
-	window.linkPickerState.handlers.click = function(e) {
+	window.linkPickerState.handlers.click = (e) => {
 		// Ignore clicks on control panel
 		if (e.target.closest('#snipsnip-link-picker-panel')) {
 			return;
@@ -768,7 +768,7 @@ function setupLinkPickerEventListeners() {
 	};
 
 	// Keyboard handler
-	window.linkPickerState.handlers.keydown = function(e) {
+	window.linkPickerState.handlers.keydown = (e) => {
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			cancelLinkPicker();
@@ -818,8 +818,8 @@ function showTooltip(text, x, y) {
 	tooltip.className = 'snipsnip-link-picker-tooltip';
 	tooltip.id = 'snipsnip-link-picker-tooltip';
 	tooltip.textContent = text;
-	tooltip.style.left = (x + 10) + 'px';
-	tooltip.style.top = (y + 10) + 'px';
+	tooltip.style.left = `${x + 10}px`;
+	tooltip.style.top = `${y + 10}px`;
 	document.body.appendChild(tooltip);
 }
 
@@ -983,7 +983,7 @@ function finishLinkPicker() {
 		browser.runtime.sendMessage({
 			type: 'LINK_PICKER_COMPLETE',
 			links: links,
-		}).catch(err => {
+		}).catch(_err => {
 			// Popup might be closed, that's okay - we saved to storage
 			console.log('Popup closed, links saved to storage');
 		});
@@ -1038,7 +1038,7 @@ function cancelLinkPicker() {
 		browser.runtime.sendMessage({
 			type: 'LINK_PICKER_COMPLETE',
 			links: [],
-		}).catch(err => {
+		}).catch(_err => {
 			// Popup might be closed, that's okay
 			console.log('Popup closed');
 		});

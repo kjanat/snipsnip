@@ -5,13 +5,13 @@
 */
 
 .cm-s-material.CodeMirror {
-	background-color: #263238;
 	color: #eeffff;
+	background-color: #263238;
 }
 
 .cm-s-material .CodeMirror-gutters {
-	background: #263238;
 	color: #546e7a;
+	background: #263238;
 	border: none;
 }
 
@@ -25,10 +25,10 @@
 	border-left: 1px solid #ffcc00;
 }
 .cm-s-material.cm-fat-cursor .CodeMirror-cursor {
-	background-color: #5d6d5c80 !important;
+	background-color: #5d6d5c80;
 }
 .cm-s-material .cm-animate-fat-cursor {
-	background-color: #5d6d5c80 !important;
+	background-color: #5d6d5c80;
 }
 
 .cm-s-material div.CodeMirror-selected {
@@ -135,6 +135,6 @@
 }
 
 .cm-s-material .CodeMirror-matchingbracket {
+	color: white;
 	text-decoration: underline;
-	color: white !important;
 }

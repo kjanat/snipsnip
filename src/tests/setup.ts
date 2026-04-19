@@ -6,7 +6,7 @@ const { afterEach, mock } = require('bun:test');
  */
 
 // Polyfills for Node.js environment
-const { TextEncoder, TextDecoder } = require('util');
+const { TextEncoder, TextDecoder } = require('node:util');
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 

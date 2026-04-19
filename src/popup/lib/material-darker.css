@@ -5,13 +5,13 @@
 */
 
 .cm-s-material-darker.CodeMirror {
-	background-color: #212121;
 	color: #eeffff;
+	background-color: #212121;
 }
 
 .cm-s-material-darker .CodeMirror-gutters {
-	background: #212121;
 	color: #545454;
+	background: #212121;
 	border: none;
 }
 
@@ -129,6 +129,6 @@
 }
 
 .cm-s-material-darker .CodeMirror-matchingbracket {
+	color: white;
 	text-decoration: underline;
-	color: white !important;
 }

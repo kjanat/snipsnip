@@ -1,8 +1,7 @@
 import guideTemplate from '@/guide/guide.html?raw';
-import searchCore from '@/shared/search-core.ts';
-
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
 import { installWxtPagePaths } from '@/lib/page-paths.ts';
+import searchCore from '@/shared/search-core.ts';
 
 const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const guideCssUrl = new URL('@/guide/guide.css', import.meta.url).href;

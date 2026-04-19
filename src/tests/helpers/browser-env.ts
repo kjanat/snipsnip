@@ -4,8 +4,8 @@
  */
 
 import turndownFactory from '@/shared/turndown-factory.js';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { JSDOM } from './jsdom-shim';
 
 /**

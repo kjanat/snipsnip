@@ -431,9 +431,7 @@ export interface MomentValue {
 	format(pattern: string): string;
 }
 
-export interface MomentApi {
-	(value?: Date | number | string | null): MomentValue;
-}
+export type MomentApi = (value?: Date | number | string | null) => MomentValue;
 
 export interface HighlightAutoResult {
 	language?: string;

@@ -74,7 +74,7 @@ export class JSDOM {
 	}
 
 	serialize() {
-		return '<!DOCTYPE html>' + this.window.document.documentElement.outerHTML;
+		return `<!DOCTYPE html>${this.window.document.documentElement.outerHTML}`;
 	}
 }
 
