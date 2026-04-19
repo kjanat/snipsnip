@@ -20,7 +20,6 @@ let optionsRuntimeLoadPromise: Promise<void> | null = null;
 export interface OptionsRuntimeBootstrapOptions {
 	importOptionsRuntimeModule?: () => Promise<unknown>;
 	importOptionsSearchModule?: () => Promise<unknown>;
-	loadMoment?: () => Promise<unknown>;
 	loadTemplate?: () => string;
 }
 
