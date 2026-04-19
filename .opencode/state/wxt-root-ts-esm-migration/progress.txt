@@ -27,6 +27,8 @@ Started: 2026-04-19
 - Background listener registration can stay synchronous in WXT if the entrypoint uses static imports for bootstrap + side-effect runtime loading instead of async wrapper calls in `defineBackground()`.
 - When a legacy content script is imported as a module, any functions later probed by injected extension code must be reattached to `window`/`globalThis`; top-level module declarations no longer become globals automatically.
 - If a page-context bridge must stay at an exact WAR path for manual injection, keep the emitted asset in `public/` and add a sync test so the legacy source copy cannot drift.
+- WXT page entrypoints only work as a top-level file or one-level-deep `index.html`; if a legacy runtime path must stay different, adapt the caller with a small path helper instead of forcing a deeper entrypoint tree.
+- For migrated legacy HTML shells, preload vendored globals through the existing wrapper layer before importing the legacy runtime module; this keeps Bun tests and WXT builds aligned.
 
 ---
 
@@ -272,3 +274,23 @@ Started: 2026-04-19
 - Learnings:
   - Content script migration can stay surgical if the WXT entrypoint only bootstraps globals and imports the legacy file instead of rewriting the whole capture/link-picker implementation.
   - Global bridge functions like `getSelectionAndDom` are a hidden dependency of later `browser.scripting.executeScript` probes and must be preserved explicitly during module migration.
+
+## Task - [migrate-offscreen-fallback]
+
+- Added a real WXT-managed offscreen page entrypoint at `src/entrypoints/offscreen/index.html` plus `main.ts`, preserving the clipboard DOM shell while moving runtime startup under WXT.
+- Added `src/lib/offscreen/bootstrap.ts` to preload vendored globals through the shared wrapper layer, install migrated shared APIs onto `globalThis`, and then import the legacy `src/offscreen/offscreen.js` runtime.
+- Patched `src/service-worker.js` with a tiny offscreen path helper so WXT builds use `offscreen.html` while the legacy non-WXT path still uses `offscreen/offscreen.html`, preserving the Firefox tab fallback and Chromium offscreen creation logic.
+- Patched `src/background/apache-mime-types.js` to publish `mimedb` on `globalThis`, which the imported offscreen runtime still expects.
+- Added focused unit coverage for the new offscreen bootstrap and verified both Chrome and Firefox WXT builds now emit `offscreen.html` successfully.
+- Files changed:
+  - `src/entrypoints/offscreen/index.html`
+  - `src/entrypoints/offscreen/main.ts`
+  - `src/lib/offscreen/bootstrap.ts`
+  - `src/background/apache-mime-types.js`
+  - `src/service-worker.js`
+  - `src/tests/unit/offscreen-bootstrap.test.ts`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - WXT offscreen pages want the standard `entrypoints/<name>/index.html` shape; keep compatibility by switching the caller path, not by nesting deeper.
+  - Reusing the existing vendor wrapper loaders is safer than raw ESM imports for old vendored libs because Bun, WXT, and classic globals all resolve slightly differently.

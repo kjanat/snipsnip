@@ -770,3 +770,7 @@ const mimedb = {
 	'video/x-smv': 'smv',
 	'x-conference/x-cooltalk': 'ice',
 };
+
+if (Reflect.get(globalThis, 'mimedb') == null) {
+	Reflect.set(globalThis, 'mimedb', mimedb);
+}

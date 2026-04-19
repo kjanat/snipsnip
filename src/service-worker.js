@@ -1840,14 +1840,20 @@ async function handleImageDownloadsContentScript(message) {
  */
 let firefoxOffscreenTabId = null;
 
+function getOffscreenDocumentPath() {
+	return globalThis.snipSnipUseImportedBackground ? 'offscreen.html' : 'offscreen/offscreen.html';
+}
+
 /**
  * Ensures the offscreen document exists (Chrome) or an equivalent
  * extension page is loaded (Firefox).
  */
 async function ensureOffscreenDocumentExists() {
+	const offscreenPath = getOffscreenDocumentPath();
+
 	if (typeof chrome !== 'undefined' && chrome.offscreen) {
 		// Chrome — use native offscreen API
-		const offscreenUrl = chrome.runtime.getURL('offscreen/offscreen.html');
+		const offscreenUrl = chrome.runtime.getURL(offscreenPath);
 		const existingContexts = await chrome.runtime.getContexts({
 			contextTypes: ['OFFSCREEN_DOCUMENT'],
 			documentUrls: [offscreenUrl],
@@ -1856,7 +1862,7 @@ async function ensureOffscreenDocumentExists() {
 		if (existingContexts.length > 0) return;
 
 		await chrome.offscreen.createDocument({
-			url: 'offscreen/offscreen.html',
+			url: offscreenPath,
 			reasons: ['DOM_PARSER', 'CLIPBOARD', 'BLOBS'],
 			justification: 'HTML to Markdown conversion',
 		});
@@ -1873,7 +1879,7 @@ async function ensureOffscreenDocumentExists() {
 		}
 
 		// Also check by URL in case the variable was lost
-		const offscreenUrl = browser.runtime.getURL('offscreen/offscreen.html');
+		const offscreenUrl = browser.runtime.getURL(offscreenPath);
 		const existing = await browser.tabs.query({ url: offscreenUrl });
 		if (existing.length > 0) {
 			firefoxOffscreenTabId = existing[0].id;
@@ -1882,7 +1888,7 @@ async function ensureOffscreenDocumentExists() {
 
 		// Create a new pinned tab for the offscreen page
 		const tab = await browser.tabs.create({
-			url: 'offscreen/offscreen.html',
+			url: offscreenPath,
 			active: false,
 			pinned: true,
 		});

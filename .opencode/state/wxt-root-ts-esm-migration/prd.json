@@ -91,7 +91,7 @@
 			"description": "Convert the offscreen document to a WXT-managed entrypoint, use capability-gated Chromium offscreen behavior, and preserve a functioning Firefox fallback path. Acceptance: Chrome uses offscreen successfully, Firefox fallback does not crash, and HTML-to-Markdown conversion regressions remain covered.",
 			"depends": ["migrate-background-msgs", "wrap-vendored-runtime-libs"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "migrate-popup-page",
