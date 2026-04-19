@@ -3,7 +3,7 @@
  * Loads browser libraries (Turndown, Readability) in a JSDOM environment
  */
 
-import turndownFactory from '@/shared/turndown-factory.js';
+import turndownFactory from '@/shared/turndown-factory.ts';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { JSDOM } from './jsdom-shim.ts';

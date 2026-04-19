@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 const api = ((global) => {
 	const ANCHOR_ATTRIBUTE = 'data-snipsnip-node-id';
 	const STRUCTURAL_SELECTOR = 'article, section, main, div, aside, blockquote, pre, table, ul, ol';

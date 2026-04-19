@@ -5,10 +5,10 @@ import templateUtils from '@/shared/template-utils.ts';
 import urlUtils from '@/shared/url-utils.ts';
 
 import '@/background/apache-mime-types.js';
-import '@/shared/code-block-utils.js';
-import '@/shared/hashtag-utils.js';
-import '@/shared/readability-recovery.js';
-import '@/shared/selection-utils.js';
+import '@/shared/code-block-utils.ts';
+import '@/shared/hashtag-utils.ts';
+import '@/shared/readability-recovery.ts';
+import '@/shared/selection-utils.ts';
 
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
 import { loadBrowserApi } from '@/lib/vendors/browser-polyfill.ts';
@@ -55,7 +55,7 @@ export async function bootOffscreenRuntime(options: OffscreenRuntimeBootstrapOpt
 	await loadVendors();
 
 	if (!offscreenRuntimeLoadPromise) {
-		const importModule = options.importModule ?? (() => import('@/offscreen/offscreen.js'));
+		const importModule = options.importModule ?? (() => import('@/offscreen/offscreen.ts'));
 		offscreenRuntimeLoadPromise = importModule().then(() => undefined);
 	}
 

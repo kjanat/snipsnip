@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 function _notifyExtension() {
 	// send a message that the content should be clipped
 	browser.runtime.sendMessage({ type: 'clip', dom: content });

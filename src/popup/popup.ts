@@ -1989,7 +1989,7 @@ async function activateLinkPicker(e) {
 		// Ensure content script is injected
 		await browser.scripting.executeScript({
 			target: { tabId: activeTab.id },
-			files: ['/browser-polyfill.min.js', '/contentScript/contentScript.js'],
+			files: ['/content-scripts/content.js'],
 		}).catch(err => {
 			// Script might already be injected, that's okay
 			console.log('Content script may already be injected:', err);
@@ -3198,7 +3198,7 @@ async function clipTabWithRetry(tab, maxAttempts = 2) {
 			await waitForTabLoadComplete(tab.id, 45000);
 			await browser.scripting.executeScript({
 				target: { tabId: tab.id },
-				files: ['/browser-polyfill.min.js', '/contentScript/contentScript.js'],
+				files: ['/content-scripts/content.js'],
 			});
 		}
 	}
@@ -3296,7 +3296,7 @@ async function handleBatchConversion(e) {
 
 				await browser.scripting.executeScript({
 					target: { tabId: tab.id },
-					files: ['/browser-polyfill.min.js', '/contentScript/contentScript.js'],
+					files: ['/content-scripts/content.js'],
 				});
 
 				await activateTabForCapture(tab.id, 1500);
@@ -3481,12 +3481,7 @@ const clipSite = id => {
 function ensureContentScriptInjected(tabId) {
 	return browser.scripting.executeScript({
 		target: { tabId },
-		files: ['/browser-polyfill.min.js'],
-	}).then(() => {
-		return browser.scripting.executeScript({
-			target: { tabId },
-			files: ['/contentScript/contentScript.js'],
-		});
+		files: ['/content-scripts/content.js'],
 	});
 }
 

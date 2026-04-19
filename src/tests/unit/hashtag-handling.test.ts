@@ -3,7 +3,7 @@
  * Uses shared production helpers.
  */
 
-import { applyHashtagHandlingToHtml, applyHashtagHandlingToMarkdown } from '@/shared/hashtag-utils.js';
+import { applyHashtagHandlingToHtml, applyHashtagHandlingToMarkdown } from '@/shared/hashtag-utils.ts';
 import { createBrowserEnvironment } from '@/tests/helpers/browser-env';
 
 function convertHtmlWithHashtagHandling(html, mode) {

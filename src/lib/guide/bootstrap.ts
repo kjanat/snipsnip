@@ -58,7 +58,7 @@ export async function bootGuideRuntime(options: GuideRuntimeBootstrapOptions = {
 			installGuideStyles();
 			installGuideShell(options.loadTemplate ?? (() => guideTemplate));
 
-			const importModule = options.importModule ?? (() => import('@/guide/guide.js'));
+			const importModule = options.importModule ?? (() => import('@/guide/guide.ts'));
 			await importModule();
 		})();
 	}

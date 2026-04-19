@@ -85,9 +85,9 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 
 			const loadMoment = options.loadMoment ?? loadMomentApi;
 			const importOptionsSearchModule = options.importOptionsSearchModule
-				?? (() => import('@/options/options-search.js'));
+				?? (() => import('@/options/options-search.ts'));
 			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
-				?? (() => import('@/options/options.js'));
+				?? (() => import('@/options/options.ts'));
 
 			await loadMoment();
 			await importOptionsSearchModule();

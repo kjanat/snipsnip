@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 /** @typedef {import('@/lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
 // Log platform info
 browser.runtime.getPlatformInfo().then(async platformInfo => {
@@ -2641,10 +2642,7 @@ async function ensureScripts(tabId) {
 		if (!results?.[0]?.result) {
 			await browser.scripting.executeScript({
 				target: { tabId: tabId },
-				files: [
-					'/browser-polyfill.min.js',
-					'/contentScript/contentScript.js',
-				],
+				files: ['/content-scripts/content.js'],
 			});
 		}
 

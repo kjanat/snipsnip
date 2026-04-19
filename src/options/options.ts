@@ -1,95 +1,89 @@
+// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { browser } from 'wxt/browser';
 
 const createMenus = globalThis.createMenus;
 const defaultOptions = globalThis.defaultOptions || {};
 const _moment = globalThis.moment;
 
-/**
- * @typedef {Object} LibrarySettings
- * @property {boolean} enabled
- * @property {boolean} autoSaveOnPopupOpen
- * @property {number} itemsToKeep
- */
+interface LibrarySettings {
+	enabled: boolean;
+	autoSaveOnPopupOpen: boolean;
+	itemsToKeep: number;
+}
 
-/**
- * @typedef {Object} AgentBridgeSettings
- * @property {boolean} enabled
- */
+interface AgentBridgeSettings {
+	enabled: boolean;
+}
 
-/**
- * @typedef {Object} AgentBridgeStatus
- * @property {boolean} enabled
- * @property {boolean} permissionGranted
- * @property {boolean} connecting
- * @property {boolean} connected
- * @property {boolean} hostInstalled
- * @property {string} browser
- * @property {string} hostVersion
- * @property {string} lastError
- * @property {string} updatedAt
- */
+interface AgentBridgeStatus {
+	enabled: boolean;
+	permissionGranted: boolean;
+	connecting: boolean;
+	connected: boolean;
+	hostInstalled: boolean;
+	browser: string;
+	hostVersion: string;
+	lastError: string;
+	updatedAt: string;
+}
 
-/**
- * @typedef {Object} SiteRuleEditorState
- * @property {'create'|'edit'} mode
- * @property {string|null} ruleId
- */
+interface SiteRuleEditorState {
+	mode: 'create' | 'edit';
+	ruleId: string | null;
+}
 
-/**
- * @typedef {Object} SendToUrlValidation
- * @property {boolean} valid
- * @property {string} normalizedValue
- * @property {string} error
- */
+interface SendToUrlValidation {
+	valid: boolean;
+	normalizedValue: string;
+	error: string;
+}
 
-/**
- * @typedef {Object} CustomSendToTarget
- * @property {string} id
- * @property {string} name
- * @property {string} urlTemplate
- */
+interface CustomSendToTarget {
+	id: string;
+	name: string;
+	urlTemplate: string;
+}
 
-/**
- * @typedef {Object} SiteRuleOverride
- * @property {string} [includeTemplate]
- * @property {string} [downloadImages]
- * @property {string} [frontmatter]
- * @property {string} [backmatter]
- * @property {string} [title]
- * @property {string} [imagePrefix]
- * @property {string} [mdClipsFolder]
- * @property {string} [imageStyle]
- * @property {string} [imageRefStyle]
- * @property {Object} [tableFormatting]
- * @property {string} [tableFormatting.stripLinks]
- * @property {string} [tableFormatting.stripFormatting]
- * @property {string} [tableFormatting.prettyPrint]
- * @property {string} [tableFormatting.centerText]
- */
+interface SiteRuleOverride {
+	includeTemplate?: string;
+	downloadImages?: string;
+	frontmatter?: string;
+	backmatter?: string;
+	title?: string;
+	imagePrefix?: string;
+	mdClipsFolder?: string;
+	imageStyle?: string;
+	imageRefStyle?: string;
+	tableFormatting?: {
+		stripLinks?: string;
+		stripFormatting?: string;
+		prettyPrint?: string;
+		centerText?: string;
+	};
+}
 
-/**
- * @typedef {Object} SiteRule
- * @property {string} id
- * @property {string} name
- * @property {boolean} enabled
- * @property {string} pattern
- * @property {SiteRuleOverride} overrides
- */
+interface SiteRule {
+	id: string;
+	name: string;
+	enabled: boolean;
+	pattern: string;
+	overrides: SiteRuleOverride;
+}
 
 /** @type {Object} */
-let options = defaultOptions;
+let options: object = defaultOptions;
 /** @type {LibrarySettings} */
-let librarySettings = {
+let librarySettings: LibrarySettings = {
 	enabled: true,
 	autoSaveOnPopupOpen: true,
 	itemsToKeep: 10,
 };
 /** @type {AgentBridgeSettings} */
-let agentBridgeSettings = {
+let agentBridgeSettings: AgentBridgeSettings = {
 	enabled: false,
 };
 /** @type {AgentBridgeStatus} */
-let agentBridgeStatus = {
+let agentBridgeStatus: AgentBridgeStatus = {
 	enabled: false,
 	permissionGranted: false,
 	connecting: false,
@@ -157,7 +151,7 @@ const SITE_RULE_OVERRIDE_LABELS = {
 	'tableFormatting.centerText': 'Center Text',
 };
 /** @type {SiteRuleEditorState} */
-let siteRuleEditorState = {
+let siteRuleEditorState: SiteRuleEditorState = {
 	mode: 'create',
 	ruleId: null,
 };
@@ -182,11 +176,7 @@ function getTemplateUtils() {
 	return globalThis.snipSnipTemplateUtils || null;
 }
 
-/**
- * @param {any} rules
- * @returns {SiteRule[]}
- */
-function normalizeSiteRulesState(rules) {
+function normalizeSiteRulesState(rules): SiteRule[] {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRules) {
 		return siteRulesApi.normalizeSiteRules(rules);
@@ -195,11 +185,7 @@ function normalizeSiteRulesState(rules) {
 	return Array.isArray(rules) ? rules.slice() : [];
 }
 
-/**
- * @param {any} overrides
- * @returns {SiteRuleOverride}
- */
-function normalizeSiteRuleOverridesState(overrides) {
+function normalizeSiteRuleOverridesState(overrides): SiteRuleOverride {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRuleOverrides) {
 		return siteRulesApi.normalizeSiteRuleOverrides(overrides);
@@ -208,11 +194,7 @@ function normalizeSiteRuleOverridesState(overrides) {
 	return overrides && typeof overrides === 'object' ? { ...overrides } : {};
 }
 
-/**
- * @param {any} pattern
- * @returns {{valid: boolean, error: string, normalizedPattern: string}}
- */
-function validateSiteRulePatternState(pattern) {
+function validateSiteRulePatternState(pattern): { valid: boolean; error: string; normalizedPattern: string } {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.validateSiteRulePattern) {
 		return siteRulesApi.validateSiteRulePattern(pattern);
@@ -229,15 +211,11 @@ function validateSiteRulePatternState(pattern) {
 /**
  * @returns {string}
  */
-function buildSiteRuleIdState() {
+function buildSiteRuleIdState(): string {
 	return `site-rule-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/**
- * @param {any} value
- * @returns {string}
- */
-function escapeHtml(value) {
+function escapeHtml(value: string): string {
 	return String(value || '')
 		.replace(/&/g, '&amp;')
 		.replace(/</g, '&lt;')
@@ -249,15 +227,11 @@ function escapeHtml(value) {
 /**
  * @returns {string}
  */
-function buildCustomSendToTargetId() {
+function buildCustomSendToTargetId(): string {
 	return `custom-target-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/**
- * @param {any} value
- * @returns {SendToUrlValidation}
- */
-function getSendToUrlValidationState(value) {
+function getSendToUrlValidationState(value): SendToUrlValidation {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.validateSendToUrlTemplate) {
 		return optionsStateApi.validateSendToUrlTemplate(value);
@@ -293,11 +267,7 @@ function getSendToUrlValidationState(value) {
 	return { valid: true, normalizedValue, error: '' };
 }
 
-/**
- * @param {any} targets
- * @returns {CustomSendToTarget[]}
- */
-function normalizeCustomSendToTargetsState(targets) {
+function normalizeCustomSendToTargetsState(targets): CustomSendToTarget[] {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeCustomSendToTargets) {
 		return optionsStateApi.normalizeCustomSendToTargets(targets);
@@ -334,15 +304,10 @@ function normalizeCustomSendToTargetsState(targets) {
 	}, []);
 }
 
-/**
- * @param {any} value
- * @param {CustomSendToTarget[]} [customTargets]
- * @returns {string}
- */
 function normalizeDefaultSendToTargetState(
 	value,
-	customTargets = normalizeCustomSendToTargetsState(options?.sendToCustomTargets),
-) {
+	customTargets: CustomSendToTarget[] = normalizeCustomSendToTargetsState(options?.sendToCustomTargets),
+): string {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeDefaultSendToTarget) {
 		return optionsStateApi.normalizeDefaultSendToTarget(value, customTargets, DEFAULT_SEND_TO_TARGET);
@@ -358,15 +323,10 @@ function normalizeDefaultSendToTargetState(
 		: DEFAULT_SEND_TO_TARGET;
 }
 
-/**
- * @param {any} value
- * @param {number} [fallbackValue]
- * @returns {number}
- */
 function normalizeSendToMaxUrlLengthState(
 	value,
-	fallbackValue = defaultOptions?.sendToMaxUrlLength ?? DEFAULT_SEND_TO_MAX_URL_LENGTH,
-) {
+	fallbackValue: number = defaultOptions?.sendToMaxUrlLength ?? DEFAULT_SEND_TO_MAX_URL_LENGTH,
+): number {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeSendToMaxUrlLength) {
 		return optionsStateApi.normalizeSendToMaxUrlLength(value, fallbackValue);
@@ -384,7 +344,7 @@ function normalizeSendToMaxUrlLengthState(
 /**
  * @returns {CustomSendToTarget[]}
  */
-function getNormalizedSendToTargets() {
+function getNormalizedSendToTargets(): CustomSendToTarget[] {
 	const targets = normalizeCustomSendToTargetsState(options?.sendToCustomTargets);
 	options.sendToCustomTargets = targets;
 	options.defaultSendToTarget = normalizeDefaultSendToTargetState(options?.defaultSendToTarget, targets);
@@ -588,15 +548,11 @@ function initSendToControls() {
 /**
  * @returns {SiteRule[]}
  */
-function getSiteRulesList() {
+function getSiteRulesList(): SiteRule[] {
 	return normalizeSiteRulesState(options?.siteRules);
 }
 
-/**
- * @param {any} nextRules
- * @returns {void}
- */
-function setSiteRules(nextRules) {
+function setSiteRules(nextRules): void {
 	options.siteRules = normalizeSiteRulesState(nextRules);
 }
 
@@ -604,7 +560,7 @@ function setSiteRules(nextRules) {
  * @param {string} ruleId
  * @returns {SiteRule|null}
  */
-function findSiteRule(ruleId) {
+function findSiteRule(ruleId: string): SiteRule | null {
 	return getSiteRulesList().find((rule) => rule.id === ruleId) || null;
 }
 
@@ -612,7 +568,7 @@ function findSiteRule(ruleId) {
  * @param {string} id
  * @returns {boolean|undefined}
  */
-function readTriStateBoolean(id) {
+function readTriStateBoolean(id: string): boolean | undefined {
 	const value = document.getElementById(id)?.value || 'inherit';
 	if (value === 'true') return true;
 	if (value === 'false') return false;
@@ -624,19 +580,13 @@ function readTriStateBoolean(id) {
  * @param {boolean|undefined} value
  * @returns {void}
  */
-function setTriStateBoolean(id, value) {
+function setTriStateBoolean(id: string, value: boolean | undefined): void {
 	const input = document.getElementById(id);
 	if (!input) return;
 	input.value = value === true ? 'true' : value === false ? 'false' : 'inherit';
 }
 
-/**
- * @param {string} toggleId
- * @param {string} inputId
- * @param {any} value
- * @returns {void}
- */
-function setTextOverrideControl(toggleId, inputId, value) {
+function setTextOverrideControl(toggleId: string, inputId: string, value): void {
 	const toggle = document.getElementById(toggleId);
 	const input = document.getElementById(inputId);
 	const enabled = value !== undefined;
@@ -652,7 +602,7 @@ function setTextOverrideControl(toggleId, inputId, value) {
 /**
  * @returns {void}
  */
-function refreshSiteRuleTextOverrideStates() {
+function refreshSiteRuleTextOverrideStates(): void {
 	Object.values(SITE_RULE_TEXT_FIELD_IDS).forEach(({ toggleId, inputId }) => {
 		const toggle = document.getElementById(toggleId);
 		const input = document.getElementById(inputId);
@@ -665,7 +615,7 @@ function refreshSiteRuleTextOverrideStates() {
 /**
  * @returns {void}
  */
-function clearSiteRuleEditorFeedback() {
+function clearSiteRuleEditorFeedback(): void {
 	const feedback = document.getElementById('siteRulePatternFeedback');
 	const patternInput = document.getElementById('siteRulePattern');
 	if (feedback) {
@@ -680,19 +630,19 @@ function clearSiteRuleEditorFeedback() {
 /**
  * @returns {void}
  */
-function resetSiteRuleEditor() {
+function resetSiteRuleEditor(): void {
 	siteRuleEditorState = { mode: 'create', ruleId: null };
 	document.getElementById('siteRuleEditorTitle').textContent = 'Add Site Rule';
 	document.getElementById('siteRuleName').value = '';
 	document.getElementById('siteRulePattern').value = '';
 	document.getElementById('siteRuleEnabled').checked = true;
 
-	Object.values(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((id) => setTriStateBoolean(id, undefined));
+	Object.values(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((id) => setTriStateBoolean(id));
 	Object.values(SITE_RULE_ENUM_FIELD_IDS).forEach((id) => {
 		const input = document.getElementById(id);
 		if (input) input.value = 'inherit';
 	});
-	Object.values(SITE_RULE_TABLE_FIELD_IDS).forEach((id) => setTriStateBoolean(id, undefined));
+	Object.values(SITE_RULE_TABLE_FIELD_IDS).forEach((id) => setTriStateBoolean(id));
 	Object.values(SITE_RULE_TEXT_FIELD_IDS).forEach(({ toggleId, inputId }) => {
 		setTextOverrideControl(toggleId, inputId, undefined);
 	});
@@ -705,7 +655,7 @@ function resetSiteRuleEditor() {
  * @param {string|null} [ruleId]
  * @returns {void}
  */
-function openSiteRuleEditor(ruleId = null) {
+function openSiteRuleEditor(ruleId: string | null = null): void {
 	resetSiteRuleEditor();
 	const editor = document.getElementById('siteRuleEditor');
 	if (!editor) {
@@ -748,7 +698,7 @@ function openSiteRuleEditor(ruleId = null) {
 /**
  * @returns {void}
  */
-function closeSiteRuleEditor() {
+function closeSiteRuleEditor(): void {
 	document.getElementById('siteRuleEditor')?.setAttribute('hidden', '');
 	const editor = document.getElementById('siteRuleEditor');
 	if (editor) {
@@ -760,7 +710,7 @@ function closeSiteRuleEditor() {
 /**
  * @returns {SiteRuleOverride}
  */
-function buildSiteRuleOverridesFromEditor() {
+function buildSiteRuleOverridesFromEditor(): SiteRuleOverride {
 	const overrides = {};
 
 	Object.keys(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((key) => {
@@ -802,7 +752,7 @@ function buildSiteRuleOverridesFromEditor() {
  * @param {SiteRule} rule
  * @returns {string[]}
  */
-function getSiteRuleOverrideLabels(rule) {
+function getSiteRuleOverrideLabels(rule: SiteRule): string[] {
 	const siteRulesApi = getSiteRulesApi();
 	const overrideKeys = siteRulesApi?.collectOverrideKeys
 		? siteRulesApi.collectOverrideKeys(rule?.overrides)
@@ -815,7 +765,7 @@ function getSiteRuleOverrideLabels(rule) {
  * @param {SiteRule[]} rules
  * @returns {void}
  */
-function updateSiteRulesSummary(rules) {
+function updateSiteRulesSummary(rules: SiteRule[]): void {
 	const summary = document.getElementById('siteRulesSummary');
 	if (!summary) {
 		return;
@@ -828,7 +778,7 @@ function updateSiteRulesSummary(rules) {
 /**
  * @returns {void}
  */
-function renderSiteRules() {
+function renderSiteRules(): void {
 	const rules = getSiteRulesList();
 	const list = document.getElementById('siteRulesList');
 	const empty = document.getElementById('siteRulesEmpty');
@@ -891,7 +841,7 @@ function renderSiteRules() {
 /**
  * @returns {Promise<void>}
  */
-async function saveSiteRuleEditor() {
+async function saveSiteRuleEditor(): Promise<void> {
 	const patternInput = document.getElementById('siteRulePattern');
 	const rawPattern = patternInput?.value || '';
 	const validation = validateSiteRulePatternState(rawPattern);
@@ -937,7 +887,7 @@ async function saveSiteRuleEditor() {
  * @param {'up'|'down'} direction
  * @returns {void}
  */
-function moveSiteRule(ruleId, direction) {
+function moveSiteRule(ruleId: string, direction: 'up' | 'down'): void {
 	const rules = getSiteRulesList();
 	const index = rules.findIndex((rule) => rule.id === ruleId);
 	if (index < 0) {
@@ -961,7 +911,7 @@ function moveSiteRule(ruleId, direction) {
  * @param {string} ruleId
  * @returns {void}
  */
-function deleteSiteRule(ruleId) {
+function deleteSiteRule(ruleId: string): void {
 	const nextRules = getSiteRulesList().filter((rule) => rule.id !== ruleId);
 	setSiteRules(nextRules);
 	renderSiteRules();
@@ -976,7 +926,7 @@ function deleteSiteRule(ruleId) {
  * @param {boolean} [enabled]
  * @returns {void}
  */
-function toggleSiteRuleEnabled(ruleId, enabled) {
+function toggleSiteRuleEnabled(ruleId: string, enabled: boolean): void {
 	const nextRules = getSiteRulesList().map((rule) => (
 		rule.id === ruleId ? { ...rule, enabled: enabled !== false } : rule
 	));
@@ -988,7 +938,7 @@ function toggleSiteRuleEnabled(ruleId, enabled) {
 /**
  * @returns {void}
  */
-function initSiteRuleControls() {
+function initSiteRuleControls(): void {
 	document.getElementById('addSiteRule')?.addEventListener('click', () => openSiteRuleEditor());
 	document.getElementById('cancelSiteRule')?.addEventListener('click', () => closeSiteRuleEditor());
 	document.getElementById('saveSiteRule')?.addEventListener('click', () => {
@@ -2242,8 +2192,8 @@ const buttonClick = async (e) => {
 	} else if (e.target.id === 'export' || e.target.closest('#export')) {
 		console.log('export');
 		const json = JSON.stringify(buildExportPayload(), null, 2);
-		var blob = new Blob([json], { type: 'text/json' });
-		var url = URL.createObjectURL(blob);
+		const blob = new Blob([json], { type: 'text/json' });
+		const url = URL.createObjectURL(blob);
 		browser.downloads.download({
 			url: url,
 			saveAs: true,
@@ -2928,7 +2878,7 @@ function getCheckedValue(radioObj) {
 	if (!radioObj) {
 		return '';
 	}
-	var radioLength = radioObj.length;
+	const radioLength = radioObj.length;
 	if (radioLength === undefined) {
 		if (radioObj.checked) {
 			return radioObj.value;
@@ -2936,7 +2886,7 @@ function getCheckedValue(radioObj) {
 			return '';
 		}
 	}
-	for (var i = 0; i < radioLength; i++) {
+	for (let i = 0; i < radioLength; i++) {
 		if (radioObj[i].checked) {
 			return radioObj[i].value;
 		}
@@ -2952,12 +2902,12 @@ function setCheckedValue(radioObj, newValue) {
 	if (!radioObj) {
 		return;
 	}
-	var radioLength = radioObj.length;
+	const radioLength = radioObj.length;
 	if (radioLength === undefined) {
 		radioObj.checked = radioObj.value === newValue.toString();
 		return;
 	}
-	for (var i = 0; i < radioLength; i++) {
+	for (let i = 0; i < radioLength; i++) {
 		radioObj[i].checked = false;
 		if (radioObj[i].value === newValue.toString()) {
 			radioObj[i].checked = true;

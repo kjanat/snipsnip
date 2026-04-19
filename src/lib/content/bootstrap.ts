@@ -6,7 +6,7 @@ export interface ContentRuntimeBootstrapOptions {
 
 export async function bootContentScriptRuntime(options: ContentRuntimeBootstrapOptions = {}): Promise<void> {
 	if (!contentRuntimeLoadPromise) {
-		const importModule = options.importModule ?? (() => import('@/contentScript/contentScript.js'));
+		const importModule = options.importModule ?? (() => import('@/contentScript/contentScript.ts'));
 		contentRuntimeLoadPromise = importModule().then(() => undefined);
 	}
 

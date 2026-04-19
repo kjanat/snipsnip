@@ -136,9 +136,9 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			syncPopupPageLinks();
 
 			const importThemeBootstrapModule = options.importThemeBootstrapModule
-				?? (() => import('@/popup/theme-bootstrap.js'));
+				?? (() => import('@/popup/theme-bootstrap.ts'));
 			const importPopupShortcutsModule = options.importPopupShortcutsModule
-				?? (() => import('@/shared/popup-shortcuts.js'));
+				?? (() => import('@/shared/popup-shortcuts.ts'));
 			const importPopupRuntimeModule = options.importPopupRuntimeModule
 				?? (() => import('@/popup/popup.ts'));
 			await importThemeBootstrapModule();

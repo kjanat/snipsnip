@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { Readability } from '@mozilla/readability';
 import TurndownService from 'turndown';
 import { highlightedCodeBlock, strikethrough, tables, taskListItems } from 'turndown-plugin-gfm';
