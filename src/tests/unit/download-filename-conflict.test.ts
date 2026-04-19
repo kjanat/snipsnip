@@ -1,4 +1,4 @@
-const { describe, test, expect, beforeEach, mock } = require('bun:test');
+import { describe, test, expect, beforeEach, mock } from 'bun:test';
 
 /**
  * Download Filename Conflict Tests
@@ -6,7 +6,7 @@ const { describe, test, expect, beforeEach, mock } = require('bun:test');
  * and handles empty filenames properly
  */
 
-const { createDownloadTracker } = require('@/shared/download-tracker');
+import { createDownloadTracker } from '@/shared/download-tracker';
 
 describe('Download Filename Conflict Handling', () => {
 	let tracker;

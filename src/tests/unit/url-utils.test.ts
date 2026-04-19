@@ -1,11 +1,6 @@
-const { describe, test, expect, beforeEach, mock } = require('bun:test');
+import { describe, test, expect, beforeEach, mock } from 'bun:test';
 
-const {
-	safeParseUrl,
-	resolveArticleUrl,
-	validateUri,
-	getImageFilename,
-} = require('@/shared/url-utils');
+import { safeParseUrl, resolveArticleUrl, validateUri, getImageFilename } from '@/shared/url-utils';
 
 describe('URL utils', () => {
 	describe('safeParseUrl', () => {

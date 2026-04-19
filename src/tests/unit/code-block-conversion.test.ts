@@ -1,4 +1,4 @@
-const { describe, test, expect, mock } = require('bun:test');
+import { describe, test, expect, mock } from 'bun:test';
 
 /**
  * Code block conversion regression tests

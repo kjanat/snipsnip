@@ -1,17 +1,17 @@
-const { afterEach, mock } = require('bun:test');
-
+import { afterEach, mock } from 'bun:test';
+import './mocks/browser-api';
 /**
  * Test setup file.
  * Runs before each test file to set up the testing environment.
  */
 
 // Polyfills for Node.js environment
-const { TextEncoder, TextDecoder } = require('node:util');
+import { TextDecoder, TextEncoder } from 'node:util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 // Mock browser/chrome APIs globally
-global.browser = require('./mocks/browser-api');
+global.browser = require('./mocks/browser-api.ts');
 global.chrome = global.browser; // Chrome uses 'chrome' instead of 'browser'
 
 // Mock DOMParser if not available

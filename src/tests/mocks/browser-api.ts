@@ -3,7 +3,7 @@
  * Provides mock objects for chrome.* and browser.* APIs used in the extension
  */
 
-const { mock } = require('bun:test');
+import { mock } from 'bun:test';
 
 // Storage mock
 const storageMock = {
@@ -265,10 +265,10 @@ const contextMenusMock = {
 
 // Scripting mock
 const scriptingMock = {
-	executeScript: mock((_injection) => {
+	executeScript: mock((injection) => {
 		return Promise.resolve([{ result: null }]);
 	}),
-	insertCSS: mock((_injection) => {
+	insertCSS: mock((injection) => {
 		return Promise.resolve();
 	}),
 };
@@ -300,7 +300,7 @@ const permissionsMock = {
 
 // Offscreen mock
 const offscreenMock = {
-	createDocument: mock((_parameters) => {
+	createDocument: mock((parameters) => {
 		return Promise.resolve();
 	}),
 	closeDocument: mock(() => {

@@ -17,20 +17,5 @@
 		".wxt/types/**/*.d.ts",
 		".wxt/wxt.d.ts"
 	],
-	"exclude": [
-		".output",
-		"node_modules",
-		"src/background",
-		"src/browser-polyfill.min.ts",
-		"src/highlight.min.ts",
-		"src/service-worker.ts",
-		"src/contentScript",
-		"src/popup",
-		"src/options",
-		"src/guide",
-		"src/offscreen",
-		"src/scripts",
-		"src/tests",
-		"src/print"
-	]
+	"exclude": [".output", "node_modules"]
 }

@@ -3,11 +3,8 @@
  * Uses shared production helpers.
  */
 
-const { createBrowserEnvironment } = require('@/tests/helpers/browser-env');
-const {
-	applyHashtagHandlingToHtml,
-	applyHashtagHandlingToMarkdown,
-} = require('@/shared/hashtag-utils');
+import { applyHashtagHandlingToHtml, applyHashtagHandlingToMarkdown } from '@/shared/hashtag-utils.js';
+import { createBrowserEnvironment } from '@/tests/helpers/browser-env';
 
 function convertHtmlWithHashtagHandling(html, mode) {
 	const env = createBrowserEnvironment();

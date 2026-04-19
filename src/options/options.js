@@ -3,15 +3,91 @@ const createMenus = globalThis.createMenus;
 const defaultOptions = globalThis.defaultOptions || {};
 const _moment = globalThis.moment;
 
+/**
+ * @typedef {Object} LibrarySettings
+ * @property {boolean} enabled
+ * @property {boolean} autoSaveOnPopupOpen
+ * @property {number} itemsToKeep
+ */
+
+/**
+ * @typedef {Object} AgentBridgeSettings
+ * @property {boolean} enabled
+ */
+
+/**
+ * @typedef {Object} AgentBridgeStatus
+ * @property {boolean} enabled
+ * @property {boolean} permissionGranted
+ * @property {boolean} connecting
+ * @property {boolean} connected
+ * @property {boolean} hostInstalled
+ * @property {string} browser
+ * @property {string} hostVersion
+ * @property {string} lastError
+ * @property {string} updatedAt
+ */
+
+/**
+ * @typedef {Object} SiteRuleEditorState
+ * @property {'create'|'edit'} mode
+ * @property {string|null} ruleId
+ */
+
+/**
+ * @typedef {Object} SendToUrlValidation
+ * @property {boolean} valid
+ * @property {string} normalizedValue
+ * @property {string} error
+ */
+
+/**
+ * @typedef {Object} CustomSendToTarget
+ * @property {string} id
+ * @property {string} name
+ * @property {string} urlTemplate
+ */
+
+/**
+ * @typedef {Object} SiteRuleOverride
+ * @property {string} [includeTemplate]
+ * @property {string} [downloadImages]
+ * @property {string} [frontmatter]
+ * @property {string} [backmatter]
+ * @property {string} [title]
+ * @property {string} [imagePrefix]
+ * @property {string} [mdClipsFolder]
+ * @property {string} [imageStyle]
+ * @property {string} [imageRefStyle]
+ * @property {Object} [tableFormatting]
+ * @property {string} [tableFormatting.stripLinks]
+ * @property {string} [tableFormatting.stripFormatting]
+ * @property {string} [tableFormatting.prettyPrint]
+ * @property {string} [tableFormatting.centerText]
+ */
+
+/**
+ * @typedef {Object} SiteRule
+ * @property {string} id
+ * @property {string} name
+ * @property {boolean} enabled
+ * @property {string} pattern
+ * @property {SiteRuleOverride} overrides
+ */
+
+/** @type {Object} */
 let options = defaultOptions;
+/** @type {LibrarySettings} */
 let librarySettings = {
 	enabled: true,
 	autoSaveOnPopupOpen: true,
 	itemsToKeep: 10,
 };
+/** @type {AgentBridgeSettings} */
 let agentBridgeSettings = {
 	enabled: false,
 };
+/** @type {AgentBridgeStatus} */
 let agentBridgeStatus = {
 	enabled: false,
 	permissionGranted: false,
@@ -79,6 +155,7 @@ const SITE_RULE_OVERRIDE_LABELS = {
 	'tableFormatting.prettyPrint': 'Pretty Print',
 	'tableFormatting.centerText': 'Center Text',
 };
+/** @type {SiteRuleEditorState} */
 let siteRuleEditorState = {
 	mode: 'create',
 	ruleId: null,
@@ -104,6 +181,10 @@ function getTemplateUtils() {
 	return globalThis.snipSnipTemplateUtils || null;
 }
 
+/**
+ * @param {any} rules
+ * @returns {SiteRule[]}
+ */
 function normalizeSiteRulesState(rules) {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRules) {
@@ -113,6 +194,10 @@ function normalizeSiteRulesState(rules) {
 	return Array.isArray(rules) ? rules.slice() : [];
 }
 
+/**
+ * @param {any} overrides
+ * @returns {SiteRuleOverride}
+ */
 function normalizeSiteRuleOverridesState(overrides) {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRuleOverrides) {
@@ -122,6 +207,10 @@ function normalizeSiteRuleOverridesState(overrides) {
 	return overrides && typeof overrides === 'object' ? { ...overrides } : {};
 }
 
+/**
+ * @param {any} pattern
+ * @returns {{valid: boolean, error: string, normalizedPattern: string}}
+ */
 function validateSiteRulePatternState(pattern) {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.validateSiteRulePattern) {
@@ -136,10 +225,17 @@ function validateSiteRulePatternState(pattern) {
 	};
 }
 
+/**
+ * @returns {string}
+ */
 function buildSiteRuleIdState() {
 	return `site-rule-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/**
+ * @param {any} value
+ * @returns {string}
+ */
 function escapeHtml(value) {
 	return String(value || '')
 		.replace(/&/g, '&amp;')
@@ -149,10 +245,17 @@ function escapeHtml(value) {
 		.replace(/'/g, '&#39;');
 }
 
+/**
+ * @returns {string}
+ */
 function buildCustomSendToTargetId() {
 	return `custom-target-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/**
+ * @param {any} value
+ * @returns {SendToUrlValidation}
+ */
 function getSendToUrlValidationState(value) {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.validateSendToUrlTemplate) {
@@ -189,6 +292,10 @@ function getSendToUrlValidationState(value) {
 	return { valid: true, normalizedValue, error: '' };
 }
 
+/**
+ * @param {any} targets
+ * @returns {CustomSendToTarget[]}
+ */
 function normalizeCustomSendToTargetsState(targets) {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeCustomSendToTargets) {
@@ -226,6 +333,11 @@ function normalizeCustomSendToTargetsState(targets) {
 	}, []);
 }
 
+/**
+ * @param {any} value
+ * @param {CustomSendToTarget[]} [customTargets]
+ * @returns {string}
+ */
 function normalizeDefaultSendToTargetState(
 	value,
 	customTargets = normalizeCustomSendToTargetsState(options?.sendToCustomTargets),
@@ -245,6 +357,11 @@ function normalizeDefaultSendToTargetState(
 		: DEFAULT_SEND_TO_TARGET;
 }
 
+/**
+ * @param {any} value
+ * @param {number} [fallbackValue]
+ * @returns {number}
+ */
 function normalizeSendToMaxUrlLengthState(
 	value,
 	fallbackValue = defaultOptions?.sendToMaxUrlLength ?? DEFAULT_SEND_TO_MAX_URL_LENGTH,
@@ -263,6 +380,9 @@ function normalizeSendToMaxUrlLengthState(
 		: normalizedFallback;
 }
 
+/**
+ * @returns {CustomSendToTarget[]}
+ */
 function getNormalizedSendToTargets() {
 	const targets = normalizeCustomSendToTargetsState(options?.sendToCustomTargets);
 	options.sendToCustomTargets = targets;
@@ -464,18 +584,33 @@ function initSendToControls() {
 	});
 }
 
+/**
+ * @returns {SiteRule[]}
+ */
 function getSiteRulesList() {
 	return normalizeSiteRulesState(options?.siteRules);
 }
 
+/**
+ * @param {any} nextRules
+ * @returns {void}
+ */
 function setSiteRules(nextRules) {
 	options.siteRules = normalizeSiteRulesState(nextRules);
 }
 
+/**
+ * @param {string} ruleId
+ * @returns {SiteRule|null}
+ */
 function findSiteRule(ruleId) {
 	return getSiteRulesList().find((rule) => rule.id === ruleId) || null;
 }
 
+/**
+ * @param {string} id
+ * @returns {boolean|undefined}
+ */
 function readTriStateBoolean(id) {
 	const value = document.getElementById(id)?.value || 'inherit';
 	if (value === 'true') return true;
@@ -483,12 +618,23 @@ function readTriStateBoolean(id) {
 	return undefined;
 }
 
+/**
+ * @param {string} id
+ * @param {boolean|undefined} value
+ * @returns {void}
+ */
 function setTriStateBoolean(id, value) {
 	const input = document.getElementById(id);
 	if (!input) return;
 	input.value = value === true ? 'true' : value === false ? 'false' : 'inherit';
 }
 
+/**
+ * @param {string} toggleId
+ * @param {string} inputId
+ * @param {any} value
+ * @returns {void}
+ */
 function setTextOverrideControl(toggleId, inputId, value) {
 	const toggle = document.getElementById(toggleId);
 	const input = document.getElementById(inputId);
@@ -502,6 +648,9 @@ function setTextOverrideControl(toggleId, inputId, value) {
 	}
 }
 
+/**
+ * @returns {void}
+ */
 function refreshSiteRuleTextOverrideStates() {
 	Object.values(SITE_RULE_TEXT_FIELD_IDS).forEach(({ toggleId, inputId }) => {
 		const toggle = document.getElementById(toggleId);
@@ -512,6 +661,9 @@ function refreshSiteRuleTextOverrideStates() {
 	});
 }
 
+/**
+ * @returns {void}
+ */
 function clearSiteRuleEditorFeedback() {
 	const feedback = document.getElementById('siteRulePatternFeedback');
 	const patternInput = document.getElementById('siteRulePattern');
@@ -524,6 +676,9 @@ function clearSiteRuleEditorFeedback() {
 	}
 }
 
+/**
+ * @returns {void}
+ */
 function resetSiteRuleEditor() {
 	siteRuleEditorState = { mode: 'create', ruleId: null };
 	document.getElementById('siteRuleEditorTitle').textContent = 'Add Site Rule';
@@ -545,6 +700,10 @@ function resetSiteRuleEditor() {
 	refreshSiteRuleTextOverrideStates();
 }
 
+/**
+ * @param {string|null} [ruleId]
+ * @returns {void}
+ */
 function openSiteRuleEditor(ruleId = null) {
 	resetSiteRuleEditor();
 	const editor = document.getElementById('siteRuleEditor');
@@ -585,6 +744,9 @@ function openSiteRuleEditor(ruleId = null) {
 	document.getElementById('siteRuleName')?.focus();
 }
 
+/**
+ * @returns {void}
+ */
 function closeSiteRuleEditor() {
 	document.getElementById('siteRuleEditor')?.setAttribute('hidden', '');
 	const editor = document.getElementById('siteRuleEditor');
@@ -594,6 +756,9 @@ function closeSiteRuleEditor() {
 	resetSiteRuleEditor();
 }
 
+/**
+ * @returns {SiteRuleOverride}
+ */
 function buildSiteRuleOverridesFromEditor() {
 	const overrides = {};
 
@@ -632,6 +797,10 @@ function buildSiteRuleOverridesFromEditor() {
 	return normalizeSiteRuleOverridesState(overrides);
 }
 
+/**
+ * @param {SiteRule} rule
+ * @returns {string[]}
+ */
 function getSiteRuleOverrideLabels(rule) {
 	const siteRulesApi = getSiteRulesApi();
 	const overrideKeys = siteRulesApi?.collectOverrideKeys
@@ -641,6 +810,10 @@ function getSiteRuleOverrideLabels(rule) {
 	return overrideKeys.map((key) => SITE_RULE_OVERRIDE_LABELS[key] || key);
 }
 
+/**
+ * @param {SiteRule[]} rules
+ * @returns {void}
+ */
 function updateSiteRulesSummary(rules) {
 	const summary = document.getElementById('siteRulesSummary');
 	if (!summary) {
@@ -651,6 +824,9 @@ function updateSiteRulesSummary(rules) {
 	summary.textContent = `${rules.length} rule${rules.length === 1 ? '' : 's'} • ${enabledCount} enabled`;
 }
 
+/**
+ * @returns {void}
+ */
 function renderSiteRules() {
 	const rules = getSiteRulesList();
 	const list = document.getElementById('siteRulesList');
@@ -711,6 +887,9 @@ function renderSiteRules() {
 	}
 }
 
+/**
+ * @returns {Promise<void>}
+ */
 async function saveSiteRuleEditor() {
 	const patternInput = document.getElementById('siteRulePattern');
 	const rawPattern = patternInput?.value || '';
@@ -752,6 +931,11 @@ async function saveSiteRuleEditor() {
 	save();
 }
 
+/**
+ * @param {string} ruleId
+ * @param {'up'|'down'} direction
+ * @returns {void}
+ */
 function moveSiteRule(ruleId, direction) {
 	const rules = getSiteRulesList();
 	const index = rules.findIndex((rule) => rule.id === ruleId);
@@ -772,6 +956,10 @@ function moveSiteRule(ruleId, direction) {
 	save();
 }
 
+/**
+ * @param {string} ruleId
+ * @returns {void}
+ */
 function deleteSiteRule(ruleId) {
 	const nextRules = getSiteRulesList().filter((rule) => rule.id !== ruleId);
 	setSiteRules(nextRules);
@@ -782,6 +970,11 @@ function deleteSiteRule(ruleId) {
 	save();
 }
 
+/**
+ * @param {string} ruleId
+ * @param {boolean} [enabled]
+ * @returns {void}
+ */
 function toggleSiteRuleEnabled(ruleId, enabled) {
 	const nextRules = getSiteRulesList().map((rule) => (
 		rule.id === ruleId ? { ...rule, enabled: enabled !== false } : rule
@@ -791,6 +984,9 @@ function toggleSiteRuleEnabled(ruleId, enabled) {
 	save();
 }
 
+/**
+ * @returns {void}
+ */
 function initSiteRuleControls() {
 	document.getElementById('addSiteRule')?.addEventListener('click', () => openSiteRuleEditor());
 	document.getElementById('cancelSiteRule')?.addEventListener('click', () => closeSiteRuleEditor());
