@@ -1,6 +1,6 @@
 const { describe, test, expect, mock } = require('bun:test');
 
-const { generateValidFileName } = require('../../shared/template-utils');
+const { generateValidFileName } = require('@/shared/template-utils');
 
 const SINGLE_DOWNLOAD_NOTIFICATION_DELTA = Object.freeze({ downloads: 1, exports: 1 });
 

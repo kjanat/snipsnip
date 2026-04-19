@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 
-import { getBrowserApi, loadBrowserApi } from '../../lib/vendors/browser-polyfill.ts';
-import { getHighlightApi, loadHighlightApi } from '../../lib/vendors/highlight.ts';
-import { getMomentApi, loadMomentApi } from '../../lib/vendors/moment.ts';
-import { getReadabilityApi, loadReadabilityApi } from '../../lib/vendors/readability.ts';
-import { getTurndownRuntime, loadTurndownRuntime } from '../../lib/vendors/turndown.ts';
+import { getBrowserApi, loadBrowserApi } from '@/lib/vendors/browser-polyfill';
+import { getHighlightApi, loadHighlightApi } from '@/lib/vendors/highlight';
+import { getMomentApi, loadMomentApi } from '@/lib/vendors/moment';
+import { getReadabilityApi, loadReadabilityApi } from '@/lib/vendors/readability';
+import { getTurndownRuntime, loadTurndownRuntime } from '@/lib/vendors/turndown';
 
 const originalBrowser = globalThis.browser;
 const originalHighlight = globalThis.hljs;

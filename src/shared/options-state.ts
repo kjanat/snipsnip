@@ -1,4 +1,4 @@
-import { normalizeSiteRules as defaultNormalizeSiteRules } from './site-rules.ts';
+import { normalizeSiteRules as defaultNormalizeSiteRules } from './site-rules';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return Object.prototype.toString.call(value) === '[object Object]';

@@ -9,7 +9,7 @@ Markdown web clipper for Chrome and Firefox. Save pages as clean Markdown, copy 
 [Changelog]: CHANGELOG.md
 [Privacy Policy]: PRIVACY.md
 [MarkDownload]: https://github.com/deathau/markdownload/
-[Chrome Web Store]: https://chromewebstore.google.com/detail/snipsnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm
+[Chrome Web Store]: https://chromewebstore.google.com/detail/snipsnip-markdown-web-cli/bkfjlhecphnfmocakicdnihbppbhcodc
 [Firefox Add-ons]: https://addons.mozilla.org/en-US/firefox/addon/snipsnip-markdown-web-clipper
 
 [![SnipSnip Promo](media/snipsnip_promo.gif)](https://www.youtube.com/watch?v=IO6PjI79drY)

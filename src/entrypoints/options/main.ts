@@ -1,3 +1,3 @@
-import { bootOptionsRuntime } from '../../lib/options/bootstrap.ts';
+import { bootOptionsRuntime } from '@/lib/options/bootstrap';
 
 await bootOptionsRuntime();

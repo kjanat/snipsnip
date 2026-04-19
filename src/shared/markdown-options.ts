@@ -1,8 +1,8 @@
-import type { ExtensionOptions } from '../lib/types/index.ts';
+import type { ExtensionOptions } from '@/lib/types';
 import {
 	generateValidFileName as defaultGenerateValidFileName,
 	textReplace as defaultTextReplace,
-} from './template-utils.ts';
+} from './template-utils';
 
 export function createEffectiveMarkdownOptions(
 	article: Record<string, unknown>,

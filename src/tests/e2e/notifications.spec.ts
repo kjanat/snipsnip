@@ -6,7 +6,7 @@
 const fs = require('fs');
 const { test, expect, chromium } = require('playwright/test');
 const path = require('path');
-const { getExtensionLaunchArgs } = require('../helpers/extension-target');
+const { getExtensionLaunchArgs } = require('@/tests/helpers/extension-target');
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const notificationHostPath = '/notifications/host.html';
 const notificationHostUrl = `${fixtureHost}${notificationHostPath}`;

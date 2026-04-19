@@ -195,7 +195,7 @@ function loadPageContextScript() {
 		}
 
 		var script = document.createElement('script');
-		script.src = browser.runtime.getURL('contentScript/pageContext.js');
+		script.src = browser.runtime.getURL('/page-context.js');
 		script.setAttribute('data-snipsnip-page-context', 'true');
 		script.onload = () => {
 			window.snipsnipCaptureState.pageContextScriptLoaded = true;

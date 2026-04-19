@@ -3,7 +3,7 @@
  * Tests actual article extraction using Mozilla's Readability.js
  */
 
-const { parseArticle } = require('../helpers/browser-env');
+const { parseArticle } = require('@/tests/helpers/browser-env');
 
 describe('Real Readability Integration', () => {
 	describe('Article Extraction', () => {

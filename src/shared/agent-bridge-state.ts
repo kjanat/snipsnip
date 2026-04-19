@@ -1,9 +1,4 @@
-import type {
-	AgentBridgeLatestClip,
-	AgentBridgeSettings,
-	AgentBridgeStatus,
-	ExtensionStorageArea,
-} from '../lib/types/index.ts';
+import type { AgentBridgeLatestClip, AgentBridgeSettings, AgentBridgeStatus, ExtensionStorageArea } from '@/lib/types';
 
 export const STORAGE_KEYS = Object.freeze({
 	SETTINGS: 'agentBridgeSettings',
@@ -37,7 +32,7 @@ export const DEFAULT_LATEST_CLIP: Readonly<AgentBridgeLatestClip> = Object.freez
 });
 
 function getDefaultStorage(): ExtensionStorageArea | undefined {
-	return globalThis.browser?.storage?.local;
+	return browser?.storage?.local;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

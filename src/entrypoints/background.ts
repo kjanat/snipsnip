@@ -1,6 +1,4 @@
-import { defineBackground } from 'wxt/utils/define-background';
-
-import '../lib/background/bootstrap.ts';
-import '../service-worker.ts';
+import '@/lib/background/bootstrap';
+import '@/service-worker';
 
 export default defineBackground(() => {});

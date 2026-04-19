@@ -1,19 +1,18 @@
-import browserApi from '../../browser-polyfill.min.ts';
-import optionsTemplate from '../../options/options.html?raw';
-import agentBridgeState from '../../shared/agent-bridge-state.ts';
-import libraryState from '../../shared/library-state.ts';
-import optionsState from '../../shared/options-state.ts';
-import searchCore from '../../shared/search-core.ts';
-import siteRules from '../../shared/site-rules.ts';
-import templateUtils from '../../shared/template-utils.ts';
+import optionsTemplate from '@/options/options.html?raw';
+import agentBridgeState from '@/shared/agent-bridge-state';
+import libraryState from '@/shared/library-state';
+import optionsState from '@/shared/options-state';
+import searchCore from '@/shared/search-core';
+import siteRules from '@/shared/site-rules';
+import templateUtils from '@/shared/template-utils';
 
-import { createMenus } from '../background/context-menus-runtime.ts';
-import { defaultOptions } from '../background/default-options-runtime.ts';
-import { getGuidePageHref, installWxtPagePaths } from '../page-paths.ts';
-import { loadMomentApi } from '../vendors/moment.ts';
+import { createMenus } from '@/lib/background/context-menus-runtime';
+import { defaultOptions } from '@/lib/background/default-options-runtime';
+import { getGuidePageHref, installWxtPagePaths } from '@/lib/page-paths';
+import { loadMomentApi } from '@/lib/vendors/moment';
 
-const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
-const optionsCssUrl = new URL('../../options/options.css', import.meta.url).href;
+const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
+const optionsCssUrl = new URL('@/options/options.css', import.meta.url).href;
 
 let optionsRuntimeLoadPromise: Promise<void> | null = null;
 
@@ -38,7 +37,6 @@ function appendStylesheet(href: string, id: string): void {
 
 function installOptionsGlobals(): void {
 	installWxtPagePaths();
-	globalThis.browser ??= browserApi;
 	globalThis.defaultOptions ??= defaultOptions;
 	globalThis.snipSnipAgentBridgeState ??= agentBridgeState;
 	globalThis.snipSnipLibraryState ??= libraryState;
@@ -88,9 +86,9 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 
 			const loadMoment = options.loadMoment ?? loadMomentApi;
 			const importOptionsSearchModule = options.importOptionsSearchModule
-				?? (() => import('../../options/options-search.ts'));
+				?? (() => import('@/options/options-search'));
 			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
-				?? (() => import('../../options/options.ts'));
+				?? (() => import('@/options/options'));
 
 			await loadMoment();
 			await importOptionsSearchModule();

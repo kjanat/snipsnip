@@ -7,7 +7,7 @@ describe('background default options runtime', () => {
 	let defaultOptionsRuntime;
 
 	beforeEach(async () => {
-		defaultOptionsRuntime = await import('../../lib/background/default-options-runtime.js');
+		defaultOptionsRuntime = await import('@/lib/background/default-options-runtime');
 	});
 
 	afterEach(() => {

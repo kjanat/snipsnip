@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 
-import { bootContentScriptRuntime } from '../../lib/content/bootstrap.ts';
+import { bootContentScriptRuntime } from '@/lib/content/bootstrap';
 
 const originalBrowser = globalThis.browser;
 

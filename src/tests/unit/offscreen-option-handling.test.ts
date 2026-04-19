@@ -4,8 +4,8 @@ const { describe, test, expect, mock, spyOn } = require('bun:test');
  * Tests shared offscreen markdown option normalization helper.
  */
 
-const { createEffectiveMarkdownOptions } = require('../../shared/markdown-options');
-const templateUtils = require('../../shared/template-utils');
+const { createEffectiveMarkdownOptions } = require('@/shared/markdown-options');
+const templateUtils = require('@/shared/template-utils');
 
 describe('Offscreen markdown option handling', () => {
 	const article = {

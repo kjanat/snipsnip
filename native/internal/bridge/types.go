@@ -3,8 +3,8 @@ package bridge
 const (
 	HostName         = "com.snipsnip.bridge"
 	HostVersion      = "0.1.0"
-	DefaultChromeID  = "kcbaglhfgbkjdnpeokaamjjkddempipm"
-	DefaultFirefoxID = "snipsnip@dhruvparikh"
+	DefaultChromeID  = "bkfjlhecphnfmocakicdnihbppbhcodc"
+	DefaultFirefoxID = "snipsnip@kjanat.com"
 )
 
 type Browser string

@@ -4,4 +4,4 @@ GlobalRegistrator.register({
 	url: 'https://example.com/',
 });
 
-require('./setup.js');
+require('./setup');

@@ -1,4 +1,4 @@
-import templateUtilsModule, { textReplace } from '../../shared/template-utils.ts';
+import templateUtilsModule, { textReplace } from '@/shared/template-utils';
 
 /**
  * Template Processing Tests

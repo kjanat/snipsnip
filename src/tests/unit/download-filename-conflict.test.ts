@@ -6,7 +6,7 @@ const { describe, test, expect, beforeEach, mock } = require('bun:test');
  * and handles empty filenames properly
  */
 
-const { createDownloadTracker } = require('../../shared/download-tracker');
+const { createDownloadTracker } = require('@/shared/download-tracker');
 
 describe('Download Filename Conflict Handling', () => {
 	let tracker;

@@ -1,4 +1,4 @@
-const agentBridgeState = require('../../shared/agent-bridge-state');
+const agentBridgeState = require('@/shared/agent-bridge-state');
 
 describe('agent-bridge-state helpers', () => {
 	test('normalizes settings to disabled by default', () => {

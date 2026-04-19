@@ -1,4 +1,4 @@
-import type { SiteRule, SiteRuleOverrides } from '../lib/types/index.ts';
+import type { SiteRule, SiteRuleOverrides } from '@/lib/types';
 
 export interface SiteRulePatternValidation {
 	valid: boolean;

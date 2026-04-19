@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('../helpers/jsdom-shim');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
 
-const searchCore = require('../../shared/search-core.ts');
+const searchCore = require('@/shared/search-core');
 
 const guideHtml = fs.readFileSync(
 	path.join(__dirname, '../../guide/guide.html'),

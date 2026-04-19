@@ -1,6 +1,6 @@
-const { JSDOM } = require('../helpers/jsdom-shim');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
 const { COMMAND_LABELS, COMMAND_ORDER, splitShortcut, groupCommands, buildShortcutsFragment } = require(
-	'../../shared/popup-shortcuts.ts',
+	'@/shared/popup-shortcuts',
 );
 
 const { document } = new JSDOM('<!DOCTYPE html>').window;

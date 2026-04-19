@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('./jsdom-shim');
-const turndownFactory = require('../../shared/turndown-factory');
+const turndownFactory = require('@/shared/turndown-factory');
 
 /**
  * Create a browser-like environment with required libraries loaded

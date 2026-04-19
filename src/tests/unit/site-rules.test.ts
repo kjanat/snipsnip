@@ -1,4 +1,4 @@
-const siteRules = require('../../shared/site-rules');
+const siteRules = require('@/shared/site-rules');
 
 describe('site-rules helper', () => {
 	const baseOptions = {

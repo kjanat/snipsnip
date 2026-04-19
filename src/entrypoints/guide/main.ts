@@ -1,3 +1,3 @@
-import { bootGuideRuntime } from '../../lib/guide/bootstrap.ts';
+import { bootGuideRuntime } from '@/lib/guide/bootstrap';
 
 await bootGuideRuntime();

@@ -2,7 +2,7 @@ const { test, expect, chromium } = require('playwright/test');
 const {
 	getExtensionPageUrl,
 	getExtensionLaunchArgs,
-} = require('../helpers/extension-target');
+} = require('@/tests/helpers/extension-target');
 
 test.describe('WXT smoke', () => {
 	let context;

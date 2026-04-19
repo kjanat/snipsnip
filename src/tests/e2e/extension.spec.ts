@@ -9,7 +9,7 @@ const path = require('path');
 const {
 	getExtensionPageUrl,
 	getExtensionLaunchArgs,
-} = require('../helpers/extension-target');
+} = require('@/tests/helpers/extension-target');
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixtureFiles = {
 	'/extension/deterministic-article.html': path.join(

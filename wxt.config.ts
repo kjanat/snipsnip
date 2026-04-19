@@ -1,22 +1,24 @@
+import { AutoIconsOptions } from '@wxt-dev/auto-icons';
 import { defineConfig } from 'wxt';
+
+const autoIcons: AutoIconsOptions = {
+	enabled: true,
+	baseIconPath: 'assets/icon.png',
+	developmentIndicator: 'overlay',
+	sizes: [16, 32, 48, 128],
+};
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+	modules: ['@wxt-dev/auto-icons'],
 	srcDir: 'src',
+	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
 	manifest: ({ browser }) => ({
 		name: 'SnipSnip - Markdown Web Clipper',
-		author: 'Dhruv Parikh',
+		author: 'Kaj Kowalski',
 		description:
 			'One-click Markdown web clipper. Save articles, docs, code & tables as clean Markdown for AI agents & LLMs. Supports Obsidian & more.',
-		icons: {
-			16: 'icons/favicon-16x16.png',
-			32: 'icons/favicon-32x32.png',
-			48: 'icons/favicon-48x48.png',
-			128: 'icons/appicon-128x128.png',
-			192: 'icons/favicon-192x192.png',
-			512: 'icons/favicon-512x512.png',
-		},
 		permissions: [
 			'activeTab',
 			'downloads',
@@ -31,12 +33,6 @@ export default defineConfig({
 		action: {
 			default_title: 'SnipSnip',
 			default_popup: 'popup.html',
-			default_icon: {
-				16: 'icons/favicon-16x16.png',
-				32: 'icons/favicon-32x32.png',
-				48: 'icons/favicon-48x48.png',
-				128: 'icons/appicon-128x128.png',
-			},
 		},
 		options_ui: {
 			page: 'options.html',
@@ -82,7 +78,7 @@ export default defineConfig({
 		},
 		web_accessible_resources: [
 			{
-				resources: ['contentScript/pageContext.js'],
+				resources: ['page-context.js'],
 				matches: ['<all_urls>'],
 			},
 		],
@@ -90,8 +86,8 @@ export default defineConfig({
 			? {
 				browser_specific_settings: {
 					gecko: {
-						id: 'snipsnip@dhruvparikh',
-						strict_min_version: '121.0',
+						id: 'snipsnip@kjanat.com',
+						strict_min_version: '150.0',
 						data_collection_permissions: {
 							required: ['none'],
 						},

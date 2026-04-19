@@ -1,18 +1,16 @@
-import momentApi from '../../background/moment.min.ts';
-import browserApi from '../../browser-polyfill.min.ts';
-import agentBridgeState from '../../shared/agent-bridge-state.ts';
-import downloadTracker from '../../shared/download-tracker.ts';
-import libraryExport from '../../shared/library-export.ts';
-import notifications from '../../shared/notifications.ts';
-import siteRules from '../../shared/site-rules.ts';
+import momentApi from '@/background/moment.min';
+import agentBridgeState from '@/shared/agent-bridge-state';
+import downloadTracker from '@/shared/download-tracker';
+import libraryExport from '@/shared/library-export';
+import notifications from '@/shared/notifications';
+import siteRules from '@/shared/site-rules';
 
-import { installWxtPagePaths } from '../page-paths.ts';
-import { createMenus } from './context-menus-runtime.ts';
-import { defaultOptions, getOptions, LEGACY_DEFAULT_FRONTMATTER } from './default-options-runtime.ts';
+import { installWxtPagePaths } from '@/lib/page-paths';
+import { createMenus } from './context-menus-runtime';
+import { defaultOptions, getOptions, LEGACY_DEFAULT_FRONTMATTER } from './default-options-runtime';
 
 installWxtPagePaths();
 globalThis.snipSnipUseImportedBackground = true;
-globalThis.browser ??= browserApi;
 globalThis.moment ??= momentApi;
 globalThis.defaultOptions ??= defaultOptions;
 globalThis.snipSnipAgentBridgeState ??= agentBridgeState;

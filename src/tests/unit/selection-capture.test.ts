@@ -3,7 +3,7 @@
  * Uses the shared production helper.
  */
 
-const { buildDomWithSelection } = require('../../shared/selection-utils');
+const { buildDomWithSelection } = require('@/shared/selection-utils');
 
 describe('Selection Capture', () => {
 	test('replaces body with selection html when selection mode is enabled', () => {

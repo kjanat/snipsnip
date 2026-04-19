@@ -1,7 +1,6 @@
 /// <reference types="bun-types/test-globals" />
 
 import type {
-	ExtensionBrowserApi,
 	ExtensionOptions,
 	HighlightApi,
 	MomentApi,
@@ -20,10 +19,12 @@ import type {
 	SnipSnipUrlUtilsApi,
 	TurndownPluginGfmApi,
 	TurndownServiceApi,
-} from './lib/types';
+} from '@/lib/types';
 
 declare global {
-	var browser: ExtensionBrowserApi | undefined;
+	interface globalThis {
+		browser: typeof import('wxt/browser').browser;
+	}
 	var defaultOptions: Record<string, unknown> | undefined;
 	var hljs: HighlightApi | undefined;
 	var moment: MomentApi | undefined;

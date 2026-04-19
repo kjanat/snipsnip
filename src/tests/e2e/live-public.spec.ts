@@ -9,7 +9,7 @@ const {
 	repoRoot,
 	getExtensionPageUrl,
 	getExtensionLaunchArgs,
-} = require('../helpers/extension-target');
+} = require('@/tests/helpers/extension-target');
 const {
 	createSnapshotRecord,
 	loadLatestSuccessfulRun,
@@ -17,7 +17,7 @@ const {
 	persistSnapshotRun,
 	formatComparisonForFailure,
 	attachSnapshotArtifacts,
-} = require('../helpers/live-public-artifacts');
+} = require('@/tests/helpers/live-public-artifacts');
 
 const livePublicArtifactRoot = path.join(repoRoot, 'test-artifacts', 'live-public');
 const liveClipCases = [

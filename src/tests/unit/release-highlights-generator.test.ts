@@ -2,7 +2,7 @@ const {
 	buildReleaseHighlightsAsset,
 	extractReleaseSections,
 	normalizeBulletText,
-} = require('../../scripts/generate-release-highlights');
+} = require('@/scripts/generate-release-highlights');
 
 describe('release highlights generator', () => {
 	const sampleChangelog = `

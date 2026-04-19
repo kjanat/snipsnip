@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 
-import { bootOffscreenRuntime } from '../../lib/offscreen/bootstrap.ts';
+import { bootOffscreenRuntime } from '@/lib/offscreen/bootstrap';
 
 const originalBrowser = globalThis.browser;
 const originalDefaultOptions = globalThis.defaultOptions;

@@ -1,12 +1,11 @@
-import browserApi from '../../browser-polyfill.min.ts';
-import guideTemplate from '../../guide/guide.html?raw';
-import searchCore from '../../shared/search-core.ts';
+import guideTemplate from '@/guide/guide.html?raw';
+import searchCore from '@/shared/search-core';
 
-import { defaultOptions } from '../background/default-options-runtime.ts';
-import { installWxtPagePaths } from '../page-paths.ts';
+import { defaultOptions } from '@/lib/background/default-options-runtime';
+import { installWxtPagePaths } from '@/lib/page-paths';
 
-const fontsCssUrl = new URL('../../shared/fonts.css', import.meta.url).href;
-const guideCssUrl = new URL('../../guide/guide.css', import.meta.url).href;
+const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
+const guideCssUrl = new URL('@/guide/guide.css', import.meta.url).href;
 let guideRuntimeLoadPromise: Promise<void> | null = null;
 
 export interface GuideRuntimeBootstrapOptions {
@@ -28,7 +27,6 @@ function appendStylesheet(href: string, id: string): void {
 
 function installGuideGlobals(): void {
 	installWxtPagePaths();
-	globalThis.browser ??= browserApi;
 	globalThis.defaultOptions ??= defaultOptions;
 	Reflect.set(globalThis, 'snipSnipSearchCore', Reflect.get(globalThis, 'snipSnipSearchCore') ?? searchCore);
 }
@@ -61,7 +59,7 @@ export async function bootGuideRuntime(options: GuideRuntimeBootstrapOptions = {
 			installGuideStyles();
 			installGuideShell(options.loadTemplate ?? (() => guideTemplate));
 
-			const importModule = options.importModule ?? (() => import('../../guide/guide.ts'));
+			const importModule = options.importModule ?? (() => import('@/guide/guide'));
 			await importModule();
 		})();
 	}

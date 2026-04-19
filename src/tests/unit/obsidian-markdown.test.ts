@@ -2,7 +2,7 @@ const {
 	createObsidianSourceImageMap,
 	getObsidianTransportOptions,
 	prepareMarkdownForObsidian,
-} = require('../../shared/obsidian-utils');
+} = require('@/shared/obsidian-utils');
 
 describe('Obsidian markdown helpers', () => {
 	test('forces send-to-obsidian conversions to avoid local attachment styles', () => {

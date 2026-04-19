@@ -1,6 +1,4 @@
-import { defineContentScript } from 'wxt/utils/define-content-script';
-
-import { bootContentScriptRuntime } from '../lib/content/bootstrap.ts';
+import { bootContentScriptRuntime } from '@/lib/content/bootstrap';
 
 export default defineContentScript({
 	matches: ['<all_urls>'],

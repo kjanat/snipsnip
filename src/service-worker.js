@@ -1,4 +1,4 @@
-/** @typedef {import('./lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
+/** @typedef {import('@/lib/background/message-contracts').BackgroundMessage} BackgroundMessage */
 
 // Log platform info
 browser.runtime.getPlatformInfo().then(async platformInfo => {

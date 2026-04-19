@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import libraryState from '../../shared/library-state.ts';
-import optionsState from '../../shared/options-state.ts';
-import searchCore from '../../shared/search-core.ts';
-import templateUtils from '../../shared/template-utils.ts';
-import { JSDOM } from '../helpers/jsdom-shim.ts';
+import libraryState from '@/shared/library-state';
+import optionsState from '@/shared/options-state';
+import searchCore from '@/shared/search-core';
+import templateUtils from '@/shared/template-utils';
+import { JSDOM } from '@/tests/helpers/jsdom-shim';
 
 globalThis.snipSnipSearchCore = searchCore;
-await import('../../options/options-search.ts');
+await import('@/options/options-search');
 
 const optionsSearch = globalThis.snipSnipOptionsSearch;
 

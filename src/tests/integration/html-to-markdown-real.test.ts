@@ -3,8 +3,8 @@
  * Tests actual conversion using Turndown.js library
  */
 
-const { createTurndownService } = require('../helpers/browser-env');
-const htmlSamples = require('../fixtures/html-samples');
+const { createTurndownService } = require('@/tests/helpers/browser-env');
+const htmlSamples = require('@/tests/fixtures/html-samples');
 
 describe('Real HTML to Markdown Conversion', () => {
 	/**

@@ -3,7 +3,7 @@ const path = require('path');
 
 const SRC_DIR = path.resolve(__dirname, '..');
 const ROOT_DIR = path.resolve(SRC_DIR, '..');
-const MANIFEST_PATH = path.join(SRC_DIR, 'manifest.json');
+const PACKAGE_PATH = path.join(ROOT_DIR, 'package.json');
 const CHANGELOG_PATH = path.join(ROOT_DIR, 'CHANGELOG.md');
 const OUTPUT_PATH = path.join(SRC_DIR, 'shared', 'release-highlights.json');
 const USER_HIGHLIGHTS_HEADING = 'user highlights';
@@ -96,13 +96,13 @@ function buildReleaseHighlightsAsset(changelogText, manifestVersion, maxHighligh
 }
 
 function generateReleaseHighlights(options = {}) {
-	const manifestPath = options.manifestPath || MANIFEST_PATH;
+	const packagePath = options.packagePath || PACKAGE_PATH;
 	const changelogPath = options.changelogPath || CHANGELOG_PATH;
 	const outputPath = options.outputPath || OUTPUT_PATH;
 
-	const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+	const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 	const changelog = fs.readFileSync(changelogPath, 'utf8');
-	const asset = buildReleaseHighlightsAsset(changelog, manifest.version);
+	const asset = buildReleaseHighlightsAsset(changelog, pkg.version);
 
 	fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 	fs.writeFileSync(outputPath, `${JSON.stringify(asset, null, 2)}\n`, 'utf8');

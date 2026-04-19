@@ -5,8 +5,8 @@ const { describe, test, expect, mock } = require('bun:test');
  * Uses the shared production helper.
  */
 
-const { JSDOM } = require('../helpers/jsdom-shim');
-const { convertToFencedCodeBlock } = require('../../shared/code-block-utils');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
+const { convertToFencedCodeBlock } = require('@/shared/code-block-utils');
 
 describe('Code Block Conversion', () => {
 	test('strips syntax-highlighter spans from pre blocks', () => {

@@ -1,4 +1,4 @@
-const optionsState = require('../../shared/options-state');
+const optionsState = require('@/shared/options-state');
 
 describe('options-state helpers', () => {
 	const defaultOptions = {

@@ -59,10 +59,10 @@ export async function getOptions() {
 	let options = { ...defaultOptions };
 
 	try {
-		if (globalThis.browser?.storage?.sync?.get) {
+		if (browser?.storage?.sync?.get) {
 			options = {
 				...defaultOptions,
-				...(await globalThis.browser.storage.sync.get(defaultOptions)),
+				...(await browser.storage.sync.get(defaultOptions)),
 			};
 		}
 	} catch (error) {
@@ -80,7 +80,7 @@ export async function getOptions() {
 		options.siteRules = [];
 	}
 
-	if (!globalThis.browser?.downloads) {
+	if (!browser?.downloads) {
 		options.downloadMode = 'contentLink';
 	}
 

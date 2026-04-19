@@ -1,21 +1,21 @@
-import markdownOptions from '../../shared/markdown-options.ts';
-import obsidianUtils from '../../shared/obsidian-utils.ts';
-import siteRules from '../../shared/site-rules.ts';
-import templateUtils from '../../shared/template-utils.ts';
-import urlUtils from '../../shared/url-utils.ts';
+import markdownOptions from '@/shared/markdown-options';
+import obsidianUtils from '@/shared/obsidian-utils';
+import siteRules from '@/shared/site-rules';
+import templateUtils from '@/shared/template-utils';
+import urlUtils from '@/shared/url-utils';
 
-import '../../background/apache-mime-types.ts';
-import '../../shared/code-block-utils.ts';
-import '../../shared/hashtag-utils.ts';
-import '../../shared/readability-recovery.ts';
-import '../../shared/selection-utils.ts';
+import '@/background/apache-mime-types';
+import '@/shared/code-block-utils';
+import '@/shared/hashtag-utils';
+import '@/shared/readability-recovery';
+import '@/shared/selection-utils';
 
-import { defaultOptions } from '../background/default-options-runtime.ts';
-import { loadBrowserApi } from '../vendors/browser-polyfill.ts';
-import { loadHighlightApi } from '../vendors/highlight.ts';
-import { loadMomentApi } from '../vendors/moment.ts';
-import { loadReadabilityApi } from '../vendors/readability.ts';
-import { loadTurndownRuntime } from '../vendors/turndown.ts';
+import { defaultOptions } from '@/lib/background/default-options-runtime';
+import { loadBrowserApi } from '@/lib/vendors/browser-polyfill';
+import { loadHighlightApi } from '@/lib/vendors/highlight';
+import { loadMomentApi } from '@/lib/vendors/moment';
+import { loadReadabilityApi } from '@/lib/vendors/readability';
+import { loadTurndownRuntime } from '@/lib/vendors/turndown';
 
 let offscreenRuntimeLoadPromise: Promise<void> | null = null;
 
@@ -55,7 +55,7 @@ export async function bootOffscreenRuntime(options: OffscreenRuntimeBootstrapOpt
 	await loadVendors();
 
 	if (!offscreenRuntimeLoadPromise) {
-		const importModule = options.importModule ?? (() => import('../../offscreen/offscreen.ts'));
+		const importModule = options.importModule ?? (() => import('@/offscreen/offscreen'));
 		offscreenRuntimeLoadPromise = importModule().then(() => undefined);
 	}
 

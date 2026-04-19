@@ -4,7 +4,7 @@ import {
 	BACKGROUND_MESSAGE_TYPES,
 	isBackgroundMessage,
 	isBackgroundMessageType,
-} from '../../lib/background/message-contracts.ts';
+} from '@/lib/background/message-contracts';
 
 describe('background message contracts', () => {
 	test('tracks known background message types', () => {

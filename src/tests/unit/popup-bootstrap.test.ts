@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test';
 
-import { bootPopupRuntime, resetPopupRuntimeBootstrapState } from '../../lib/popup/bootstrap.ts';
+import { bootPopupRuntime, resetPopupRuntimeBootstrapState } from '@/lib/popup/bootstrap';
 
-const { JSDOM } = require('../helpers/jsdom-shim');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
 
 const originalWindow = globalThis.window;
 const originalDocument = globalThis.document;

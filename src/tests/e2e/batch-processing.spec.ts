@@ -10,7 +10,7 @@ const path = require('path');
 const {
 	getExtensionPageUrl,
 	getExtensionLaunchArgs,
-} = require('../helpers/extension-target');
+} = require('@/tests/helpers/extension-target');
 const fixturePathMap = {
 	'/batch/alpha.html': path.join(__dirname, '../fixtures/e2e-pages/batch/alpha.html'),
 	'/batch/beta.html': path.join(__dirname, '../fixtures/e2e-pages/batch/beta.html'),

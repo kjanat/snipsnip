@@ -1,13 +1,13 @@
-import type { ExtensionBrowserApi } from '../types/index.ts';
+import type { ExtensionBrowserApi } from '@/lib/types';
 
-import { getModuleDefaultExport, isRecord, loadVendorRuntime } from './runtime-loader.ts';
+import { getModuleDefaultExport, isRecord, loadVendorRuntime } from './runtime-loader';
 
 export interface BrowserPolyfillLoadOptions {
 	importModule?: () => Promise<unknown>;
 }
 
 export function getBrowserApi(): ExtensionBrowserApi | undefined {
-	return globalThis.browser;
+	return browser;
 }
 
 function isBrowserApi(value: unknown): value is ExtensionBrowserApi {
@@ -20,9 +20,9 @@ export async function loadBrowserApi(options: BrowserPolyfillLoadOptions = {}): 
 		label: 'browser polyfill',
 		getValue: getBrowserApi,
 		setValue: (value) => {
-			globalThis.browser = value;
+			Reflect.set(globalThis, 'browser', value);
 		},
-		importModule: options.importModule ?? (() => import('../../browser-polyfill.min.js')),
+		importModule: options.importModule ?? (() => import('@/browser-polyfill.min')),
 		resolveModule: (loadedModule) => {
 			const defaultExport = getModuleDefaultExport(loadedModule);
 			return isBrowserApi(defaultExport) ? defaultExport : undefined;

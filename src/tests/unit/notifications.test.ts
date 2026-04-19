@@ -1,4 +1,4 @@
-const notifications = require('../../shared/notifications');
+const notifications = require('@/shared/notifications');
 
 describe('notification helpers', () => {
 	test('queues only the next unseen support threshold when exports jump', () => {

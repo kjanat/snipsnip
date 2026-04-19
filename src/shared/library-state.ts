@@ -1,4 +1,4 @@
-import type { ClipSnapshot, ExtensionStorageArea, LibraryItem, LibrarySettings } from '../lib/types/index.ts';
+import type { ClipSnapshot, ExtensionStorageArea, LibraryItem, LibrarySettings } from '@/lib/types';
 
 export const STORAGE_KEYS = Object.freeze({
 	SETTINGS: 'librarySettings',
@@ -16,7 +16,7 @@ function deepClone<T>(value: T): T {
 }
 
 function getDefaultStorage(): ExtensionStorageArea | undefined {
-	return globalThis.browser?.storage?.local;
+	return browser?.storage?.local;
 }
 
 export function sanitizeItemsToKeep(value: unknown, fallback = DEFAULT_LIBRARY_SETTINGS.itemsToKeep): number {

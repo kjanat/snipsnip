@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('../helpers/jsdom-shim');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
 
 describe('Popup startup assets', () => {
 	test('popup HTML no longer eagerly loads all CodeMirror theme styles or the notification host', () => {

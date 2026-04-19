@@ -1,4 +1,4 @@
-const libraryExport = require('../../shared/library-export');
+const libraryExport = require('@/shared/library-export');
 
 describe('library-export helpers', () => {
 	test('creates a deterministic library ZIP filename', () => {

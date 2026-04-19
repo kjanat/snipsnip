@@ -1,4 +1,4 @@
-const libraryState = require('../../shared/library-state');
+const libraryState = require('@/shared/library-state');
 
 describe('library-state helpers', () => {
 	test('normalizes default library settings', () => {

@@ -1,14 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+import { describe, expect, test } from 'bun:test';
 
-const manifestJson = JSON.parse(fs.readFileSync(
-	path.join(__dirname, '../../manifest.json'),
-	'utf8',
-));
+import { buildExpectedManifest } from '@/tests/helpers/manifest';
 
 describe('Agent Bridge manifest permissions', () => {
-	test('nativeMessaging is requested optionally instead of at install time', () => {
-		expect(manifestJson.permissions || []).not.toContain('nativeMessaging');
-		expect(manifestJson.optional_permissions || []).toContain('nativeMessaging');
+	test('nativeMessaging is requested optionally instead of at install time', async () => {
+		const manifest = await buildExpectedManifest('chrome');
+		const permissions = (manifest.permissions ?? []) as readonly string[];
+		const optional = (manifest.optional_permissions ?? []) as readonly string[];
+		expect(permissions).not.toContain('nativeMessaging');
+		expect(optional).toContain('nativeMessaging');
 	});
 });

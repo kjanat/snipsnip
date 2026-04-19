@@ -3,9 +3,9 @@
  * Tests for actual bugs found in production use
  */
 
-const { JSDOM } = require('../helpers/jsdom-shim');
-const { createBrowserEnvironment, createTurndownService, parseArticle } = require('../helpers/browser-env');
-const htmlSamples = require('../fixtures/html-samples');
+const { JSDOM } = require('@/tests/helpers/jsdom-shim');
+const { createBrowserEnvironment, createTurndownService, parseArticle } = require('@/tests/helpers/browser-env');
+const htmlSamples = require('@/tests/fixtures/html-samples');
 
 function prepareDocumentForRecoveryTest(document, recoveryApi) {
 	document.querySelectorAll('a')?.forEach(anchor => {

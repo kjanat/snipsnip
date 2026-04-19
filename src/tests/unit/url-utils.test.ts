@@ -5,7 +5,7 @@ const {
 	resolveArticleUrl,
 	validateUri,
 	getImageFilename,
-} = require('../../shared/url-utils');
+} = require('@/shared/url-utils');
 
 describe('URL utils', () => {
 	describe('safeParseUrl', () => {
