@@ -15,7 +15,11 @@ const themes: Record<string, EditorTheme> = {
 	'ben10-light': { name: 'ben10-light', isDark: false, load: () => import('./ben10-light.ts').then((m) => m.default) },
 
 	'claude-dark': { name: 'claude-dark', isDark: true, load: () => import('./claude-dark.ts').then((m) => m.default) },
-	'claude-light': { name: 'claude-light', isDark: false, load: () => import('./claude-light.ts').then((m) => m.default) },
+	'claude-light': {
+		name: 'claude-light',
+		isDark: false,
+		load: () => import('./claude-light.ts').then((m) => m.default),
+	},
 
 	'colorblind-deuteranopia-dark': {
 		name: 'colorblind-deuteranopia-dark',
