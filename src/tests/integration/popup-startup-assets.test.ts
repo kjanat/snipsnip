@@ -55,7 +55,7 @@ describe('Popup startup assets', () => {
 		expect(document.getElementById('ddText')).not.toBeNull();
 		expect(document.getElementById('ddHtml')).not.toBeNull();
 		expect(document.getElementById('ddPrint')).not.toBeNull();
-    expect(document.getElementById('ddPdf')).not.toBeNull();
+		expect(document.getElementById('ddPdf')).not.toBeNull();
 		// @ts-ignore
 		expect(document.getElementById('splitDropdown').hasAttribute('hidden')).toBe(true);
 	});

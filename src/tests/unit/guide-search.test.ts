@@ -204,7 +204,7 @@ describe('Guide search — fallback behavior', () => {
 });
 
 describe('Guide DOM structure', () => {
-  let dom: ReturnType<typeof loadGuideDom>;
+	let dom: ReturnType<typeof loadGuideDom>;
 
 	beforeEach(() => {
 		dom = loadGuideDom();
@@ -261,7 +261,7 @@ describe('Guide DOM structure', () => {
 });
 
 describe('Guide keyboard shortcuts', () => {
-  let dom: ReturnType<typeof loadGuideDom>;
+	let dom: ReturnType<typeof loadGuideDom>;
 
 	beforeEach(() => {
 		dom = new JSDOM(guideHtml, {
