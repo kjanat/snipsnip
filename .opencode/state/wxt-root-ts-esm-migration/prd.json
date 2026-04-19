@@ -82,7 +82,7 @@
 			"description": "Move the content script to a WXT content entrypoint and convert the page-context bridge to an explicitly injected web-accessible script while preserving MathJax/custom-event behavior, DOM capture, and link picker flows. Acceptance: content script loads correctly, page bridge injection works, and end-to-end capture behavior remains intact.",
 			"depends": ["migrate-background-msgs", "wrap-vendored-runtime-libs"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "migrate-offscreen-fallback",

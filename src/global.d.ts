@@ -48,6 +48,8 @@ declare global {
 	var snipSnipTemplateUtils: SnipSnipTemplateUtilsApi | undefined;
 	var snipSnipUrlUtils: SnipSnipUrlUtilsApi | undefined;
 	var snipSnipUseImportedBackground: boolean | undefined;
+	var getSelectionAndDom: (() => { selection: string; dom: string; pageUrl: string } | null) | undefined;
+	var snipsnipPrepareForCapture: (() => Promise<void>) | undefined;
 	var TurndownService: TurndownServiceApi | undefined;
 	var turndownPluginGfm: TurndownPluginGfmApi | undefined;
 }

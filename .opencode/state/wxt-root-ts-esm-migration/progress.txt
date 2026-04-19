@@ -25,6 +25,8 @@ Started: 2026-04-19
 - `tsconfig.typecheck.json` can stay TS-entrypoint-focused while still allowing vendored JS wrapper imports by setting `allowJs: true` with `checkJs: false`.
 - For huge legacy entrypoints, avoid a risky whole-file rewrite: add a small WXT bootstrap that installs globals via imports, then patch the legacy file to read those APIs from `globalThis` instead of script-order locals.
 - Background listener registration can stay synchronous in WXT if the entrypoint uses static imports for bootstrap + side-effect runtime loading instead of async wrapper calls in `defineBackground()`.
+- When a legacy content script is imported as a module, any functions later probed by injected extension code must be reattached to `window`/`globalThis`; top-level module declarations no longer become globals automatically.
+- If a page-context bridge must stay at an exact WAR path for manual injection, keep the emitted asset in `public/` and add a sync test so the legacy source copy cannot drift.
 
 ---
 
@@ -250,3 +252,23 @@ Started: 2026-04-19
 - Learnings:
   - A small bootstrap module is the safest bridge from legacy classic-script background code to a WXT module entrypoint.
   - Replacing only the script-local dependency edges (`defaultOptions`, `getOptions`, `createMenus`) unlocks the background migration without copying the whole service worker into a second file.
+
+## Task - [migrate-content-page-bridge]
+
+- Added a real WXT content script entrypoint at `src/entrypoints/content.content.ts` so WXT now emits and registers the extension content script for all URLs.
+- Added `src/lib/content/bootstrap.ts` to install the browser polyfill and load the legacy content script through imports from the WXT entrypoint.
+- Patched `src/contentScript/contentScript.js` to reattach `snipsnipPrepareForCapture` and `getSelectionAndDom` onto `window`, preserving the service-worker `executeScript` checks after the file started loading as a module.
+- Kept the page-context bridge explicitly injected through the stable web-accessible path `contentScript/pageContext.js`, and added a test to keep the `src/` source copy and `public/` emitted asset in sync.
+- Added focused unit coverage for the content bootstrap and page-context asset sync, and verified both WXT manifests now include a `content_scripts` registration while preserving the page bridge WAR.
+- Files changed:
+  - `src/contentScript/contentScript.js`
+  - `src/entrypoints/content.content.ts`
+  - `src/global.d.ts`
+  - `src/lib/content/bootstrap.ts`
+  - `src/tests/unit/content-bootstrap.test.ts`
+  - `src/tests/unit/page-context-bridge-sync.test.js`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Content script migration can stay surgical if the WXT entrypoint only bootstraps globals and imports the legacy file instead of rewriting the whole capture/link-picker implementation.
+  - Global bridge functions like `getSelectionAndDom` are a hidden dependency of later `browser.scripting.executeScript` probes and must be preserved explicitly during module migration.

@@ -1098,3 +1098,6 @@ function cleanupLinkPicker() {
 
 	console.log('Link picker mode deactivated');
 }
+
+window.snipsnipPrepareForCapture = snipsnipPrepareForCapture;
+window.getSelectionAndDom = getSelectionAndDom;
