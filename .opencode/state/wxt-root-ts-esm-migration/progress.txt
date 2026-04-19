@@ -23,6 +23,8 @@ Started: 2026-04-19
 - For stateful shared helpers, prefer direct TS imports plus small optional dependency-arg bags on the few functions that need runtime overrides; it is leaner than module factories and keeps tests decoupled from legacy globals.
 - For vendored classic-script libs, add tiny `module.exports` footers where needed, then load them through typed TS wrappers that prefer existing globals and fall back to imported defaults.
 - `tsconfig.typecheck.json` can stay TS-entrypoint-focused while still allowing vendored JS wrapper imports by setting `allowJs: true` with `checkJs: false`.
+- For huge legacy entrypoints, avoid a risky whole-file rewrite: add a small WXT bootstrap that installs globals via imports, then patch the legacy file to read those APIs from `globalThis` instead of script-order locals.
+- Background listener registration can stay synchronous in WXT if the entrypoint uses static imports for bootstrap + side-effect runtime loading instead of async wrapper calls in `defineBackground()`.
 
 ---
 
@@ -221,3 +223,30 @@ Started: 2026-04-19
 - Learnings:
   - Wrappers for vendored globals are safer when they resolve in this order: existing global, imported default export, then error.
   - Some old vendored files need only a tiny export footer to become importable; no broader rewrite needed in this phase.
+
+## Task - [migrate-background-msgs]
+
+- Migrated the WXT background entrypoint to bootstrap the legacy background runtime through static imports instead of relying on `importScripts` ordering.
+- Added `src/lib/background/bootstrap.ts` to synchronously install the browser polyfill, moment, and the shared background APIs onto `globalThis` before `service-worker.js` executes in the WXT bundle.
+- Added importable background runtime helpers for default options and context menu creation under `src/lib/background/`, then patched `service-worker.js` to consume them through `globalThis`-backed helpers rather than free script-scope locals.
+- Added a typed background message contract module and JSDoc-linked the main `handleMessages` handler to that extracted contract surface.
+- Guarded the legacy `importScripts` bootstrap so the old build path still works while the WXT path skips script-order loading entirely.
+- Added focused unit coverage for the new background message contracts and default-options runtime helper.
+- Verified WXT Chrome + Firefox builds still succeed with the migrated background wiring.
+- Files changed:
+  - `src/.eslintrc.json`
+  - `src/entrypoints/background.ts`
+  - `src/global.d.ts`
+  - `src/lib/background/bootstrap.ts`
+  - `src/lib/background/context-menus-runtime.js`
+  - `src/lib/background/default-options-runtime.js`
+  - `src/lib/background/message-contracts.ts`
+  - `src/lib/types/extension.ts`
+  - `src/service-worker.js`
+  - `src/tests/unit/background-default-options-runtime.test.js`
+  - `src/tests/unit/background-message-contracts.test.ts`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - A small bootstrap module is the safest bridge from legacy classic-script background code to a WXT module entrypoint.
+  - Replacing only the script-local dependency edges (`defaultOptions`, `getOptions`, `createMenus`) unlocks the background migration without copying the whole service worker into a second file.

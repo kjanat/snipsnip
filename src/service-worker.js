@@ -1,6 +1,6 @@
 // In Chrome service workers, importScripts is available; in Firefox background
 // scripts, these files are listed in manifest.json background.scripts instead.
-if (typeof importScripts === 'function') {
+if (typeof importScripts === 'function' && globalThis.snipSnipUseImportedBackground !== true) {
 	importScripts(
 		'browser-polyfill.min.js',
 		'background/moment.min.js',
@@ -15,6 +15,8 @@ if (typeof importScripts === 'function') {
 		'shared/download-tracker.js',
 	);
 }
+
+/** @typedef {import('./lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
 
 // Log platform info
 browser.runtime.getPlatformInfo().then(async platformInfo => {
@@ -56,7 +58,7 @@ if (browser.tabs?.onUpdated?.addListener) {
 }
 
 // Create context menus when service worker starts
-createMenus();
+createContextMenus();
 initializeAgentBridge().catch((error) => {
 	console.error('[Agent Bridge] Failed to initialize:', error);
 });
@@ -201,6 +203,36 @@ function getSiteRulesApi() {
 	return globalThis.snipSnipSiteRules || null;
 }
 
+function getDefaultOptionsApi() {
+	return globalThis.snipSnipDefaultOptions || null;
+}
+
+function getContextMenusApi() {
+	return globalThis.snipSnipContextMenus || null;
+}
+
+function getRuntimeDefaultOptions() {
+	return getDefaultOptionsApi()?.defaultOptions || globalThis.defaultOptions || {};
+}
+
+async function loadRuntimeOptions() {
+	const defaultOptionsApi = getDefaultOptionsApi();
+	if (defaultOptionsApi?.getOptions) {
+		return await defaultOptionsApi.getOptions();
+	}
+
+	return getRuntimeDefaultOptions();
+}
+
+async function createContextMenus() {
+	const contextMenusApi = getContextMenusApi();
+	if (!contextMenusApi?.createMenus) {
+		return;
+	}
+
+	await contextMenusApi.createMenus();
+}
+
 function cloneRuntimeOptions(source = {}) {
 	const nextOptions = {
 		...(source || {}),
@@ -217,7 +249,7 @@ function cloneRuntimeOptions(source = {}) {
 }
 
 function resolveOptionsForPageUrl(pageUrl, providedOptions = null) {
-	const baseOptions = providedOptions || defaultOptions;
+	const baseOptions = providedOptions || getRuntimeDefaultOptions();
 	const siteRulesApi = getSiteRulesApi();
 	if (pageUrl && siteRulesApi?.resolveSiteRuleOptions) {
 		return siteRulesApi.resolveSiteRuleOptions(pageUrl, baseOptions);
@@ -749,6 +781,8 @@ function handleFilenameConflict(downloadItem, suggest) {
 
 /**
  * Handle messages from content scripts and popup
+ *
+ * @param {BackgroundMessage | { type?: string }} message
  */
 async function handleMessages(message, sender, _sendResponse) {
 	switch (message.type) {
@@ -1076,7 +1110,7 @@ async function handleLibraryExportRequest(message, sender) {
 		};
 	}
 
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 	const libraryExportApi = getLibraryExportApi();
 	const usedPaths = new Set();
 	const files = libraryExportApi?.createLibraryExportFiles
@@ -1117,7 +1151,7 @@ async function handleLibraryExportIndividualRequest(message, sender) {
 		return { exportedCount: 0 };
 	}
 
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 	const libraryExportApi = getLibraryExportApi();
 	const usedPaths = new Set();
 	const files = libraryExportApi?.createLibraryExportFiles
@@ -1440,7 +1474,7 @@ async function handleBatchConversionInServiceWorker(message) {
 		throw new Error('No URLs to process');
 	}
 
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 	if (options.batchProcessingEnabled === false) {
 		throw new Error('Batch Processing is disabled in Options');
 	}
@@ -1865,7 +1899,7 @@ async function ensureOffscreenDocumentExists() {
 async function handleClipRequest(message, tabId) {
 	await ensureOffscreenDocumentExists();
 
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 	const requestId = generateRequestId();
 	let pageUrl = message?.pageUrl || null;
 	if (!pageUrl && Number.isInteger(tabId)) {
@@ -1907,7 +1941,7 @@ async function handleMarkdownResult(message) {
 		imageList: result.imageList,
 		sourceImageMap: result.sourceImageMap,
 		mdClipsFolder: result.mdClipsFolder,
-		options: result.effectiveOptions || await getOptions(),
+		options: result.effectiveOptions || await loadRuntimeOptions(),
 		effectiveOptions: result.effectiveOptions || null,
 		matchedSiteRule: result.matchedSiteRule || null,
 		overriddenKeys: Array.isArray(result.overriddenKeys) ? result.overriddenKeys : [],
@@ -1918,7 +1952,7 @@ async function handleMarkdownResult(message) {
  * Handle download request
  */
 async function handleDownloadRequest(message) {
-	const options = message.options || await getOptions();
+	const options = message.options || await loadRuntimeOptions();
 	console.log(
 		`🔧 [Service Worker] Download request: downloadMode=${options.downloadMode}, offscreen=${
 			typeof chrome !== 'undefined' && chrome.offscreen
@@ -2090,7 +2124,7 @@ async function captureTabForAgentBridge(tabId) {
 	await ensureScripts(tabId);
 	await ensureAgentBridgeOffscreenReady();
 	const requestId = generateRequestId();
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 
 	const resultPromise = new Promise((resolve, reject) => {
 		let timeoutHandle = null;
@@ -2366,7 +2400,7 @@ async function handleStorageChange(changes, areaName) {
 	if (areaName === 'sync') {
 		console.log('Options changed, recreating context menus...');
 		// Recreate all context menus with updated options
-		await createMenus();
+		await createContextMenus();
 		return;
 	}
 
@@ -2468,7 +2502,7 @@ async function handleObsidianIntegration(message) {
  */
 async function toggleSetting(setting, options = null) {
 	if (options == null) {
-		await toggleSetting(setting, await getOptions());
+		await toggleSetting(setting, await loadRuntimeOptions());
 	} else {
 		options[setting] = !options[setting];
 		await browser.storage.sync.set(options);
@@ -2575,7 +2609,7 @@ function generateValidFileName(title, disallowedChars = null) {
 }
 
 async function formatTitle(article, providedOptions = null) {
-	const options = providedOptions || defaultOptions;
+	const options = providedOptions || getRuntimeDefaultOptions();
 	let title = textReplace(options.title, article, options.disallowedChars + '/');
 	title = title.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
 	return title;
@@ -2659,7 +2693,7 @@ async function downloadMarkdownFromContext(
 ) {
 	await ensureScripts(tab.id);
 	await ensureOffscreenDocumentExists();
-	const options = providedOptions || await getOptions();
+	const options = providedOptions || await loadRuntimeOptions();
 
 	// Create a promise to wait for completion
 	let timeoutHandle;
@@ -2726,7 +2760,7 @@ async function copyMarkdownFromContext(info, tab) {
 		action: 'copy',
 		info: info,
 		tabId: tab.id,
-		options: await getOptions(),
+		options: await loadRuntimeOptions(),
 	});
 
 	const delta = getCopyNotificationDelta(info.menuItemId);
@@ -2744,7 +2778,7 @@ async function copyTabAsMarkdownLink(tab) {
 	try {
 		await ensureScripts(tab.id);
 		await ensureOffscreenDocumentExists();
-		const options = await getOptions();
+		const options = await loadRuntimeOptions();
 		const article = await getArticleFromContent(tab.id, false, options);
 		const resolved = resolveOptionsForPageUrl(getArticlePageUrl(article, tab), options);
 		const title = await formatTitle(article, resolved.options);
@@ -2772,7 +2806,7 @@ async function copyTabAsMarkdownLink(tab) {
 async function copyTabAsMarkdownLinkAll(tab) {
 	try {
 		await ensureOffscreenDocumentExists();
-		const options = await getOptions();
+		const options = await loadRuntimeOptions();
 		const tabs = await browser.tabs.query({
 			currentWindow: true,
 		});
@@ -2812,7 +2846,7 @@ async function copyTabAsMarkdownLinkAll(tab) {
 async function copySelectedTabAsMarkdownLink(tab) {
 	try {
 		await ensureOffscreenDocumentExists();
-		const options = await getOptions();
+		const options = await loadRuntimeOptions();
 		const tabs = await browser.tabs.query({
 			currentWindow: true,
 			highlighted: true,
@@ -2868,7 +2902,7 @@ async function getArticleFromContent(tabId, selection = false, options = null) {
 		await ensureOffscreenDocumentExists();
 
 		if (!options) {
-			options = await getOptions();
+			options = await loadRuntimeOptions();
 		}
 
 		const requestId = generateRequestId();
@@ -2925,7 +2959,7 @@ async function handleDownloadWithBlobUrl(
 	options = null,
 	notificationDelta = SINGLE_DOWNLOAD_NOTIFICATION_DELTA,
 ) {
-	if (!options) options = await getOptions();
+	if (!options) options = await loadRuntimeOptions();
 
 	// CRITICAL: Ensure filename is never empty
 	if (!filename || filename.trim() === '' || filename === '.md') {
@@ -3012,7 +3046,7 @@ async function handleDownloadWithBlobUrl(
  * Used when offscreen document can't use Downloads API
  */
 async function _handleDownloadDirectly(markdown, title, tabId, imageList = {}, mdClipsFolder = '', options = null) {
-	if (!options) options = await getOptions();
+	if (!options) options = await loadRuntimeOptions();
 
 	// CRITICAL: Ensure title is never empty
 	if (!title || title.trim() === '') {
@@ -3131,7 +3165,7 @@ function normalizeGeneratedFileExtension(extension, fallback = 'bin') {
 }
 
 function buildGeneratedDownloadFilename(title, mdClipsFolder = '', options = null, extension = 'bin') {
-	const effectiveOptions = options || defaultOptions;
+	const effectiveOptions = options || getRuntimeDefaultOptions();
 	let safeTitle = String(title || '').trim() || `Untitled-${Date.now()}`;
 
 	safeTitle = safeTitle
@@ -3159,7 +3193,7 @@ function buildGeneratedDownloadFilename(title, mdClipsFolder = '', options = nul
 }
 
 async function downloadGeneratedFile(message = {}) {
-	const options = await getOptions();
+	const options = await loadRuntimeOptions();
 	const tabId = Number.isInteger(message.tabId) ? message.tabId : null;
 
 	if (!tabId) {
@@ -3273,7 +3307,7 @@ async function downloadMarkdown(
 	const resolvedNotificationDelta = providedOptions
 		? notificationDelta
 		: (providedOptionsOrNotificationDelta || SINGLE_DOWNLOAD_NOTIFICATION_DELTA);
-	const options = providedOptions || await getOptions();
+	const options = providedOptions || await loadRuntimeOptions();
 
 	// CRITICAL: Ensure title is never empty
 	if (!title || title.trim() === '') {

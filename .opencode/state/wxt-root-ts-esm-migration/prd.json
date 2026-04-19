@@ -73,7 +73,7 @@
 			"description": "Convert service-worker.js into a WXT background entrypoint, replace importScripts ordering with imports, and extract typed message handlers/contracts. Acceptance: listeners register synchronously, command/context-menu/download behavior still works, and no background path depends on importScripts order.",
 			"depends": ["convert-stateful-shared-mods", "wrap-vendored-runtime-libs"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "migrate-content-page-bridge",

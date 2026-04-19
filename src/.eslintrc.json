@@ -63,8 +63,17 @@
 			}
 		},
 		{
+			"files": ["src/lib/background/**/*.js"],
+			"env": {
+				"browser": true
+			},
+			"parserOptions": {
+				"sourceType": "module"
+			}
+		},
+		{
 			"files": ["**/*.js"],
-			"excludedFiles": ["scripts/**/*.js", "playwright.config.js", "tests/**/*.js"],
+			"excludedFiles": ["scripts/**/*.js", "playwright.config.js", "tests/**/*.js", "src/lib/background/**/*.js"],
 			"env": {
 				"browser": true
 			},

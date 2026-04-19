@@ -407,6 +407,16 @@ export interface SnipSnipDownloadTrackerApi {
 	}): DownloadTrackerApi;
 }
 
+export interface SnipSnipDefaultOptionsApi {
+	defaultOptions: Record<string, unknown>;
+	LEGACY_DEFAULT_FRONTMATTER: string;
+	getOptions(): Promise<Record<string, unknown>>;
+}
+
+export interface SnipSnipContextMenusApi {
+	createMenus(): Promise<void>;
+}
+
 export interface MomentValue {
 	format(pattern: string): string;
 }
