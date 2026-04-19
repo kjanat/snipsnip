@@ -8,10 +8,7 @@ import optionsState from '@/shared/options-state.ts';
 import popupBatchUtils from '@/shared/popup-batch-utils.ts';
 
 const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
-const codeMirrorCssUrl = new URL('@/popup/lib/codemirror.css', import.meta.url).href;
 const popupCssUrl = new URL('@/popup/popup.css', import.meta.url).href;
-const codeMirrorScriptUrl = browser.runtime.getURL('/popup/lib/codemirror.js');
-const markdownModeScriptUrl = browser.runtime.getURL('/popup/lib/modes/markdown/markdown.js');
 const notificationHostScriptUrl = browser.runtime.getURL('/notifications/notification-host.js');
 
 let popupRuntimeLoadPromise: Promise<void> | null = null;
@@ -20,7 +17,6 @@ export interface PopupRuntimeBootstrapOptions {
 	importPopupShortcutsModule?: () => Promise<unknown>;
 	importPopupRuntimeModule?: () => Promise<unknown>;
 	importThemeBootstrapModule?: () => Promise<unknown>;
-	loadScript?: (src: string, id?: string) => Promise<unknown>;
 	loadTemplate?: () => string;
 }
 
@@ -105,7 +101,6 @@ function syncPopupPageLinks(): void {
 
 function installPopupStyles(): void {
 	appendStylesheet(fontsCssUrl, 'popup-fonts-stylesheet');
-	appendStylesheet(codeMirrorCssUrl, 'popup-codemirror-stylesheet');
 	appendStylesheet(popupCssUrl, 'popup-shell-stylesheet');
 }
 
@@ -128,34 +123,6 @@ function installPopupShell(loadTemplate: () => string): void {
 	);
 }
 
-function loadClassicScript(src: string, id?: string): Promise<HTMLScriptElement> {
-	if (id != null) {
-		const existingById = document.getElementById(id);
-		if (existingById instanceof HTMLScriptElement) {
-			return Promise.resolve(existingById);
-		}
-	}
-
-	const existing = Array.from(document.querySelectorAll('script[src]')).find((script) =>
-		script.getAttribute('src') === src
-	);
-	if (existing instanceof HTMLScriptElement) {
-		return Promise.resolve(existing);
-	}
-
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.type = 'application/javascript';
-		script.src = src;
-		if (id != null) {
-			script.id = id;
-		}
-		script.addEventListener('load', () => resolve(script), { once: true });
-		script.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
-		document.body.appendChild(script);
-	});
-}
-
 export function resetPopupRuntimeBootstrapState(): void {
 	popupRuntimeLoadPromise = null;
 }
@@ -173,11 +140,8 @@ export async function bootPopupRuntime(options: PopupRuntimeBootstrapOptions = {
 			const importPopupShortcutsModule = options.importPopupShortcutsModule
 				?? (() => import('@/shared/popup-shortcuts.js'));
 			const importPopupRuntimeModule = options.importPopupRuntimeModule
-				?? (() => import('@/popup/popup.js'));
-			const loadScript = options.loadScript ?? loadClassicScript;
+				?? (() => import('@/popup/popup.ts'));
 			await importThemeBootstrapModule();
-			await loadScript(codeMirrorScriptUrl, 'popup-codemirror-script');
-			await loadScript(markdownModeScriptUrl, 'popup-codemirror-markdown-script');
 			await importPopupShortcutsModule();
 			await importPopupRuntimeModule();
 		})();

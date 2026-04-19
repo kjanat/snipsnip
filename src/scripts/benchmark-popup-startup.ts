@@ -205,7 +205,7 @@ async function runIteration({ context, serviceWorker, extensionId }: {
 				if (cm && typeof cm.getValue === 'function') {
 					return performance.now();
 				}
-				return document.querySelector('.CodeMirror') ? performance.now() : 0;
+				return document.querySelector('.cm-editor') ? performance.now() : 0;
 			},
 			15000,
 		);
@@ -215,7 +215,7 @@ async function runIteration({ context, serviceWorker, extensionId }: {
 			(needle) => {
 				const titleValue = document.querySelector<HTMLInputElement>('#title')?.value || '';
 				const textareaValue = document.querySelector<HTMLTextAreaElement>('#md')?.value || '';
-				const codeMirrorText = document.querySelector('.CodeMirror-code')?.textContent || '';
+				const codeMirrorText = document.querySelector('.cm-content')?.textContent || '';
 				return (
 						titleValue.includes('Deterministic Markdown Fixture')
 						|| textareaValue.includes(needle)

@@ -1,4 +1,10 @@
-// default variables
+// @ts-nocheck — legacy popup.js freshly renamed to .ts during CM6 migration.
+// TODO: incrementally type this file (4293 lines). Remove this pragma once
+// implicit-any diagnostics are resolved. Touch sites under migration get
+// explicit types via the imported wrapper; the rest is still untyped JS.
+import { createEditor } from '@/popup/lib/editor';
+import { EditorView } from '@codemirror/view';
+
 const browser = globalThis.browser;
 
 var imageList = null;
@@ -1063,17 +1069,15 @@ function initializeEditor() {
 		const initialValue = pendingEditorValue || dom.editorTextarea?.value || currentClipState.markdown || '';
 		if (dom.editorTextarea) {
 			dom.editorTextarea.value = initialValue;
+			dom.editorTextarea.style.display = 'none';
 		}
 
-		cm = CodeMirror.fromTextArea(dom.editorTextarea, {
-			theme: resolveEditorTheme(
-				currentOptions?.editorTheme || 'default',
-				darkMode,
-				currentOptions?.specialTheme || 'none',
-				currentOptions?.colorBlindTheme,
-			),
-			mode: 'markdown',
-			lineWrapping: true,
+		const editorParent = dom.editorTextarea?.parentElement ?? dom.root;
+		cm = createEditor({
+			parent: editorParent,
+			initialValue,
+			theme: EditorView.theme({}),
+			syncTextarea: dom.editorTextarea ?? null,
 		});
 		globalThis.cm = cm;
 
@@ -1330,7 +1334,7 @@ async function togglePreview() {
 	}
 
 	// Toggle visibility: hide editor, show preview (or vice versa)
-	const cmWrapper = document.querySelector('.editor-section .CodeMirror');
+	const cmWrapper = document.querySelector('.editor-section .cm-editor');
 	const textarea = dom.editorTextarea;
 
 	if (previewActive) {
@@ -1718,10 +1722,10 @@ function applyThemeSettings(options) {
 	if (shouldAnimateThemeChange) {
 		beginThemeTransition(lastResolvedThemeName !== themeName);
 	}
+	// TODO(task-9): wire theme registry — cm.reconfigureTheme(await loadTheme(themeName))
+	// ensureEditorThemeStylesheet is a no-op until CSS themes are removed (task-10)
 	ensureEditorThemeStylesheet(themeName);
-	if (typeof cm !== 'undefined' && cm) {
-		cm.setOption('theme', themeName);
-	}
+	void cm;
 
 	updateThemeToggleButton(options);
 

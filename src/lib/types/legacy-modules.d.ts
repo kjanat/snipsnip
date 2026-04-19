@@ -23,11 +23,6 @@ declare module '@/options/options-search.js' {
 	export default value;
 }
 
-declare module '@/popup/popup.js' {
-	const value: unknown;
-	export default value;
-}
-
 declare module '@/popup/theme-bootstrap.js' {
 	const value: unknown;
 	export default value;

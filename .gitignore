@@ -21,3 +21,4 @@ native/.tmp-builds
 tmp/
 capture-store-screenshots.js
 test-results/
+src/shared/release-highlights.json

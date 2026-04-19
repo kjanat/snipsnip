@@ -16,7 +16,8 @@ describe('Popup startup assets', () => {
 		const stylesheetHrefs = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
 			.map((link) => link.getAttribute('href'));
 
-		expect(stylesheetHrefs).toContain('lib/codemirror.css');
+		// CM6 no longer needs a base CSS file — theme + chrome styling ship via JS
+		expect(stylesheetHrefs).not.toContain('lib/codemirror.css');
 		expect(stylesheetHrefs).not.toContain('lib/xq-dark.css');
 		expect(stylesheetHrefs).not.toContain('lib/xq-light.css');
 		expect(stylesheetHrefs).not.toContain('lib/dracula.css');
@@ -33,7 +34,7 @@ describe('Popup startup assets', () => {
 		const scriptHrefs = Array.from(document.querySelectorAll('script[src]'))
 			.map((script) => script.getAttribute('src'));
 
-		expect(scriptHrefs).toContain('popup.js');
+		expect(scriptHrefs).toContain('popup.ts');
 		expect(scriptHrefs).not.toContain('../notifications/notification-host.js');
 		expect(scriptHrefs).not.toContain('lib/marked.min.js');
 

@@ -1,5 +1,4 @@
-/** @typedef {import('@/lib/background/message-contracts').BackgroundMessage} BackgroundMessage */
-
+/** @typedef {import('@/lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
 // Log platform info
 browser.runtime.getPlatformInfo().then(async platformInfo => {
 	const browserInfo = browser.runtime.getBrowserInfo
@@ -762,10 +761,11 @@ function handleFilenameConflict(downloadItem, suggest) {
 	return downloadTracker.handleFilenameConflict(downloadItem, suggest);
 }
 
-/**
- * Handle messages from content scripts and popup
+/** @typedef {BackgroundMessage | {type?: string}} BackgroundHuhMessage */
+
+/** Handle messages from content scripts and popup
  *
- * @param {BackgroundMessage | { type?: string }} message
+ * @param {BackgroundHuhMessage} message
  */
 async function handleMessages(message, sender, _sendResponse) {
 	switch (message.type) {

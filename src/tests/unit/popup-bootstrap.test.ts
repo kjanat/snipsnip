@@ -72,20 +72,17 @@ describe('popup runtime bootstrap', () => {
 		globalThis.snipSnipPopupAssets = undefined;
 		Reflect.deleteProperty(globalThis, 'snipSnipPopupBatchUtils');
 
-		const loadScript = mock(async () => ({}));
 		const importThemeBootstrapModule = mock(async () => ({}));
 		const importPopupShortcutsModule = mock(async () => ({}));
 		const importPopupRuntimeModule = mock(async () => ({}));
 
 		await Promise.all([
 			bootPopupRuntime({
-				loadScript,
 				importThemeBootstrapModule,
 				importPopupShortcutsModule,
 				importPopupRuntimeModule,
 			}),
 			bootPopupRuntime({
-				loadScript,
 				importThemeBootstrapModule,
 				importPopupShortcutsModule,
 				importPopupRuntimeModule,
@@ -96,7 +93,6 @@ describe('popup runtime bootstrap', () => {
 		expect(document.documentElement.classList.contains('theme-system')).toBe(true);
 		expect(document.getElementById('container')).not.toBeNull();
 		expect(document.getElementById('popup-fonts-stylesheet')).not.toBeNull();
-		expect(document.getElementById('popup-codemirror-stylesheet')).not.toBeNull();
 		expect(document.getElementById('popup-shell-stylesheet')).not.toBeNull();
 		expect((document.getElementById('guideLink') as HTMLAnchorElement | null)?.getAttribute('href')).toBe(
 			'/guide.html',
@@ -118,6 +114,5 @@ describe('popup runtime bootstrap', () => {
 		expect(importThemeBootstrapModule).toHaveBeenCalledTimes(1);
 		expect(importPopupShortcutsModule).toHaveBeenCalledTimes(1);
 		expect(importPopupRuntimeModule).toHaveBeenCalledTimes(1);
-		expect(loadScript).toHaveBeenCalledTimes(2);
 	});
 });
