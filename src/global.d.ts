@@ -3,6 +3,9 @@
 import type {
 	ExtensionBrowserApi,
 	ExtensionOptions,
+	HighlightApi,
+	MomentApi,
+	ReadabilityApi,
 	SnipSnipAgentBridgeStateApi,
 	SnipSnipDownloadTrackerApi,
 	SnipSnipLibraryExportApi,
@@ -11,12 +14,16 @@ import type {
 	SnipSnipOptionsStateApi,
 	SnipSnipTemplateUtilsApi,
 	SnipSnipUrlUtilsApi,
+	TurndownPluginGfmApi,
+	TurndownServiceApi,
 } from './lib/types';
 
 declare global {
 	var browser: ExtensionBrowserApi | undefined;
 	var defaultOptions: Partial<ExtensionOptions> | undefined;
-	var moment: ((value: Date) => { format(pattern: string): string }) | undefined;
+	var hljs: HighlightApi | undefined;
+	var moment: MomentApi | undefined;
+	var Readability: ReadabilityApi | undefined;
 	var snipSnipAgentBridgeState: SnipSnipAgentBridgeStateApi | undefined;
 	var snipSnipDownloadTracker: SnipSnipDownloadTrackerApi | undefined;
 	var snipSnipLibraryExport: SnipSnipLibraryExportApi | undefined;
@@ -25,6 +32,8 @@ declare global {
 	var snipSnipOptionsState: SnipSnipOptionsStateApi | undefined;
 	var snipSnipTemplateUtils: SnipSnipTemplateUtilsApi | undefined;
 	var snipSnipUrlUtils: SnipSnipUrlUtilsApi | undefined;
+	var TurndownService: TurndownServiceApi | undefined;
+	var turndownPluginGfm: TurndownPluginGfmApi | undefined;
 }
 
 export {};

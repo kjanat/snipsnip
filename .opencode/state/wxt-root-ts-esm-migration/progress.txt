@@ -21,6 +21,8 @@ Started: 2026-04-19
 - During TS migration, keep domain models in one importable TS module and let `src/global.d.ts` bridge legacy global runtime APIs back to those types.
 - For classic-script migration phases, keep `.ts` as the canonical shared-module source and generate committed `.js` facades that preserve `globalThis.snipSnip*` and `module.exports` until runtime entrypoints are migrated.
 - For stateful shared helpers, prefer direct TS imports plus small optional dependency-arg bags on the few functions that need runtime overrides; it is leaner than module factories and keeps tests decoupled from legacy globals.
+- For vendored classic-script libs, add tiny `module.exports` footers where needed, then load them through typed TS wrappers that prefer existing globals and fall back to imported defaults.
+- `tsconfig.typecheck.json` can stay TS-entrypoint-focused while still allowing vendored JS wrapper imports by setting `allowJs: true` with `checkJs: false`.
 
 ---
 
@@ -183,3 +185,39 @@ Started: 2026-04-19
 - Learnings:
   - Optional dependency args are the sweet spot for shared helpers that occasionally need runtime overrides but do not own mutable state.
   - Preserving legacy falsy-edge behavior in helpers like `generateValidFileName(null)` matters because old tests and callers sometimes depend on those quirks.
+
+## Task - [wrap-vendored-runtime-libs]
+
+- Added typed TS wrapper modules for vendored runtime dependencies under `src/lib/vendors/`:
+  - `browser-polyfill`
+  - `moment`
+  - `highlight`
+  - `readability`
+  - `turndown`
+- Added a shared vendor runtime loader that dedupes concurrent loads, prefers already-present globals, and normalizes imported default exports back onto `globalThis` for phased compatibility.
+- Added typed ambient globals and vendor interfaces so migrated TS entrypoints can consume the vendored runtime through imports instead of raw script-order globals.
+- Added tiny CommonJS export footers to the vendored Turndown files so the wrappers can import them safely without changing classic-script behavior.
+- Updated the WXT background scaffold to preload the browser polyfill through the new wrapper path as an initial runtime smoke integration.
+- Added unit coverage for the wrapper layer and verified WXT Chrome + Firefox builds still succeed.
+- Files changed:
+  - `src/background/turndown.js`
+  - `src/background/turndown-plugin-gfm.js`
+  - `src/entrypoints/background.ts`
+  - `src/global.d.ts`
+  - `src/lib/types/extension.ts`
+  - `src/lib/types/index.ts`
+  - `src/lib/vendors/browser-polyfill.ts`
+  - `src/lib/vendors/highlight.ts`
+  - `src/lib/vendors/index.ts`
+  - `src/lib/vendors/moment.ts`
+  - `src/lib/vendors/readability.ts`
+  - `src/lib/vendors/runtime-loader.ts`
+  - `src/lib/vendors/turndown.ts`
+  - `src/lib/vendors/vendored-modules.d.ts`
+  - `src/tests/unit/vendor-runtime-wrappers.test.ts`
+  - `tsconfig.typecheck.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Wrappers for vendored globals are safer when they resolve in this order: existing global, imported default export, then error.
+  - Some old vendored files need only a tiny export footer to become importable; no broader rewrite needed in this phase.

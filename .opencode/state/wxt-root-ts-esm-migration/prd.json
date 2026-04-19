@@ -64,7 +64,7 @@
 			"description": "Add stable wrapper modules around vendored runtime dependencies such as Readability, Turndown, Turndown GFM, moment, highlight, and browser polyfill so migrated TS/ESM code can consume them without script-order coupling. Acceptance: runtime entrypoints can import wrapper modules instead of depending on raw global side effects.",
 			"depends": ["manifest-parity-config"],
 			"priority": "architecture",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "migrate-background-msgs",

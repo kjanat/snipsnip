@@ -164,3 +164,9 @@ var turndownPluginGfm = function(exports) {
 
 	return exports;
 }({});
+
+if (typeof module === 'object') {
+	/* eslint-disable-next-line no-redeclare */
+	/* global module */
+	module.exports = turndownPluginGfm;
+}

@@ -406,3 +406,54 @@ export interface SnipSnipDownloadTrackerApi {
 		sendCleanupBlobUrl?: (url: string) => Promise<void>;
 	}): DownloadTrackerApi;
 }
+
+export interface MomentValue {
+	format(pattern: string): string;
+}
+
+export interface MomentApi {
+	(value?: Date | number | string | null): MomentValue;
+}
+
+export interface HighlightAutoResult {
+	language?: string;
+	relevance?: number;
+}
+
+export interface HighlightApi {
+	highlightAuto?(code: string): HighlightAutoResult;
+	getLanguage?(languageName: string): unknown;
+}
+
+export interface ReadabilityApi {
+	new(document: Document, options?: Record<string, unknown>): {
+		parse(): ArticleContent | null;
+	};
+}
+
+export interface TurndownRule {
+	filter: unknown;
+	replacement: (...args: unknown[]) => string;
+}
+
+export interface TurndownServiceInstance {
+	escape(text: string): string;
+	use(plugins: unknown[] | unknown): void;
+	addRule(name: string, rule: TurndownRule): void;
+	turndown(input: string): string;
+}
+
+export interface TurndownServiceApi {
+	new(options?: Record<string, unknown>): TurndownServiceInstance;
+	prototype: {
+		escape(text: string): string;
+		defaultEscape?: ((text: string) => string) | undefined;
+	};
+}
+
+export interface TurndownPluginGfmApi {
+	highlightedCodeBlock: unknown;
+	strikethrough: unknown;
+	taskListItems: unknown;
+	tables?: unknown;
+}
