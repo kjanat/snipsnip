@@ -22,37 +22,11 @@ export interface PopupRuntimeBootstrapOptions {
 
 function buildPopupAssetMap(): Record<string, string> {
 	const githubMarkdownCssUrl = new URL('@/popup/lib/github-markdown.css', import.meta.url).href;
+	// All CM5 theme CSS files were removed — themes now ship as CM6 JS extensions via
+	// src/popup/lib/themes/*.ts. marked + moment + turndown/etc. are npm imports.
 	const assetMap: Record<string, string> = {
 		'../notifications/notification-host.js': notificationHostScriptUrl,
-		'lib/atla-dark.css': new URL('@/popup/lib/atla-dark.css', import.meta.url).href,
-		'lib/atla-light.css': new URL('@/popup/lib/atla-light.css', import.meta.url).href,
-		'lib/ben10-dark.css': new URL('@/popup/lib/ben10-dark.css', import.meta.url).href,
-		'lib/ben10-light.css': new URL('@/popup/lib/ben10-light.css', import.meta.url).href,
-		'lib/claude-dark.css': new URL('@/popup/lib/claude-dark.css', import.meta.url).href,
-		'lib/claude-light.css': new URL('@/popup/lib/claude-light.css', import.meta.url).href,
-		'lib/colorblind-deuteranopia-dark.css':
-			new URL('@/popup/lib/colorblind-deuteranopia-dark.css', import.meta.url).href,
-		'lib/colorblind-deuteranopia-light.css':
-			new URL('@/popup/lib/colorblind-deuteranopia-light.css', import.meta.url).href,
-		'lib/colorblind-protanopia-dark.css': new URL('@/popup/lib/colorblind-protanopia-dark.css', import.meta.url).href,
-		'lib/colorblind-protanopia-light.css': new URL('@/popup/lib/colorblind-protanopia-light.css', import.meta.url).href,
-		'lib/colorblind-tritanopia-dark.css': new URL('@/popup/lib/colorblind-tritanopia-dark.css', import.meta.url).href,
-		'lib/colorblind-tritanopia-light.css': new URL('@/popup/lib/colorblind-tritanopia-light.css', import.meta.url).href,
-		'lib/dracula.css': new URL('@/popup/lib/dracula.css', import.meta.url).href,
 		'lib/github-markdown.css': githubMarkdownCssUrl,
-		'lib/material-darker.css': new URL('@/popup/lib/material-darker.css', import.meta.url).href,
-		'lib/material.css': new URL('@/popup/lib/material.css', import.meta.url).href,
-		// marked is imported directly via npm package now — no asset URL needed
-		'lib/monokai.css': new URL('@/popup/lib/monokai.css', import.meta.url).href,
-		'lib/nord.css': new URL('@/popup/lib/nord.css', import.meta.url).href,
-		'lib/openai-dark.css': new URL('@/popup/lib/openai-dark.css', import.meta.url).href,
-		'lib/openai-light.css': new URL('@/popup/lib/openai-light.css', import.meta.url).href,
-		'lib/perplexity-dark.css': new URL('@/popup/lib/perplexity-dark.css', import.meta.url).href,
-		'lib/perplexity-light.css': new URL('@/popup/lib/perplexity-light.css', import.meta.url).href,
-		'lib/solarized.css': new URL('@/popup/lib/solarized.css', import.meta.url).href,
-		'lib/twilight.css': new URL('@/popup/lib/twilight.css', import.meta.url).href,
-		'lib/xq-dark.css': new URL('@/popup/lib/xq-dark.css', import.meta.url).href,
-		'lib/xq-light.css': new URL('@/popup/lib/xq-light.css', import.meta.url).href,
 		'popup/lib/github-markdown.css': githubMarkdownCssUrl,
 		'print/print.css': new URL('@/print/print.css', import.meta.url).href,
 	};

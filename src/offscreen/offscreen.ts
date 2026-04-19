@@ -1,12 +1,18 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
 import { Readability } from '@mozilla/readability';
+import hljs from 'highlight.js/lib/core';
+import moment from 'moment';
 import TurndownService from 'turndown';
 import { highlightedCodeBlock, strikethrough, tables, taskListItems } from 'turndown-plugin-gfm';
 import { browser } from 'wxt/browser';
+
+// hljs language registration is centralized in src/lib/vendors/highlight.ts —
+// importing it here as a side-effect module ensures the 26 languages are
+// registered on the shared hljs instance before we use highlightAuto.
+import '@/lib/vendors/highlight.ts';
+
 const turndownPluginGfm = { highlightedCodeBlock, strikethrough, tables, taskListItems };
-const defaultOptions = globalThis.defaultOptions || {};
-const hljs = globalThis.hljs;
-const moment = globalThis.moment;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);

@@ -809,34 +809,8 @@ const EDITOR_THEME_MAP = {
 	solarized: { dark: 'solarized dark', light: 'solarized light' },
 	twilight: { dark: 'twilight', light: 'xq-light' },
 };
-const EDITOR_THEME_STYLESHEET_MAP = Object.freeze({
-	'xq-dark': 'lib/xq-dark.css',
-	'xq-light': 'lib/xq-light.css',
-	'claude-dark': 'lib/claude-dark.css',
-	'claude-light': 'lib/claude-light.css',
-	'perplexity-dark': 'lib/perplexity-dark.css',
-	'perplexity-light': 'lib/perplexity-light.css',
-	'openai-dark': 'lib/openai-dark.css',
-	'openai-light': 'lib/openai-light.css',
-	'atla-dark': 'lib/atla-dark.css',
-	'atla-light': 'lib/atla-light.css',
-	'ben10-dark': 'lib/ben10-dark.css',
-	'ben10-light': 'lib/ben10-light.css',
-	'colorblind-deuteranopia-dark': 'lib/colorblind-deuteranopia-dark.css',
-	'colorblind-deuteranopia-light': 'lib/colorblind-deuteranopia-light.css',
-	'colorblind-protanopia-dark': 'lib/colorblind-protanopia-dark.css',
-	'colorblind-protanopia-light': 'lib/colorblind-protanopia-light.css',
-	'colorblind-tritanopia-dark': 'lib/colorblind-tritanopia-dark.css',
-	'colorblind-tritanopia-light': 'lib/colorblind-tritanopia-light.css',
-	'dracula': 'lib/dracula.css',
-	'material': 'lib/material.css',
-	'material-darker': 'lib/material-darker.css',
-	'monokai': 'lib/monokai.css',
-	'nord': 'lib/nord.css',
-	'solarized dark': 'lib/solarized.css',
-	'solarized light': 'lib/solarized.css',
-	'twilight': 'lib/twilight.css',
-});
+// Theme name → CSS URL map removed: CM6 themes ship as JS extensions loaded
+// via src/popup/lib/themes/registry.ts. See loadTheme() import above.
 
 function getFallbackWordCount(text) {
 	const normalized = String(text || '').trim();
@@ -890,34 +864,10 @@ function scheduleDeferredTask(task, timeout = 800) {
 	}, 0);
 }
 
-function getEditorThemeStylesheetLink() {
-	let link = document.getElementById('cm-theme-stylesheet');
-	if (link) {
-		return link;
-	}
-
-	link = document.createElement('link');
-	link.id = 'cm-theme-stylesheet';
-	link.rel = 'stylesheet';
-	dom.root.querySelector('head')?.appendChild(link);
-	return link;
-}
-
-function ensureEditorThemeStylesheet(themeName) {
-	const href = EDITOR_THEME_STYLESHEET_MAP[themeName];
-	if (!href) {
-		return false;
-	}
-
-	const link = getEditorThemeStylesheetLink();
-	if (link.getAttribute('href') === href) {
-		link.setAttribute('data-theme-name', themeName);
-		return false;
-	}
-
-	link.setAttribute('href', href);
-	link.setAttribute('data-theme-name', themeName);
-	return true;
+// ensureEditorThemeStylesheet is now a no-op: CM6 themes ship as JS extensions via the
+// theme registry. Kept as a stub so existing callsites don't need to change.
+function ensureEditorThemeStylesheet(_themeName: string): boolean {
+	return false;
 }
 
 function resolvePopupDarkMode(options = currentOptions) {

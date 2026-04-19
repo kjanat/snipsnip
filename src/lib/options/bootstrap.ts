@@ -1,7 +1,9 @@
 import { createMenus } from '@/lib/background/context-menus-runtime.js';
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
 import { getGuidePageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
-import { loadMomentApi } from '@/lib/vendors/moment.ts';
+// Importing the moment vendor loader for its module-init side effect
+// (populates `globalThis.moment` from the npm package).
+import '@/lib/vendors/moment.ts';
 import optionsTemplate from '@/options/options.html?raw';
 import agentBridgeState from '@/shared/agent-bridge-state.ts';
 import libraryState from '@/shared/library-state.ts';
@@ -83,13 +85,11 @@ export async function bootOptionsRuntime(options: OptionsRuntimeBootstrapOptions
 			installOptionsShell(options.loadTemplate ?? (() => optionsTemplate));
 			syncGuideLinks();
 
-			const loadMoment = options.loadMoment ?? loadMomentApi;
 			const importOptionsSearchModule = options.importOptionsSearchModule
 				?? (() => import('@/options/options-search.ts'));
 			const importOptionsRuntimeModule = options.importOptionsRuntimeModule
 				?? (() => import('@/options/options.ts'));
 
-			await loadMoment();
 			await importOptionsSearchModule();
 			await importOptionsRuntimeModule();
 		})();

@@ -1,0 +1,28 @@
+import { buildTheme } from './helpers.ts';
+
+export default buildTheme({
+	background: '#0b1b2b',
+	foreground: '#f4f9ff',
+	caret: '#72c4ff',
+	selection: '#183049',
+	lineHighlight: '#102033',
+	gutterBackground: '#102033',
+	gutterForeground: '#8ea9c2',
+	gutterBorder: '#1e3a56',
+	matchingBracket: '#72c4ff',
+	matchingBracketOutline: '#305273',
+	heading: '#72c4ff',
+	quote: '#bdd1e3',
+	comment: '#8ea9c2',
+	link: '#72c4ff',
+	url: '#48a7f0',
+	string: '#f2c14e',
+	keyword: '#72c4ff',
+	atom: '#72c4ff',
+	number: '#ff9a76',
+	tag: '#ff9a76',
+	contentSeparator: '#4b7198',
+	meta: '#4b7198',
+	strong: '#f4f9ff',
+	emphasis: '#bdd1e3',
+}, true);

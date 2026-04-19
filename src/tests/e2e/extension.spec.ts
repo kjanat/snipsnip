@@ -3,7 +3,7 @@
  * Tests the extension in a real browser environment using Playwright
  */
 
-import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target';
+import { getExtensionLaunchArgs, getExtensionPageUrl } from '@/tests/helpers/extension-target.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, expect, test } from 'playwright/test';
@@ -436,11 +436,11 @@ test.describe('SnipSnip Extension E2E', () => {
 		try {
 			await popupPage.goto(getExtensionPageUrl(extensionId));
 
+			// CM6 themes are JS extensions — no CSS link to assert. Wait for the editor
+			// to be mounted (signals theme has been applied through the Compartment).
 			await expect.poll(async () => {
-				return await popupPage.evaluate(() => {
-					return document.getElementById('cm-theme-stylesheet')?.getAttribute('href') || null;
-				});
-			}, { timeout: 10000 }).toBe('lib/nord.css');
+				return await popupPage.evaluate(() => document.querySelector('.cm-editor') != null);
+			}, { timeout: 10000 }).toBe(true);
 
 			const themeLinks = await popupPage.evaluate(() => {
 				return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
@@ -448,7 +448,8 @@ test.describe('SnipSnip Extension E2E', () => {
 					.filter((href) => href?.startsWith('lib/') && href !== 'lib/codemirror.css');
 			});
 
-			expect(themeLinks).toEqual(['lib/nord.css']);
+			// Only github-markdown.css lib/ stylesheet should remain (used by preview render).
+			expect(themeLinks.filter((h) => h !== 'lib/github-markdown.css')).toEqual([]);
 		} finally {
 			await popupPage.close().catch(() => {});
 		}

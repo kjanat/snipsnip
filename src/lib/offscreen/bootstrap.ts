@@ -4,23 +4,29 @@ import siteRules from '@/shared/site-rules.ts';
 import templateUtils from '@/shared/template-utils.ts';
 import urlUtils from '@/shared/url-utils.ts';
 
+// Side-effect imports: these populate `globalThis.*` for the legacy offscreen
+// code that still reads globals (apache-mime-types, readability-recovery, etc.).
 import '@/background/apache-mime-types.ts';
 import '@/shared/code-block-utils.ts';
 import '@/shared/hashtag-utils.ts';
 import '@/shared/readability-recovery.ts';
 import '@/shared/selection-utils.ts';
 
+// Vendor loaders are now thin npm-import shims. They still set `globalThis.hljs`,
+// `globalThis.moment`, `globalThis.TurndownService`, `globalThis.Readability`,
+// `globalThis.turndownPluginGfm` at module-init time for any legacy consumer,
+// but offscreen.ts imports them directly from npm now.
+import '@/lib/vendors/browser-polyfill.ts';
+import '@/lib/vendors/highlight.ts';
+import '@/lib/vendors/moment.ts';
+import '@/lib/vendors/readability.ts';
+import '@/lib/vendors/turndown.ts';
+
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
-import { loadBrowserApi } from '@/lib/vendors/browser-polyfill.ts';
-import { loadHighlightApi } from '@/lib/vendors/highlight.ts';
-import { loadMomentApi } from '@/lib/vendors/moment.ts';
-import { loadReadabilityApi } from '@/lib/vendors/readability.ts';
-import { loadTurndownRuntime } from '@/lib/vendors/turndown.ts';
 
 let offscreenRuntimeLoadPromise: Promise<void> | null = null;
 
 export interface OffscreenRuntimeBootstrapOptions {
-	loadVendors?: () => Promise<unknown>;
 	importModule?: () => Promise<unknown>;
 }
 
@@ -41,18 +47,6 @@ function installOffscreenGlobals(): void {
 
 export async function bootOffscreenRuntime(options: OffscreenRuntimeBootstrapOptions = {}): Promise<void> {
 	installOffscreenGlobals();
-
-	const loadVendors = options.loadVendors
-		?? (() =>
-			Promise.all([
-				loadBrowserApi(),
-				loadHighlightApi(),
-				loadMomentApi(),
-				loadReadabilityApi(),
-				loadTurndownRuntime(),
-			]));
-
-	await loadVendors();
 
 	if (!offscreenRuntimeLoadPromise) {
 		const importModule = options.importModule ?? (() => import('@/offscreen/offscreen.ts'));
