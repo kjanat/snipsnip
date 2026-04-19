@@ -7,7 +7,7 @@
 // You can find some technical background for some of the code below
 // at http://marijnhaverbeke.nl/blog/#cm-internals .
 
-((global, factory) => {
+((_global, factory) => {
 	return factory();
 })();
 

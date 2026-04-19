@@ -229,8 +229,4 @@ function parseArticle(html, url = 'https://example.com') {
 	return { article, env };
 }
 
-export {
-	createBrowserEnvironment,
-	createTurndownService,
-	parseArticle,
-};
+export { createBrowserEnvironment, createTurndownService, parseArticle };

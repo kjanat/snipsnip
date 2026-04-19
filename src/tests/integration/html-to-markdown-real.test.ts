@@ -3,7 +3,6 @@
  * Tests actual conversion using Turndown.js library
  */
 
-import htmlSamples from '@/tests/fixtures/html-samples';
 import { createTurndownService } from '@/tests/helpers/browser-env';
 
 describe('Real HTML to Markdown Conversion', () => {

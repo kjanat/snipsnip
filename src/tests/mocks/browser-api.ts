@@ -265,10 +265,10 @@ const contextMenusMock = {
 
 // Scripting mock
 const scriptingMock = {
-	executeScript: mock((injection) => {
+	executeScript: mock((_injection) => {
 		return Promise.resolve([{ result: null }]);
 	}),
-	insertCSS: mock((injection) => {
+	insertCSS: mock((_injection) => {
 		return Promise.resolve();
 	}),
 };
@@ -300,7 +300,7 @@ const permissionsMock = {
 
 // Offscreen mock
 const offscreenMock = {
-	createDocument: mock((parameters) => {
+	createDocument: mock((_parameters) => {
 		return Promise.resolve();
 	}),
 	closeDocument: mock(() => {

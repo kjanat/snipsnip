@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
@@ -12,7 +12,7 @@ function getExtensionPath() {
 		: defaultExtensionPath;
 	const manifestPath = join(extensionPath, 'manifest.json');
 
-	if (!fs.existsSync(manifestPath)) {
+	if (!existsSync(manifestPath)) {
 		throw new Error(
 			`Missing built extension at ${extensionPath}. Run \`bun build:wxt\` or set SNIPSNIP_EXTENSION_PATH.`,
 		);
@@ -21,7 +21,7 @@ function getExtensionPath() {
 	return extensionPath;
 }
 
-function getExtensionPageUrl(extensionId, pagePath = popupPagePath) {
+function getExtensionPageUrl(extensionId: string, pagePath = popupPagePath) {
 	return `chrome-extension://${extensionId}/${pagePath}`;
 }
 

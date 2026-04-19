@@ -57,7 +57,7 @@ export class JSDOM {
 
 		for (const key of Object.getOwnPropertyNames(globalThis)) {
 			if (!(key in this.window)) {
-				Object.defineProperty(this.window, key, Object.getOwnPropertyDescriptor(globalThis, key));
+				Object.defineProperty(this.window, key, Object.getOwnPropertyDescriptor(globalThis, key) as PropertyDescriptor);
 			}
 		}
 

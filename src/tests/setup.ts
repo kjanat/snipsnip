@@ -7,6 +7,7 @@ import './mocks/browser-api';
 
 // Polyfills for Node.js environment
 import { TextDecoder, TextEncoder } from 'node:util';
+
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 

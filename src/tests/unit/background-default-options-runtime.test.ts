@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, expect, test, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 describe('background default options runtime', () => {
 	const originalBrowser = global.browser;

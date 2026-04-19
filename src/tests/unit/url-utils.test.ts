@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, mock } from 'bun:test';
+import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import { safeParseUrl, resolveArticleUrl, validateUri, getImageFilename } from '@/shared/url-utils';
+import { getImageFilename, resolveArticleUrl, safeParseUrl, validateUri } from '@/shared/url-utils';
 
 describe('URL utils', () => {
 	describe('safeParseUrl', () => {
