@@ -1,4 +1,5 @@
-const browser = globalThis.browser;
+import { browser } from 'wxt/browser';
+
 const createMenus = globalThis.createMenus;
 const defaultOptions = globalThis.defaultOptions || {};
 const _moment = globalThis.moment;

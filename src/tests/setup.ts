@@ -1,5 +1,5 @@
 import { afterEach, mock } from 'bun:test';
-import './mocks/browser-api';
+import './mocks/browser-api.ts';
 /**
  * Test setup file.
  * Runs before each test file to set up the testing environment.

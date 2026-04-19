@@ -1,4 +1,4 @@
-import { getOptions } from './default-options-runtime';
+import { getOptions } from './default-options-runtime.ts';
 
 function getContextMenusApi() {
 	return globalThis.browser?.contextMenus;

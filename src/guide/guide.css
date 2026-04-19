@@ -1002,15 +1002,6 @@ a:hover {
 	box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
-.search-input:focus ~ .search-shortcut {
-	opacity: 0;
-}
-
-.search-input:focus + .search-icon,
-.search-input:not(:placeholder-shown) + .search-icon {
-	color: rgba(255, 255, 255, 0.8);
-}
-
 .search-shortcut {
 	position: absolute;
 	right: 8px;
@@ -1024,6 +1015,15 @@ a:hover {
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	border-radius: var(--radius-sm);
 	transition: opacity var(--transition);
+}
+
+.search-input:focus ~ .search-shortcut {
+	opacity: 0;
+}
+
+.search-input:focus + .search-icon,
+.search-input:not(:placeholder-shown) + .search-icon {
+	color: rgba(255, 255, 255, 0.8);
 }
 
 /* ── Header Actions ── */

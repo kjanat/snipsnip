@@ -42,7 +42,7 @@ function buildPopupAssetMap(): Record<string, string> {
 		'lib/github-markdown.css': githubMarkdownCssUrl,
 		'lib/material-darker.css': new URL('@/popup/lib/material-darker.css', import.meta.url).href,
 		'lib/material.css': new URL('@/popup/lib/material.css', import.meta.url).href,
-		'lib/marked.min.js': new URL('@/popup/lib/marked.min.ts', import.meta.url).href,
+		// marked is imported directly via npm package now — no asset URL needed
 		'lib/monokai.css': new URL('@/popup/lib/monokai.css', import.meta.url).href,
 		'lib/nord.css': new URL('@/popup/lib/nord.css', import.meta.url).href,
 		'lib/openai-dark.css': new URL('@/popup/lib/openai-dark.css', import.meta.url).href,

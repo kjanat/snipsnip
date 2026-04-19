@@ -8,8 +8,9 @@
  *  - Keyboard navigation (/, Escape, anchor focus management)
  *  - Open Settings action
  */
+import { browser } from 'wxt/browser';
+
 (() => {
-	const browser = globalThis.browser;
 	const defaultOptions = globalThis.defaultOptions || {};
 
 	const core = globalThis.snipSnipSearchCore;

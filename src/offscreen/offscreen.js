@@ -1,10 +1,11 @@
-const Readability = globalThis.Readability;
-const TurndownService = globalThis.TurndownService;
-const browser = globalThis.browser;
+import { Readability } from '@mozilla/readability';
+import TurndownService from 'turndown';
+import { highlightedCodeBlock, strikethrough, tables, taskListItems } from 'turndown-plugin-gfm';
+import { browser } from 'wxt/browser';
+const turndownPluginGfm = { highlightedCodeBlock, strikethrough, tables, taskListItems };
 const defaultOptions = globalThis.defaultOptions || {};
 const hljs = globalThis.hljs;
 const moment = globalThis.moment;
-const turndownPluginGfm = globalThis.turndownPluginGfm;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);
@@ -56,6 +57,7 @@ function getCodeBlockUtilsApi() {
 function cloneRuntimeOptions(source = {}) {
 	const nextOptions = {
 		...(source || {}),
+		s,
 	};
 
 	if (source?.tableFormatting && typeof source.tableFormatting === 'object') {
@@ -220,7 +222,7 @@ function handleMessages(message, _sender) {
  */
 async function processContent(message) {
 	try {
-		const { data, requestId, tabId, options } = message;
+		const { data, requestId, options } = message;
 
 		const domForArticle = buildDomWithSelection(data.dom, data.selection, !!data.clipSelection);
 		const article = await getArticleFromDom(domForArticle, options, data.pageUrl);
@@ -337,7 +339,7 @@ function isLikelyIncompleteMarkdown(markdown) {
 		&& !/^[-*+]\s/.test(line)
 		&& !/^\d+\.\s/.test(line)
 		&& !/^>\s/.test(line)
-		&& !/^!\[/.test(line)
+		&& !line.startsWith('![')
 	));
 	const nonStructuralChars = nonStructuralLines.join(' ').replace(/`/g, '').trim().length;
 	const hasTocMarker = /\bOn this page\b/i.test(normalized) || /\bTable of contents\b/i.test(normalized);
@@ -1006,12 +1008,12 @@ function turndown(content, options, article) {
 			else if (options.imageStyle.startsWith('obsidian')) return `![[${node.getAttribute('src')}]]`;
 			// otherwise, output the normal markdown link
 			else {
-				var alt = cleanAttribute(node.getAttribute('alt'));
-				var src = node.getAttribute('src') || '';
-				var title = cleanAttribute(node.getAttribute('title'));
-				var titlePart = title ? ` "${title}"` : '';
+				const alt = cleanAttribute(node.getAttribute('alt'));
+				const src = node.getAttribute('src') || '';
+				const title = cleanAttribute(node.getAttribute('title'));
+				const titlePart = title ? ` "${title}"` : '';
 				if (options.imageRefStyle === 'referenced') {
-					var id = this.references.length + 1;
+					const id = this.references.length + 1;
 					this.references.push(`[fig${id}]: ${src}${titlePart}`);
 					return `![${alt}][fig${id}]`;
 				} else return src ? `![${alt}](${src}${titlePart})` : '';
@@ -1183,9 +1185,9 @@ function turndown(content, options, article) {
 		}
 		const language = detectPreLanguage(node, code);
 
-		var fenceChar = options.fence.charAt(0);
-		var fenceSize = 3;
-		var fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
+		const fenceChar = options.fence.charAt(0);
+		let fenceSize = 3;
+		const fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
 		var match;
 		while ((match = fenceInCodeRegex.exec(code))) {
@@ -1249,6 +1251,7 @@ function turndown(content, options, article) {
 	// strip out non-printing special characters which CodeMirror displays as a red dot
 	// see: https://codemirror.net/doc/manual.html#option_specialChars
 	markdown = markdown.replace(
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: These are cc's.
 		/[\u0000-\u0009\u000b\u000c\u000e-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff\ufff9-\ufffc]/g,
 		'',
 	);
@@ -1480,7 +1483,6 @@ function prepareDomForReadability(dom, options, recoveryApi) {
 	// Process headers to avoid Readability.js stripping them
 	dom.body.querySelectorAll('h1, h2, h3, h4, h5, h6')?.forEach(header => {
 		header.className = '';
-		header.outerHTML = header.outerHTML;
 	});
 
 	recoveryApi.annotateStructuralAnchors(dom);
@@ -1935,14 +1937,14 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 	// Process all images in parallel
 	await Promise.all(
 		Object.entries(imageList).map(([src, filename]) =>
-			new Promise(async (resolve) => {
+			new Promise((resolve) => {
 				try {
 					// Fetch the image using fetch instead of XMLHttpRequest
-					const response = await fetch(src);
+					const response = fetch(src);
 					if (!response.ok) {
 						throw new Error(`HTTP ${response.status}`);
 					}
-					const blob = await response.blob();
+					const blob = response.blob();
 
 					if (options.imageStyle === 'base64') {
 						// Convert to base64
@@ -1958,7 +1960,7 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 						// Handle unknown extensions
 						if (newFilename.endsWith('.idunno')) {
 							const mimeType = blob.type || 'application/octet-stream';
-							const extension = mimedb[mimeType] || 'bin';
+							const extension = mime[mimeType] || 'bin';
 							newFilename = filename.replace('.idunno', `.${extension}`);
 
 							// Update filename in markdown
@@ -2270,7 +2272,7 @@ function base64EncodeUnicode(str) {
 /**
  * Convert to fenced code block
  */
-function _convertToFencedCodeBlock(node, options) {
+function convertToFencedCodeBlock(node, options) {
 	const sharedApi = getCodeBlockUtilsApi();
 	if (sharedApi?.convertToFencedCodeBlock) {
 		return sharedApi.convertToFencedCodeBlock(node, options);

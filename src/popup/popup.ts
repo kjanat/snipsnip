@@ -5,8 +5,7 @@
 import { createEditor } from '@/popup/lib/editor';
 import defaultEditorTheme from '@/popup/lib/themes/default.ts';
 import { loadTheme } from '@/popup/lib/themes/registry.ts';
-
-const browser = globalThis.browser;
+import { browser } from 'wxt/browser';
 
 var imageList = null;
 var sourceImageMap = null;
