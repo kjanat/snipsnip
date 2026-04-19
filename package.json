@@ -4,10 +4,9 @@
 	"private": true,
 	"scripts": {
 		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.js",
-		"build": "bun run build:manifests && web-ext build -s src/.build/firefox",
-		"build:all": "bun run build && bun run build:chrome",
-		"build:chrome": "cd src/.build/chrome && zip -r ../../../dist/snipsnip-chrome-$(node -p \"require('../../manifest.json').version\").zip . -x '*.DS_Store'",
-		"build:manifests": "bun run generate:release-highlights && bun src/scripts/generate-browser-manifests.js",
+		"build": "bun run generate:release-highlights && bun run build:wxt:firefox",
+		"build:all": "bun run build:chrome && bun run build",
+		"build:chrome": "bun run generate:release-highlights && bun run build:wxt",
 		"build:wxt": "wxt build",
 		"build:wxt:firefox": "wxt build -b firefox --mv3",
 		"dev:wxt": "wxt",

@@ -53,19 +53,17 @@ Install from ~~[Firefox Add-ons]~~.
 
 ### Load unpacked (local build)
 
-1. `cd src`
-2. `npm ci`
-3. `npm run build:manifests`
-4. Open `chrome://extensions`
-5. Enable Developer mode
-6. Click **Load unpacked** and select `src/.build/chrome`
+1. `bun install`
+2. `bun run build:chrome`
+3. Open `chrome://extensions`
+4. Enable Developer mode
+5. Click **Load unpacked** and select `.output/chrome-mv3`
 
 ### Firefox (local build)
 
-1. `cd src`
-2. `npm ci`
-3. `npm run build:manifests`
-4. Load `src/.build/firefox` as a temporary add-on in Firefox, or package with release workflow.
+1. `bun install`
+2. `bun run build`
+3. Load `.output/firefox-mv3` as a temporary add-on in Firefox, or package with release workflow.
 
 ## Usage
 
@@ -91,7 +89,7 @@ Agent Bridge:
 For local unpacked Chrome testing on Windows, you can first look up the unpacked extension ID with:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\find-unpacked-chrome-extension-id.ps1 -ExtensionPath .\src
+powershell -ExecutionPolicy Bypass -File .\tools\find-unpacked-chrome-extension-id.ps1 -ExtensionPath .\.output\chrome-mv3
 ```
 
 On any platform, you can also copy the unpacked extension ID from `chrome://extensions`.
@@ -135,40 +133,37 @@ Popup export format settings do not change these shortcut or context-menu action
 
 ## Development
 
-All development commands run from `src/`.
+All development commands run from the repo root.
 
 ### Prerequisites
 
-- Node.js 24+
-- npm
+- Bun 1.3+
 
 ### Setup
 
 ```bash
-cd src
-npm ci
+bun install
 ```
 
 ### Common scripts
 
-- `npm test` - Run Jest test suite
-- `npm run test:unit` - Unit tests
-- `npm run test:integration` - Integration tests
-- `npm run test:e2e` - Playwright end-to-end tests
-- `npm run build:manifests` - Generate browser-specific manifests
-- `npm run build` - Firefox package build via `web-ext`
-- `npm run build:chrome` - Chrome ZIP package
-- `npm run build:all` - Build Firefox + Chrome artifacts
+- `bun test` - Run Bun test suite
+- `bun run test:unit` - Unit tests
+- `bun run test:integration` - Integration tests
+- `bun run test:e2e` - Playwright end-to-end tests
+- `bun run build` - Build Firefox MV3 output in `.output/firefox-mv3`
+- `bun run build:chrome` - Build Chrome MV3 output in `.output/chrome-mv3`
+- `bun run build:all` - Build both browser outputs
 - `go build ./cmd/snipsnip` and `go build ./cmd/snipsnip-native-host` from `native/` - Agent Bridge companion
 
 ## Build Architecture
 
-`src/manifest.json` is the source manifest. `src/scripts/generate-browser-manifests.js` generates:
+`wxt.config.ts` is the build source of truth. WXT generates browser outputs in `.output/`:
 
-- `src/.build/chrome/manifest.json` with `background.service_worker`
-- `src/.build/firefox/manifest.json` with `background.scripts`
+- `.output/chrome-mv3/manifest.json`
+- `.output/firefox-mv3/manifest.json`
 
-The `.build/` directory is generated output and should not be committed.
+The `.output/` directory is generated output and should not be committed.
 
 Root-level `dist/` is for packaged release artifacts, and root-level `tmp/` is for ignored local scratch work.
 
@@ -179,7 +174,7 @@ Root-level `dist/` is for packaged release artifacts, and root-level `tmp/` is f
 GitHub Actions workflow [`.github/workflows/build-release.yml`][build-release.yml]:
 
 1. Runs unit and integration tests.
-2. Builds browser manifests.
+2. Builds WXT browser outputs.
 3. Packages:
    - `snipsnip-chrome-<version>.zip`
    - `snipsnip-firefox-<version>.xpi`
@@ -191,7 +186,7 @@ GitHub Actions workflow [`.github/workflows/build-release.yml`][build-release.ym
 
 To publish:
 
-1. Update version in `src/manifest.json`
+1. Update version in `package.json`
 2. Update `CHANGELOG.md`
 3. Tag and push, for example:
 
@@ -220,7 +215,9 @@ git push origin v4.0.4
 |  |- scripts/
 |  |- shared/
 |  |- tests/
-|  `- manifest.json
+|  `- entrypoints/
+|- public/
+|- wxt.config.ts
 |- tools/
 |  `- find-unpacked-chrome-extension-id.ps1
 |- CHANGELOG.md

@@ -124,7 +124,7 @@
 				"migrate-options-guide-pages"
 			],
 			"priority": "polish",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "stabilize-tests-typecheck",

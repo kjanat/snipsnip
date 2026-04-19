@@ -31,6 +31,8 @@ Started: 2026-04-19
 - For migrated legacy HTML shells, preload vendored globals through the existing wrapper layer before importing the legacy runtime module; this keeps Bun tests and WXT builds aligned.
 - For legacy popup-style pages with huge static HTML and classic scripts, keep the old HTML as a raw template, inject its body into a tiny WXT entrypoint, and load legacy scripts/assets through a runtime URL map instead of duplicating the whole page.
 - For legacy options/guide-style pages, keep the source HTML unchanged for old-path compatibility, then have the WXT bootstrap inject the raw shell, install globals/styles, and patch only the path-sensitive links at runtime.
+- WXT build assets that are referenced by stable manifest paths, like extension icons, must live under root `public/`; leaving them only under `src/` can pass local builds but fail packaged Firefox lint.
+- `web-ext lint` should run from inside the emitted extension directory (`.output/firefox-mv3`) with `-s .`; invoking it from repo root against that path can mis-detect the package root.
 
 ---
 
@@ -356,3 +358,27 @@ Started: 2026-04-19
 - Learnings:
   - Flattened WXT page outputs can coexist with legacy source HTML if runtime callers resolve page paths through one small shared map.
   - For page migrations that still rely on old classic scripts, loading only the minimum remaining legacy scripts from the bootstrap keeps the blast radius small and the shell diff tiny.
+
+## Task - [remove-legacy-build-paths]
+
+- Removed the obsolete browser-manifest generator and rewired root build scripts to use WXT-only Chrome/Firefox build outputs.
+- Updated CI and release workflows to install from the root Bun workspace, build from WXT `.output/*`, and lint Firefox from the emitted package root instead of the deleted `src/.build` path.
+- Copied the shipped extension icon set into `public/icons/` so WXT outputs contain the manifest-referenced icons during packaging and Firefox lint.
+- Refreshed README build/release docs to point at root Bun commands and WXT output directories.
+- Files changed:
+  - `package.json`
+  - `README.md`
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/build-release.yml`
+  - `public/icons/appicon-128x128.png`
+  - `public/icons/favicon-16x16.png`
+  - `public/icons/favicon-192x192.png`
+  - `public/icons/favicon-32x32.png`
+  - `public/icons/favicon-48x48.png`
+  - `public/icons/favicon-512x512.png`
+  - deleted `src/scripts/generate-browser-manifests.js`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - WXT build parity is not enough for release packaging if manifest-referenced static assets still live outside `public/`.
+  - `web-ext lint` is path-sensitive around package roots; run it from the built extension directory, not the repo root.

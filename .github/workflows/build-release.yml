@@ -9,6 +9,7 @@ on:
 env:
   NODE_VERSION: 24
   GO_VERSION: 1.26
+  BUN_VERSION: 1.3.12
 
 jobs:
   test:
@@ -22,32 +23,29 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: src/package-lock.json
 
-      - name: Setup npm
-        run: npm install --global npm@latest
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Show tool versions
         run: |
           node --version
-          npm --version
+          bun --version
 
       - name: Setup Go
         uses: actions/setup-go@v6
         with: { go-version: "${{ env.GO_VERSION }}" }
 
       - name: Install dependencies
-        working-directory: src
-        run: npm ci || npm ci || npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run unit tests
-        working-directory: src
-        run: npm run test:unit
+        run: bun run test:unit
 
       - name: Run integration tests
-        working-directory: src
-        run: npm run test:integration
+        run: bun run test:integration
 
   build:
     name: Build Extension Packages
@@ -62,44 +60,43 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: "src/package-lock.json"
 
-      - name: Setup npm
-        run: npm install --global npm@latest
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Show tool versions
         run: |
           node --version
-          npm --version
+          bun --version
 
       - name: Setup Go
         uses: actions/setup-go@v6
         with: { go-version: "${{ env.GO_VERSION }}" }
 
       - name: Install dependencies
-        working-directory: src
-        run: npm ci || npm ci || npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run ESLint
-        working-directory: src
-        run: npm run lint:js
+        run: bun run lint:js
 
-      - name: Get version from manifest
+      - name: Get version from package.json
         id: get-version
-        working-directory: src
         run: |
-          VERSION="$(yq .version manifest.json)"
+          VERSION="$(node -p "require('./package.json').version")"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extension version: $VERSION"
 
-      - name: Generate browser-specific manifests
-        working-directory: src
-        run: npm run build:manifests
+      - name: Build Chrome WXT output
+        run: bun run build:chrome
+
+      - name: Build Firefox WXT output
+        run: bun run build
 
       - name: Run web-ext lint (Firefox)
-        working-directory: src
-        run: npx web-ext lint -s .build/firefox
+        working-directory: .output/firefox-mv3
+        run: bunx web-ext lint -s .
 
       - name: Create dist directory
         run: mkdir -p dist
@@ -144,15 +141,15 @@ jobs:
           build_bridge linux amd64 snipsnip-agent-bridge-linux-amd64.tar.gz
 
       - name: Create Chrome package (.zip)
-        working-directory: src/.build/chrome
+        working-directory: .output/chrome-mv3
         run: |
-          zip -r ../../../dist/snipsnip-chrome-${{ steps.get-version.outputs.version }}.zip . \
+          zip -r ../../dist/snipsnip-chrome-${{ steps.get-version.outputs.version }}.zip . \
             -x "*.DS_Store"
 
       - name: Create Firefox package (.xpi)
-        working-directory: src/.build/firefox
+        working-directory: .output/firefox-mv3
         run: |
-          zip -r ../../../dist/snipsnip-firefox-${{ steps.get-version.outputs.version }}.xpi . \
+          zip -r ../../dist/snipsnip-firefox-${{ steps.get-version.outputs.version }}.xpi . \
             -x "*.DS_Store"
 
       - name: Upload Chrome artifact
