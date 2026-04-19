@@ -1,31 +1,15 @@
 import type { ExtensionBrowserApi } from '@/lib/types/extension.ts';
+import { browser } from 'wxt/browser';
 
-import { getModuleDefaultExport, isRecord, loadVendorRuntime } from './runtime-loader.ts';
+// Legacy shim: some legacy globals-dependent code reads `globalThis.browser`.
+// WXT's browser import already does the Chrome/Firefox detection — this just
+// exposes it through the legacy path until all consumers migrate to imports.
+Reflect.set(globalThis, 'browser', browser);
 
-export interface BrowserPolyfillLoadOptions {
-	importModule?: () => Promise<unknown>;
+export function getBrowserApi(): ExtensionBrowserApi {
+	return browser as unknown as ExtensionBrowserApi;
 }
 
-export function getBrowserApi(): ExtensionBrowserApi | undefined {
-	return browser;
-}
-
-function isBrowserApi(value: unknown): value is ExtensionBrowserApi {
-	return isRecord(value);
-}
-
-export async function loadBrowserApi(options: BrowserPolyfillLoadOptions = {}): Promise<ExtensionBrowserApi> {
-	return loadVendorRuntime({
-		cacheKey: 'vendor:browser-polyfill',
-		label: 'browser polyfill',
-		getValue: getBrowserApi,
-		setValue: (value) => {
-			Reflect.set(globalThis, 'browser', value);
-		},
-		importModule: options.importModule ?? (() => import('@/browser-polyfill.min.js')),
-		resolveModule: (loadedModule) => {
-			const defaultExport = getModuleDefaultExport(loadedModule);
-			return isBrowserApi(defaultExport) ? defaultExport : undefined;
-		},
-	});
+export async function loadBrowserApi(): Promise<ExtensionBrowserApi> {
+	return browser as unknown as ExtensionBrowserApi;
 }

@@ -61,7 +61,9 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 
 .cm-s-solarized {
 	line-height: 1.45em;
+	/* biome-ignore lint/correctness/noUnknownProperty: <explanation> */
 	color-profile: sRGB;
+	/* biome-ignore lint/correctness/noUnknownProperty: <explanation> */
 	rendering-intent: auto;
 }
 .cm-s-solarized.cm-s-dark {
@@ -234,6 +236,7 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 }
 
 /* Common */
+/* biome-ignore lint/style/noDescendingSpecificity: <explanation> */
 .cm-s-solarized .CodeMirror-linenumber {
 	padding: 0 5px;
 }

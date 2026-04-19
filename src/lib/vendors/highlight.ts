@@ -8,7 +8,6 @@ import css from 'highlight.js/lib/languages/css';
 import diff from 'highlight.js/lib/languages/diff';
 import dockerfile from 'highlight.js/lib/languages/dockerfile';
 import go from 'highlight.js/lib/languages/go';
-import html from 'highlight.js/lib/languages/xml';
 import java from 'highlight.js/lib/languages/java';
 import javascript from 'highlight.js/lib/languages/javascript';
 import json from 'highlight.js/lib/languages/json';
@@ -24,6 +23,7 @@ import shell from 'highlight.js/lib/languages/shell';
 import sql from 'highlight.js/lib/languages/sql';
 import swift from 'highlight.js/lib/languages/swift';
 import typescript from 'highlight.js/lib/languages/typescript';
+import html from 'highlight.js/lib/languages/xml';
 import yaml from 'highlight.js/lib/languages/yaml';
 
 hljs.registerLanguage('bash', bash);

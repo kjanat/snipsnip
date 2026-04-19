@@ -1068,6 +1068,7 @@
 	color: var(--color-prettylights-syntax-string);
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: <explanation> */
 .markdown-body .pl-v,
 .markdown-body .pl-smw {
 	color: var(--color-prettylights-syntax-variable);
@@ -1165,9 +1166,11 @@
 	outline: none;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: <explanation> */
 .markdown-body g-emoji {
 	display: inline-block;
 	min-width: 1ch;
+	/* biome-ignore lint/a11y/useGenericFontNames: <explanation> */
 	font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 	font-size: 1em;
 	font-style: normal;

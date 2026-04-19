@@ -138,6 +138,7 @@
 .cm-positive {
 	color: #292;
 }
+/* biome-ignore lint/style/noDescendingSpecificity: <explanation> */
 .cm-header, .cm-strong {
 	font-weight: bold;
 }
@@ -415,6 +416,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {
 	position: static;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: <explanation> */
 div.CodeMirror-cursors {
 	position: relative;
 	z-index: 3;
@@ -450,6 +452,7 @@ div.CodeMirror-dragcursors {
 
 .cm-searching {
 	background-color: #ffa;
+	/* biome-ignore lint/suspicious/noDuplicateProperties: <explanation> */
 	background-color: rgba(255, 255, 0, 0.4);
 }
 
