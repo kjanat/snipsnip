@@ -1190,14 +1190,14 @@ function turndown(content, options, article) {
 		let fenceSize = 3;
 		const fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
-		var match;
+		let match;
 		while ((match = fenceInCodeRegex.exec(code))) {
 			if (match[0].length >= fenceSize) {
 				fenceSize = match[0].length + 1;
 			}
 		}
 
-		var fence = repeat(fenceChar, fenceSize);
+		let fence = repeat(fenceChar, fenceSize);
 
 		return (
 			'\n\n' + fence + language + '\n'
