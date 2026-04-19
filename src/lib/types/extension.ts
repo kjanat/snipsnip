@@ -323,6 +323,21 @@ export interface SnipSnipMarkdownOptionsApi {
 	): EffectiveMarkdownOptions;
 }
 
+export interface SnipSnipObsidianApi {
+	createObsidianSourceImageMap(imageList?: Record<string, string>): Record<string, string>;
+	getObsidianTransportOptions(options?: Record<string, unknown>): Record<string, unknown>;
+	prepareMarkdownForObsidian(markdown: string, sourceImageMap?: Record<string, string>): string;
+}
+
+export interface SnipSnipCountUtilsApi {
+	COUNT_MODES: readonly string[];
+	DEFAULT_READING_WORDS_PER_MINUTE: number;
+	getWordCount(text: unknown): number;
+	estimateTokens(text: unknown): number;
+	estimateReadingMinutes(text: unknown, wordsPerMinute?: number): number;
+	formatCountDisplay(text: unknown, mode: string): string;
+}
+
 export interface SnipSnipLibraryStateApi {
 	STORAGE_KEYS: Readonly<{
 		SETTINGS: string;

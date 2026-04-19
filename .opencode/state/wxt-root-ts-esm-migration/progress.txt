@@ -29,6 +29,7 @@ Started: 2026-04-19
 - If a page-context bridge must stay at an exact WAR path for manual injection, keep the emitted asset in `public/` and add a sync test so the legacy source copy cannot drift.
 - WXT page entrypoints only work as a top-level file or one-level-deep `index.html`; if a legacy runtime path must stay different, adapt the caller with a small path helper instead of forcing a deeper entrypoint tree.
 - For migrated legacy HTML shells, preload vendored globals through the existing wrapper layer before importing the legacy runtime module; this keeps Bun tests and WXT builds aligned.
+- For legacy popup-style pages with huge static HTML and classic scripts, keep the old HTML as a raw template, inject its body into a tiny WXT entrypoint, and load legacy scripts/assets through a runtime URL map instead of duplicating the whole page.
 
 ---
 
@@ -294,3 +295,30 @@ Started: 2026-04-19
 - Learnings:
   - WXT offscreen pages want the standard `entrypoints/<name>/index.html` shape; keep compatibility by switching the caller path, not by nesting deeper.
   - Reusing the existing vendor wrapper loaders is safer than raw ESM imports for old vendored libs because Bun, WXT, and classic globals all resolve slightly differently.
+
+## Task - [migrate-popup-page]
+
+- Added a real WXT popup page entrypoint at `src/entrypoints/popup/index.html` plus `main.ts`, and pointed the manifest popup path at the emitted `popup.html` output.
+- Added `src/lib/popup/bootstrap.ts` to inject the existing popup HTML shell from `src/popup/popup.html`, install shared globals from TS modules, and load the legacy classic-script popup runtime in the required order.
+- Patched `src/popup/popup.js` and `src/popup/theme-bootstrap.js` to resolve lazy script/style asset paths through a popup asset map, so the flattened WXT popup path still loads themes, preview assets, print CSS, and the notification host correctly.
+- Added focused unit coverage for the popup bootstrap and updated popup consumers that hardcoded the old nested popup URL.
+- Verified `bun run typecheck`, `bun run test`, `bun run build:wxt`, and `bun run build:wxt:firefox` all pass. `bun run lint:js` still reports the repo's pre-existing warnings only.
+- Files changed:
+  - `wxt.config.ts`
+  - `src/global.d.ts`
+  - `src/lib/types/extension.ts`
+  - `src/lib/popup/bootstrap.ts`
+  - `src/entrypoints/popup/index.html`
+  - `src/entrypoints/popup/main.ts`
+  - `src/popup/popup.js`
+  - `src/popup/theme-bootstrap.js`
+  - `src/tests/unit/popup-bootstrap.test.ts`
+  - `src/tests/e2e/extension.spec.js`
+  - `src/tests/e2e/batch-processing.spec.js`
+  - `src/tests/e2e/live-public.spec.js`
+  - `src/scripts/benchmark-popup-startup.js`
+  - `.opencode/state/wxt-root-ts-esm-migration/prd.json`
+  - `.opencode/state/wxt-root-ts-esm-migration/progress.txt`
+- Learnings:
+  - Raw-template shell injection is a good bridge when a legacy page's HTML is large but its runtime can still be kept on the old classic-script path.
+  - Popup asset paths need an explicit resolver once WXT flattens the page to `popup.html`; otherwise lazy `lib/...` and `print/...` fetches silently point at the wrong place.

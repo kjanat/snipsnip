@@ -168,6 +168,11 @@ const EXPORT_TYPE_CONFIG = {
 	},
 };
 
+/** @param {string} assetPath */
+function resolvePopupAssetPath(assetPath) {
+	return globalThis.snipSnipPopupAssets?.[assetPath] || assetPath;
+}
+
 function normalizeColorBlindTheme(value) {
 	return ['deuteranopia', 'protanopia', 'tritanopia'].includes(value) ? value : 'deuteranopia';
 }
@@ -1103,6 +1108,7 @@ function initializeEditor() {
 }
 
 function loadScriptOnce(src, id) {
+	const resolvedSrc = resolvePopupAssetPath(src);
 	if (id) {
 		const existingById = document.getElementById(id);
 		if (existingById) {
@@ -1110,7 +1116,7 @@ function loadScriptOnce(src, id) {
 		}
 	}
 
-	const existing = Array.from(document.scripts).find((script) => script.getAttribute('src') === src);
+	const existing = Array.from(document.scripts).find((script) => script.getAttribute('src') === resolvedSrc);
 	if (existing) {
 		return Promise.resolve(existing);
 	}
@@ -1118,17 +1124,18 @@ function loadScriptOnce(src, id) {
 	return new Promise((resolve, reject) => {
 		const script = document.createElement('script');
 		script.type = 'application/javascript';
-		script.src = src;
+		script.src = resolvedSrc;
 		if (id) {
 			script.id = id;
 		}
 		script.addEventListener('load', () => resolve(script), { once: true });
-		script.addEventListener('error', () => reject(new Error(`Failed to load script: ${src}`)), { once: true });
+		script.addEventListener('error', () => reject(new Error(`Failed to load script: ${resolvedSrc}`)), { once: true });
 		document.body.appendChild(script);
 	});
 }
 
 function loadStylesheetOnce(href, id) {
+	const resolvedHref = resolvePopupAssetPath(href);
 	if (id) {
 		const existingById = document.getElementById(id);
 		if (existingById) {
@@ -1137,7 +1144,7 @@ function loadStylesheetOnce(href, id) {
 	}
 
 	const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-		.find((link) => link.getAttribute('href') === href);
+		.find((link) => link.getAttribute('href') === resolvedHref);
 	if (existing) {
 		return Promise.resolve(existing);
 	}
@@ -1145,12 +1152,14 @@ function loadStylesheetOnce(href, id) {
 	return new Promise((resolve, reject) => {
 		const link = document.createElement('link');
 		link.rel = 'stylesheet';
-		link.href = href;
+		link.href = resolvedHref;
 		if (id) {
 			link.id = id;
 		}
 		link.addEventListener('load', () => resolve(link), { once: true });
-		link.addEventListener('error', () => reject(new Error(`Failed to load stylesheet: ${href}`)), { once: true });
+		link.addEventListener('error', () => reject(new Error(`Failed to load stylesheet: ${resolvedHref}`)), {
+			once: true,
+		});
 		document.head.appendChild(link);
 	});
 }
@@ -1348,7 +1357,7 @@ async function getPrintStyles() {
 
 	const assetPaths = ['popup/lib/github-markdown.css', 'print/print.css'];
 	printStylesPromise = Promise.all(assetPaths.map(async (assetPath) => {
-		const response = await fetch(browser.runtime.getURL(assetPath));
+		const response = await fetch(resolvePopupAssetPath(assetPath));
 		if (!response.ok) {
 			throw new Error(`Failed to load print asset: ${assetPath}`);
 		}

@@ -100,7 +100,7 @@
 			"description": "Convert popup bootstrap code to a WXT popup entrypoint while preserving the existing HTML/CSS structure and replacing script-order dependencies with explicit imports. Acceptance: popup clipping, preview, batch flow, and agent-related actions work as before.",
 			"depends": ["convert-stateful-shared-mods", "migrate-background-msgs", "migrate-content-page-bridge"],
 			"priority": "integration",
-			"passes": false
+			"passes": true
 		},
 		{
 			"id": "migrate-options-guide-pages",

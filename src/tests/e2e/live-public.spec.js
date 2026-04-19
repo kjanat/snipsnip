@@ -169,7 +169,7 @@ async function clipPageThroughPopup(context, extensionId, serviceWorker, liveCas
 		const tabId = await getTabIdForUrl(serviceWorker, livePage.url());
 		expect(tabId).toBeTruthy();
 
-		await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+		await popupPage.goto(`chrome-extension://${extensionId}/popup.html`);
 		await popupPage.waitForSelector('#container', { state: 'visible' });
 
 		await popupPage.evaluate(async (targetTabId) => {

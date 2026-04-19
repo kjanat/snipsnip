@@ -169,7 +169,7 @@ async function runBatchCapture(context, extensionId, serviceWorker, urls, option
 	const batchSaveMode = options.batchSaveMode || 'zip';
 
 	try {
-		await launcher.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+		await launcher.goto(`chrome-extension://${extensionId}/popup.html`);
 		await launcher.evaluate(({ urlObjects, batchSaveMode }) => {
 			browser.runtime.sendMessage({
 				type: 'start-batch-conversion',

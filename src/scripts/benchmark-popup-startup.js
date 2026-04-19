@@ -180,7 +180,7 @@ async function runIteration({ context, serviceWorker, extensionId }) {
 		await fixturePage.waitForLoadState('networkidle');
 		await fixturePage.bringToFront();
 
-		await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+		await popupPage.goto(`chrome-extension://${extensionId}/popup.html`);
 
 		const shellVisibleMs = await waitForMetric(
 			popupPage,

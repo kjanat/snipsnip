@@ -143,7 +143,7 @@ test.describe('SnipSnip Extension E2E', () => {
 
 		const popupPage = await context.newPage();
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 		} finally {
 			await popupPage.close().catch(() => {});
@@ -171,7 +171,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			}, { targetUrl: fixturePage.url() });
 			expect(fixtureTabId).toBeTruthy();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 
 			await popupPage.evaluate(async (tabId) => {
@@ -213,7 +213,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await popupPage.close().catch(() => {});
 
 			const popupAgain = await context.newPage();
-			await popupAgain.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupAgain.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupAgain.locator('#container')).toBeVisible();
 			await popupAgain.evaluate(async (tabId) => {
 				await clipSite(tabId);
@@ -247,7 +247,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#libraryViewToggle')).toBeVisible();
 			await expect.poll(async () => {
 				const state = await getLibraryStorage(serviceWorker);
@@ -282,7 +282,7 @@ test.describe('SnipSnip Extension E2E', () => {
 		const popupPage = await context.newPage();
 
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await popupPage.locator('#libraryViewToggle').click();
 			await expect(popupPage.locator('#exportLibraryAll')).toBeDisabled();
 		} finally {
@@ -307,7 +307,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			const popupPage = await context.newPage();
 
 			try {
-				await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+				await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 				await expect.poll(async () => {
 					return await popupPage.evaluate(() => {
@@ -337,7 +337,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			const popupPage = await context.newPage();
 
 			try {
-				await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+				await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 				await expect.poll(async () => {
 					return await popupPage.evaluate(() => {
@@ -376,7 +376,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			const popupPage = await context.newPage();
 
 			try {
-				await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+				await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 				await expect.poll(async () => {
 					return await popupPage.evaluate(() => {
@@ -407,7 +407,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			const popupPage = await context.newPage();
 
 			try {
-				await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+				await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 				await expect.poll(async () => {
 					return await popupPage.evaluate(() => {
@@ -438,7 +438,7 @@ test.describe('SnipSnip Extension E2E', () => {
 		const popupPage = await context.newPage();
 
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 			await expect.poll(async () => {
 				return await popupPage.evaluate(() => {
@@ -467,7 +467,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 			await expect.poll(async () => {
 				return await popupPage.evaluate(() => Boolean(window.cm && document.querySelector('.CodeMirror')));
@@ -572,7 +572,7 @@ test.describe('SnipSnip Extension E2E', () => {
 		const popupPage = await context.newPage();
 
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#libraryViewToggle')).toBeVisible({ timeout: 10000 });
 
 			await expect.poll(async () => {
@@ -615,7 +615,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				batchSaveMode: 'zip',
 			});
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 
 			await expect(popupPage.locator('#batchContainer')).toBeVisible({ timeout: 10000 });
 			await expect(popupPage.locator('#progressContainer')).toBeVisible({ timeout: 10000 });
@@ -659,7 +659,7 @@ test.describe('SnipSnip Extension E2E', () => {
 		const popupPage = await context.newPage();
 
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.getByText('Popup notification test')).toBeVisible({ timeout: 15000 });
 			await expect(popupPage.getByText('Deferred popup notification body')).toBeVisible();
 			await expect(popupPage.getByLabel('Dismiss notification')).toBeVisible();
@@ -719,7 +719,7 @@ test.describe('SnipSnip Extension E2E', () => {
 		const popupPage = await context.newPage();
 
 		try {
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await popupPage.locator('#libraryViewToggle').click();
 			await expect(popupPage.locator('#exportLibraryAll')).toBeEnabled();
 			await popupPage.locator('#exportLibraryAll').click();
@@ -757,7 +757,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 
 			await expect.poll(async () => popupPage.inputValue('#title'), { timeout: 10000 })
@@ -830,7 +830,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 
 			await expect.poll(async () => popupPage.inputValue('#title'), { timeout: 10000 })
@@ -955,7 +955,7 @@ test.describe('SnipSnip Extension E2E', () => {
 				await fixturePage.waitForLoadState('networkidle');
 				await fixturePage.bringToFront();
 
-				await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+				await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 				await expect(popupPage.locator('#container')).toBeVisible();
 
 				await expect.poll(async () => popupPage.inputValue('#title'), { timeout: 10000 })
@@ -1054,7 +1054,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 
 			await expect.poll(async () => popupPage.inputValue('#title'), { timeout: 10000 })
@@ -1167,7 +1167,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 
 			await expect.poll(async () => popupPage.inputValue('#title'), { timeout: 10000 })
@@ -1256,7 +1256,7 @@ test.describe('SnipSnip Extension E2E', () => {
 			await fixturePage.waitForLoadState('networkidle');
 			await fixturePage.bringToFront();
 
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#libraryViewToggle')).toBeHidden();
 			await expect.poll(async () => {
 				const state = await getLibraryStorage(serviceWorker);
@@ -1327,7 +1327,7 @@ test.describe('SnipSnip Extension E2E', () => {
 
 		test.beforeEach(async () => {
 			popupPage = await context.newPage();
-			await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`);
+			await popupPage.goto(`chrome-extension://${extensionId}/${popupPagePath}`);
 			await expect(popupPage.locator('#container')).toBeVisible();
 		});
 

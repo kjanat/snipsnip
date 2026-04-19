@@ -61,15 +61,34 @@
 		twilight: 'lib/twilight.css',
 	};
 
+	/** @param {string} assetPath */
+	function resolvePopupAssetPath(assetPath) {
+		return globalThis.snipSnipPopupAssets?.[assetPath] || assetPath;
+	}
+
+	/** @param {string} value */
 	function normalizeColorBlindTheme(value) {
 		return ['deuteranopia', 'protanopia', 'tritanopia'].includes(value) ? value : 'deuteranopia';
 	}
 
+	/** @param {string} specialTheme @param {string} colorBlindTheme */
 	function getResolvedSpecialThemeKey(specialTheme, colorBlindTheme) {
 		if (specialTheme === 'colorblind') {
 			return `colorblind-${normalizeColorBlindTheme(colorBlindTheme)}`;
 		}
 		return specialTheme;
+	}
+
+	/** @param {string} themeKey @returns {{ dark: string, light: string }} */
+	function getEditorThemeEntry(themeKey) {
+		const resolvedTheme = Reflect.get(editorThemeMap, themeKey);
+		return resolvedTheme && typeof resolvedTheme === 'object' ? resolvedTheme : editorThemeMap.default;
+	}
+
+	/** @param {string} themeName */
+	function getEditorThemeHref(themeName) {
+		const resolvedHref = Reflect.get(editorThemeStylesheetMap, themeName);
+		return typeof resolvedHref === 'string' ? resolvedHref : editorThemeStylesheetMap['xq-light'];
 	}
 
 	try {
@@ -83,10 +102,9 @@
 		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 		const isDark = popupTheme === 'dark' || (popupTheme !== 'light' && prefersDark);
 		const resolvedSpecialTheme = getResolvedSpecialThemeKey(specialTheme, colorBlindTheme);
-		const themeEntry = editorThemeMap[specialTheme !== 'none' ? resolvedSpecialTheme : editorTheme]
-			|| editorThemeMap.default;
+		const themeEntry = getEditorThemeEntry(specialTheme !== 'none' ? resolvedSpecialTheme : editorTheme);
 		const themeName = isDark ? themeEntry.dark : themeEntry.light;
-		const themeHref = editorThemeStylesheetMap[themeName];
+		const themeHref = resolvePopupAssetPath(getEditorThemeHref(themeName));
 
 		root.classList.remove('theme-light', 'theme-dark', 'theme-system');
 		root.classList.add('theme-' + popupTheme);

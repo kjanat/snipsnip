@@ -8,11 +8,13 @@ import type {
 	ReadabilityApi,
 	SnipSnipAgentBridgeStateApi,
 	SnipSnipContextMenusApi,
+	SnipSnipCountUtilsApi,
 	SnipSnipDefaultOptionsApi,
 	SnipSnipDownloadTrackerApi,
 	SnipSnipLibraryExportApi,
 	SnipSnipLibraryStateApi,
 	SnipSnipMarkdownOptionsApi,
+	SnipSnipObsidianApi,
 	SnipSnipOptionsStateApi,
 	SnipSnipTemplateUtilsApi,
 	SnipSnipUrlUtilsApi,
@@ -26,6 +28,7 @@ declare global {
 	var hljs: HighlightApi | undefined;
 	var moment: MomentApi | undefined;
 	var Readability: ReadabilityApi | undefined;
+	var snipSnipCountUtils: SnipSnipCountUtilsApi | undefined;
 	var snipSnipAgentBridgeState: SnipSnipAgentBridgeStateApi | undefined;
 	var snipSnipContextMenus: SnipSnipContextMenusApi | undefined;
 	var snipSnipDefaultOptions: SnipSnipDefaultOptionsApi | undefined;
@@ -34,7 +37,9 @@ declare global {
 	var snipSnipLibraryState: SnipSnipLibraryStateApi | undefined;
 	var snipSnipMarkdownOptions: SnipSnipMarkdownOptionsApi | undefined;
 	var snipSnipNotifications: Record<string, unknown> | undefined;
+	var snipSnipObsidian: SnipSnipObsidianApi | undefined;
 	var snipSnipOptionsState: SnipSnipOptionsStateApi | undefined;
+	var snipSnipPopupAssets: Record<string, string> | undefined;
 	var snipSnipSiteRules:
 		| {
 			normalizeSiteRules?(rules: unknown): unknown[];
