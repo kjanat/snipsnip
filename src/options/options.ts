@@ -1,5 +1,5 @@
 const browser = globalThis.browser;
-const createMenus = Reflect.get(globalThis, 'createMenus');
+const createMenus = globalThis.createMenus;
 const defaultOptions = globalThis.defaultOptions || {};
 const moment = globalThis.moment;
 

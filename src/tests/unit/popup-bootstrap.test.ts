@@ -75,10 +75,21 @@ describe('popup runtime bootstrap', () => {
 		const loadScript = mock(async () => ({}));
 		const importThemeBootstrapModule = mock(async () => ({}));
 		const importPopupShortcutsModule = mock(async () => ({}));
+		const importPopupRuntimeModule = mock(async () => ({}));
 
 		await Promise.all([
-			bootPopupRuntime({ loadScript, importThemeBootstrapModule, importPopupShortcutsModule }),
-			bootPopupRuntime({ loadScript, importThemeBootstrapModule, importPopupShortcutsModule }),
+			bootPopupRuntime({
+				loadScript,
+				importThemeBootstrapModule,
+				importPopupShortcutsModule,
+				importPopupRuntimeModule,
+			}),
+			bootPopupRuntime({
+				loadScript,
+				importThemeBootstrapModule,
+				importPopupShortcutsModule,
+				importPopupRuntimeModule,
+			}),
 		]);
 
 		expect(document.title).toBe('SnipSnip');
@@ -107,6 +118,7 @@ describe('popup runtime bootstrap', () => {
 		expect(typeof globalThis.snipSnipPopupAssets?.['../notifications/notification-host.js']).toBe('string');
 		expect(importThemeBootstrapModule).toHaveBeenCalledTimes(1);
 		expect(importPopupShortcutsModule).toHaveBeenCalledTimes(1);
-		expect(loadScript).toHaveBeenCalledTimes(3);
+		expect(importPopupRuntimeModule).toHaveBeenCalledTimes(1);
+		expect(loadScript).toHaveBeenCalledTimes(2);
 	});
 });

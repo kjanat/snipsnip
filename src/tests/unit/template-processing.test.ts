@@ -3,7 +3,8 @@
  * Tests template variable substitution and text replacement functionality
  */
 
-const moment = require('../../background/moment.min.js');
+const momentModule = require('../../background/moment.min.ts');
+const moment = momentModule.default ?? momentModule;
 const {
 	textReplace,
 	generateValidFileName,

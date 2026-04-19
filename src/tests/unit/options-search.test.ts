@@ -8,6 +8,7 @@ const searchCore = require('../../shared/search-core.ts');
 const libraryState = require('../../shared/library-state.ts');
 const optionsState = require('../../shared/options-state.ts');
 const templateUtils = require('../../shared/template-utils.ts');
+globalThis.snipSnipSearchCore = searchCore;
 const optionsSearch = require('../../options/options-search.ts');
 
 const optionsHtml = fs.readFileSync(
@@ -22,7 +23,8 @@ const optionsSource = fs.readFileSync(
 	path.join(__dirname, '../../options/options.ts'),
 	'utf8',
 );
-const moment = require('../../background/moment.min.ts');
+const momentModule = require('../../background/moment.min.ts');
+const moment = momentModule.default ?? momentModule;
 
 const baseOptions = {
 	headingStyle: 'atx',

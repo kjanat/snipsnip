@@ -2574,3 +2574,5 @@
 		f;
 });
 // # sourceMappingURL=moment.min.js.map
+
+export default globalThis.moment;

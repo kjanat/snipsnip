@@ -25,15 +25,16 @@ describe('Template utils helpers', () => {
 
 	describe('formatDate fallback', () => {
 		const originalMoment = global.moment;
-		const actualMoment = require('../../background/moment.min.js');
+		const actualMomentModule = require('../../background/moment.min.ts');
+		const actualMoment = actualMomentModule.default ?? actualMomentModule;
 
 		afterEach(() => {
-			mock.module('../../background/moment.min.js', () => actualMoment);
+			mock.module('../../background/moment.min.ts', () => actualMoment);
 			global.moment = originalMoment;
 		});
 
 		test('falls back to ISO date when moment cannot be loaded', () => {
-			mock.module('../../background/moment.min.js', () => ({}));
+			mock.module('../../background/moment.min.ts', () => ({}));
 			delete global.moment;
 
 			const { textReplace } = require('../../shared/template-utils');
