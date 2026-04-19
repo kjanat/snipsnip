@@ -2,7 +2,9 @@
 	"extends": "./.wxt/tsconfig.json",
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
+		"module": "nodenext",
 		"moduleDetection": "force",
+		"moduleResolution": "nodenext", // don't change. I NEED YOU TO FUCKING USE MODULE SYNTAX!!!
 		"types": ["bun"]
 	},
 	"include": [

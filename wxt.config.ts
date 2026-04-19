@@ -12,6 +12,7 @@ const autoIcons: AutoIconsOptions = {
 export default defineConfig({
 	modules: ['@wxt-dev/auto-icons'],
 	srcDir: 'src',
+	publicDir: 'src/public',
 	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
 	manifest: ({ browser }) => ({

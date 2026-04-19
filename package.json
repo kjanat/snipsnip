@@ -1,7 +1,12 @@
 {
 	"name": "snipsnip",
-	"version": "4.5.0",
+	"version": "5.0.0+dev",
 	"private": true,
+	"repository": "kjanat/snipsnip",
+	"author": {
+		"name": "Kaj Kowalski",
+		"url": "https://github.com/kjanat"
+	},
 	"type": "module",
 	"scripts": {
 		"bd": "bun generate:highlights && bun run build && bun fmt",
