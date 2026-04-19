@@ -1,16 +1,13 @@
 name: Add issues to MarkDownload project
 
-on:
-  issues:
-    types:
-      - opened
+on: { issues: { types: [opened] } }
 
 jobs:
   add-to-project:
     name: Add issue to project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v0.4.0
+      - uses: actions/add-to-project@v1.0.2
         with:
           # You can target a repository in a different organization
           # to the issue

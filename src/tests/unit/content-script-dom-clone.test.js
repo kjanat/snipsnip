@@ -2,14 +2,14 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Content Script DOM Capture', () => {
-  beforeAll(() => {
-    const scriptPath = path.join(__dirname, '../../contentScript/contentScript.js');
-    const scriptSource = fs.readFileSync(scriptPath, 'utf8');
-    window.eval(scriptSource);
-  });
+	beforeAll(() => {
+		const scriptPath = path.join(__dirname, '../../contentScript/contentScript.js');
+		const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+		window.eval(scriptSource);
+	});
 
-  beforeEach(() => {
-    document.documentElement.innerHTML = `
+	beforeEach(() => {
+		document.documentElement.innerHTML = `
       <head></head>
       <body>
         <main id="root">
@@ -20,54 +20,56 @@ describe('Content Script DOM Capture', () => {
         </main>
       </body>
     `;
-  });
+	});
 
-  test('getSelectionAndDom should not mutate the live document', () => {
-    const beforeOuterHTML = document.documentElement.outerHTML;
-    const beforeTitleCount = document.head.querySelectorAll('title').length;
-    const beforeBaseCount = document.head.querySelectorAll('base').length;
-    const beforeHiddenImage = document.getElementById('hidden-img');
+	test('getSelectionAndDom should not mutate the live document', () => {
+		const beforeOuterHTML = document.documentElement.outerHTML;
+		const beforeTitleCount = document.head.querySelectorAll('title').length;
+		const beforeBaseCount = document.head.querySelectorAll('base').length;
+		const beforeHiddenImage = document.getElementById('hidden-img');
 
-    const result = getSelectionAndDom();
+		const result = getSelectionAndDom();
 
-    expect(result).toBeTruthy();
-    expect(result.dom).toBeTruthy();
-    expect(document.documentElement.outerHTML).toBe(beforeOuterHTML);
-    expect(document.head.querySelectorAll('title').length).toBe(beforeTitleCount);
-    expect(document.head.querySelectorAll('base').length).toBe(beforeBaseCount);
-    expect(document.getElementById('hidden-img')).toBe(beforeHiddenImage);
-  });
+		expect(result).toBeTruthy();
+		expect(result.dom).toBeTruthy();
+		expect(document.documentElement.outerHTML).toBe(beforeOuterHTML);
+		expect(document.head.querySelectorAll('title').length).toBe(beforeTitleCount);
+		expect(document.head.querySelectorAll('base').length).toBe(beforeBaseCount);
+		expect(document.getElementById('hidden-img')).toBe(beforeHiddenImage);
+	});
 
-  test('captured DOM should be cleaned while live DOM stays intact', () => {
-    const result = getSelectionAndDom();
-    const parser = new DOMParser();
-    const capturedDocument = parser.parseFromString(result.dom, 'text/html');
+	test('captured DOM should be cleaned while live DOM stays intact', () => {
+		const result = getSelectionAndDom();
+		const parser = new DOMParser();
+		const capturedDocument = parser.parseFromString(result.dom, 'text/html');
 
-    expect(capturedDocument.getElementById('hidden-img')).toBeNull();
-    expect(capturedDocument.getElementById('hidden-div')).toBeNull();
-    expect(capturedDocument.getElementById('visible-img')).toBeTruthy();
-    expect(capturedDocument.getElementById('visible-div')).toBeTruthy();
-    expect(document.getElementById('hidden-img')).toBeTruthy();
-    expect(document.getElementById('hidden-div')).toBeTruthy();
-    expect(document.head.querySelector('base')).toBeNull();
-  });
+		expect(capturedDocument.getElementById('hidden-img')).toBeNull();
+		expect(capturedDocument.getElementById('hidden-div')).toBeNull();
+		expect(capturedDocument.getElementById('visible-img')).toBeTruthy();
+		expect(capturedDocument.getElementById('visible-div')).toBeTruthy();
+		expect(document.getElementById('hidden-img')).toBeTruthy();
+		expect(document.getElementById('hidden-div')).toBeTruthy();
+		expect(document.head.querySelector('base')).toBeNull();
+	});
 
-  test('marksnipPrepareForCapture should request MathJax sync for rendered nodes', async () => {
-    const mathNode = document.createElement('mjx-container');
-    document.getElementById('visible-div').appendChild(mathNode);
+	test('snipsnipPrepareForCapture should request MathJax sync for rendered nodes', async () => {
+		const mathNode = document.createElement('mjx-container');
+		document.getElementById('visible-div').appendChild(mathNode);
 
-    window.marksnipCaptureState.pageContextScriptLoaded = true;
-    window.marksnipCaptureState.pageContextLoadPromise = Promise.resolve(true);
+		window.snipsnipCaptureState.pageContextScriptLoaded = true;
+		window.snipsnipCaptureState.pageContextLoadPromise = Promise.resolve(true);
 
-    window.addEventListener(window.marksnipCaptureState.mathJaxSyncRequestEventName, () => {
-      mathNode.setAttribute('marksnip-latex', 'E=mc^2');
-      window.dispatchEvent(new CustomEvent(window.marksnipCaptureState.mathJaxSyncEventName, {
-        detail: { taggedCount: 1 }
-      }));
-    }, { once: true });
+		window.addEventListener(window.snipsnipCaptureState.mathJaxSyncRequestEventName, () => {
+			mathNode.setAttribute('snipsnip-latex', 'E=mc^2');
+			window.dispatchEvent(
+				new CustomEvent(window.snipsnipCaptureState.mathJaxSyncEventName, {
+					detail: { taggedCount: 1 },
+				}),
+			);
+		}, { once: true });
 
-    await marksnipPrepareForCapture();
+		await snipsnipPrepareForCapture();
 
-    expect(mathNode.getAttribute('marksnip-latex')).toBe('E=mc^2');
-  });
+		expect(mathNode.getAttribute('snipsnip-latex')).toBe('E=mc^2');
+	});
 });

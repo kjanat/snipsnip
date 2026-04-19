@@ -19,7 +19,7 @@ area = Measure[amount: 1.5, unit: 'm^2']
 
 
 distance.amount 
-distance.unit 
+distance.unit
 ```
 
 Constructed object also has a reasonable definitions of [`==`](https://ruby-doc.org/3.3.6/Data.html#method-i-3D-3D) operator, [`to_h`](https://ruby-doc.org/3.3.6/Data.html#method-i-to_h) hash conversion, and [`deconstruct`](https://ruby-doc.org/3.3.6/Data.html#method-i-deconstruct) / [`deconstruct_keys`](https://ruby-doc.org/3.3.6/Data.html#method-i-deconstruct_keys) to be used in pattern matching.
@@ -38,7 +38,6 @@ end
 
 Measure[3, 'm'] < Measure[5, 'm'] 
 Measure[3, 'm'] < Measure[5, 'kg']
-
 ```
 
 [`Data`](https://ruby-doc.org/3.3.6/Data.html) provides no member writers, or enumerators: it is meant to be a storage for immutable atomic values. But note that if some of data members is of a mutable class, [`Data`](https://ruby-doc.org/3.3.6/Data.html) does no additional immutability enforcement:
@@ -50,7 +49,6 @@ event = Event.new('18:00', %w[Tue Wed Fri])
 
 event.weekdays << 'Sat'
 event
-
 ```
 
 See also [`Struct`](https://ruby-doc.org/3.3.6/Struct.html), which is a similar concept, but has more container-alike API, allowing to change contents of the object and enumerate it.
@@ -70,7 +68,6 @@ measure.new(1, 'km')
 Measure = Data.define(:amount, :unit)
 
 Measure.new(1, 'km')
-
 ```
 
 Note that member-less Data is acceptable and might be a useful technique for defining several homogenous data classes, like
@@ -135,7 +132,7 @@ Returns an array of member names of the data class:
 
 ```makefile
 Measure = Data.define(:amount, :unit)
-Measure.members 
+Measure.members
 ```
 
 ```cpp
@@ -163,7 +160,6 @@ Measure.new(amount: 1, unit: 'km')
 Measure[1, 'km']
 
 Measure[amount: 1, unit: 'km']
-
 ```
 
 All arguments are mandatory (unlike [`Struct`](https://ruby-doc.org/3.3.6/Struct.html)), and converted to keyword arguments:
@@ -173,7 +169,6 @@ Measure.new(amount: 1)
 
 
 Measure.new(1)
-
 ```
 
 Note that `Measure#initialize` always receives keyword arguments, and that mandatory arguments are checked in `initialize`, not in `new`. This can be important for redefining initialize in order to convert arguments or provide defaults:
@@ -188,7 +183,7 @@ Measure = Data.define(:amount, :unit) do
 end
 
 Measure.new('10', 'km') 
-Measure.new(10_000)     
+Measure.new(10_000)
 ```
 
 ```objectivec
@@ -248,7 +243,7 @@ Measure[1, 'km'] == Measure[1, 'm']
 Measurement = Data.define(:amount, :unit)
 
 
-Measure[1, 'km'] == Measurement[1, 'km'] 
+Measure[1, 'km'] == Measurement[1, 'km']
 ```
 
 ```cpp
@@ -272,7 +267,6 @@ in n, 'km'
 else
   puts "Don't know how to handle it"
 end
-
 ```
 
 Or, with checking the class, too:
@@ -307,7 +301,6 @@ in amount:, unit: 'km'
 else
   puts "Don't know how to handle it"
 end
-
 ```
 
 Or, with checking the class, too:
@@ -335,7 +328,7 @@ Measure = Data.define(:amount, :unit)
 
 Measure[1, 'km'] == Measure[1.0, 'km'] 
 
-Measure[1, 'km'].eql? Measure[1.0, 'km'] 
+Measure[1, 'km'].eql? Measure[1.0, 'km']
 ```
 
 See also [`Object#eql?`](https://ruby-doc.org/3.3.6/Object.html#method-i-eql-3F) for further explanations of the method usage.
@@ -359,7 +352,7 @@ Measure[1, 'km'].hash == Measure[1.0, 'km'].hash
 
 Measurement = Data.define(:amount, :unit)
 
-Measure[1, 'km'].hash == Measurement[1, 'km'].hash 
+Measure[1, 'km'].hash == Measurement[1, 'km'].hash
 ```
 
 ```cpp
@@ -378,8 +371,7 @@ distance = Measure[10, 'km']
 p distance  
 
 
-puts distance  
-
+puts distance
 ```
 
 ```javascript
@@ -400,7 +392,7 @@ Returns the member names from `self` as an array:
 Measure = Data.define(:amount, :unit)
 distance = Measure[10, 'km']
 
-distance.members 
+distance.members
 ```
 
 ```cpp
@@ -418,14 +410,12 @@ Measure = Data.define(:amount, :unit)
 distance = Measure[10, 'km']
 
 distance.to_h
-
 ```
 
 Like [`Enumerable#to_h`](https://ruby-doc.org/3.3.6/Enumerable.html#method-i-to_h), if the block is provided, it is expected to produce key-value pairs to construct a hash:
 
 ```kotlin
 distance.to_h { |name, val| [name.to_s, val.to_s] }
-
 ```
 
 Note that there is a useful symmetry between [`to_h`](https://ruby-doc.org/3.3.6/Data.html#method-i-to_h) and initialize:
@@ -434,7 +424,6 @@ Note that there is a useful symmetry between [`to_h`](https://ruby-doc.org/3.3.6
 distance2 = Measure.new(**distance.to_h)
 
 distance2 == distance
-
 ```
 
 ```cpp
@@ -453,8 +442,7 @@ distance = Measure[10, 'km']
 p distance  
 
 
-puts distance  
-
+puts distance
 ```
 
 with(\*\*kwargs) → instance
@@ -478,7 +466,7 @@ p right
 p up_and_right 
 
 out = origin.with(z: 1) 
-some_point = origin.with(1, 2) 
+some_point = origin.with(1, 2)
 ```
 
 ```objectivec

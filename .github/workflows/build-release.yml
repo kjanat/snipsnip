@@ -1,14 +1,14 @@
 name: Build and Release Extension
 
 on:
-  push:
-    tags:
-      - "v*"
+  push: { tags: [v*] }
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version tag (e.g., v4.0.1)"
-        required: false
+      version: { description: "Version tag (e.g., v4.0.1)", required: false }
+
+env:
+  NODE_VERSION: 24
+  GO_VERSION: 1.26
 
 jobs:
   test:
@@ -16,17 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: "src/package-lock.json"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/package-lock.json
 
       - name: Setup npm
-        run: npm install --global npm@11.8.0
+        run: npm install --global npm@latest
 
       - name: Show tool versions
         run: |
@@ -34,9 +34,8 @@ jobs:
           npm --version
 
       - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
+        uses: actions/setup-go@v6
+        with: { go-version: "${{ env.GO_VERSION }}" }
 
       - name: Install dependencies
         working-directory: src
@@ -54,22 +53,20 @@ jobs:
     name: Build Extension Packages
     runs-on: ubuntu-latest
     needs: test
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-
+    outputs: { version: "${{ steps.get-version.outputs.version }}" }
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: "src/package-lock.json"
 
       - name: Setup npm
-        run: npm install --global npm@11.8.0
+        run: npm install --global npm@latest
 
       - name: Show tool versions
         run: |
@@ -77,9 +74,8 @@ jobs:
           npm --version
 
       - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
+        uses: actions/setup-go@v6
+        with: { go-version: "${{ env.GO_VERSION }}" }
 
       - name: Install dependencies
         working-directory: src
@@ -93,7 +89,7 @@ jobs:
         id: get-version
         working-directory: src
         run: |
-          VERSION=$(node -p "require('./manifest.json').version")
+          VERSION="$(yq .version manifest.json)"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extension version: $VERSION"
 
@@ -118,8 +114,8 @@ jobs:
             local goarch="$2"
             local archive_name="$3"
             local stage_dir="../dist/.agent-bridge-${goos}-${goarch}"
-            local cli_name="marksnip"
-            local host_name="marksnip-native-host"
+            local cli_name="snipsnip"
+            local host_name="snipsnip-native-host"
 
             rm -rf "$stage_dir"
             mkdir -p "$stage_dir"
@@ -129,8 +125,8 @@ jobs:
               host_name="${host_name}.exe"
             fi
 
-            GOOS="$goos" GOARCH="$goarch" go build -o "${stage_dir}/${cli_name}" ./cmd/marksnip
-            GOOS="$goos" GOARCH="$goarch" go build -o "${stage_dir}/${host_name}" ./cmd/marksnip-native-host
+            GOOS="$goos" GOARCH="$goarch" go build -o "${stage_dir}/${cli_name}" ./cmd/snipsnip
+            GOOS="$goos" GOARCH="$goarch" go build -o "${stage_dir}/${host_name}" ./cmd/snipsnip-native-host
             cp README.md "${stage_dir}/README.md"
 
             if [ "$goos" = "windows" ]; then
@@ -142,46 +138,46 @@ jobs:
             rm -rf "$stage_dir"
           }
 
-          build_bridge windows amd64 marksnip-agent-bridge-windows-amd64.zip
-          build_bridge darwin amd64 marksnip-agent-bridge-macos-amd64.tar.gz
-          build_bridge darwin arm64 marksnip-agent-bridge-macos-arm64.tar.gz
-          build_bridge linux amd64 marksnip-agent-bridge-linux-amd64.tar.gz
+          build_bridge windows amd64 snipsnip-agent-bridge-windows-amd64.zip
+          build_bridge darwin amd64 snipsnip-agent-bridge-macos-amd64.tar.gz
+          build_bridge darwin arm64 snipsnip-agent-bridge-macos-arm64.tar.gz
+          build_bridge linux amd64 snipsnip-agent-bridge-linux-amd64.tar.gz
 
       - name: Create Chrome package (.zip)
         working-directory: src/.build/chrome
         run: |
-          zip -r ../../../dist/marksnip-chrome-${{ steps.get-version.outputs.version }}.zip . \
+          zip -r ../../../dist/snipsnip-chrome-${{ steps.get-version.outputs.version }}.zip . \
             -x "*.DS_Store"
 
       - name: Create Firefox package (.xpi)
         working-directory: src/.build/firefox
         run: |
-          zip -r ../../../dist/marksnip-firefox-${{ steps.get-version.outputs.version }}.xpi . \
+          zip -r ../../../dist/snipsnip-firefox-${{ steps.get-version.outputs.version }}.xpi . \
             -x "*.DS_Store"
 
       - name: Upload Chrome artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: marksnip-chrome
-          path: dist/marksnip-chrome-${{ steps.get-version.outputs.version }}.zip
+          name: snipsnip-chrome
+          path: dist/snipsnip-chrome-${{ steps.get-version.outputs.version }}.zip
           retention-days: 30
 
       - name: Upload Firefox artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: marksnip-firefox
-          path: dist/marksnip-firefox-${{ steps.get-version.outputs.version }}.xpi
+          name: snipsnip-firefox
+          path: dist/snipsnip-firefox-${{ steps.get-version.outputs.version }}.xpi
           retention-days: 30
 
       - name: Upload Agent Bridge artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: marksnip-agent-bridge
+          name: snipsnip-agent-bridge
           path: |
-            dist/marksnip-agent-bridge-windows-amd64.zip
-            dist/marksnip-agent-bridge-macos-amd64.tar.gz
-            dist/marksnip-agent-bridge-macos-arm64.tar.gz
-            dist/marksnip-agent-bridge-linux-amd64.tar.gz
+            dist/snipsnip-agent-bridge-windows-amd64.zip
+            dist/snipsnip-agent-bridge-macos-amd64.tar.gz
+            dist/snipsnip-agent-bridge-macos-arm64.tar.gz
+            dist/snipsnip-agent-bridge-linux-amd64.tar.gz
           retention-days: 30
 
   release:
@@ -189,30 +185,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
-
-    permissions:
-      contents: write
-
+    permissions: { contents: write }
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download Chrome artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: marksnip-chrome
+          name: snipsnip-chrome
           path: ./artifacts
 
       - name: Download Firefox artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: marksnip-firefox
+          name: snipsnip-firefox
           path: ./artifacts
 
       - name: Download Agent Bridge artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: marksnip-agent-bridge
+          name: snipsnip-agent-bridge
           path: ./artifacts
 
       - name: List artifacts
@@ -256,7 +249,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.get-tag.outputs.tag }}
           name: SnipSnip ${{ steps.get-tag.outputs.tag }}
@@ -266,32 +259,32 @@ jobs:
             ### Installation
 
             **Chrome:**
-            1. Download `marksnip-chrome-${{ needs.build.outputs.version }}.zip`
+            1. Download `snipsnip-chrome-${{ needs.build.outputs.version }}.zip`
             2. Go to `chrome://extensions/`
             3. Enable "Developer mode"
             4. Click "Load unpacked" and select the extracted folder
             5. Or drag and drop the .zip file to install
 
             **Firefox:**
-            1. Download `marksnip-firefox-${{ needs.build.outputs.version }}.xpi`
+            1. Download `snipsnip-firefox-${{ needs.build.outputs.version }}.xpi`
             2. Open Firefox and drag the .xpi file into the browser
             3. Confirm the installation
 
             **Agent Bridge (choose the archive for your OS):**
-            - Windows x64: `marksnip-agent-bridge-windows-amd64.zip`
-            - macOS Intel: `marksnip-agent-bridge-macos-amd64.tar.gz`
-            - macOS Apple Silicon: `marksnip-agent-bridge-macos-arm64.tar.gz`
-            - Linux x64: `marksnip-agent-bridge-linux-amd64.tar.gz`
+            - Windows x64: `snipsnip-agent-bridge-windows-amd64.zip`
+            - macOS Intel: `snipsnip-agent-bridge-macos-amd64.tar.gz`
+            - macOS Apple Silicon: `snipsnip-agent-bridge-macos-arm64.tar.gz`
+            - Linux x64: `snipsnip-agent-bridge-linux-amd64.tar.gz`
 
             After extracting the archive:
-            - Windows: run `.\marksnip.exe install-host`
-            - macOS/Linux: run `./marksnip install-host`
+            - Windows: run `.\snipsnip.exe install-host`
+            - macOS/Linux: run `./snipsnip install-host`
             - Then enable **Agent Bridge** in the extension settings
 
             ### Changes
             ${{ steps.changelog.outputs.changes }}
 
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for all version changes.
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for all version changes.
 
           files: |
             artifacts/*.zip

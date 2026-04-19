@@ -78,9 +78,9 @@ func normalizeInstallEnvironment(env installEnvironment) installEnvironment {
 
 func hostBinaryName(goos string) string {
 	if goos == "windows" {
-		return "marksnip-native-host.exe"
+		return "snipsnip-native-host.exe"
 	}
-	return "marksnip-native-host"
+	return "snipsnip-native-host"
 }
 
 func HostExecutableForCLI(cliExecutable string) (string, error) {

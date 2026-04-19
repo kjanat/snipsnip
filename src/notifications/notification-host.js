@@ -1,85 +1,87 @@
 'use strict';
 
-(function () {
-  if (window.top !== window) {
-    return;
-  }
+(function() {
+	if (window.top !== window) {
+		return;
+	}
 
-  const DISPLAY_DELAY_MS = (
-    location.protocol === 'chrome-extension:' ||
-    location.protocol === 'moz-extension:'
-  ) ? 0 : 1000;
+	const DISPLAY_DELAY_MS = (
+			location.protocol === 'chrome-extension:'
+			|| location.protocol === 'moz-extension:'
+		)
+		? 0
+		: 1000;
 
-  function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+	function delay(ms) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
 
-  function waitForDomReady() {
-    if (document.readyState !== 'loading') {
-      return Promise.resolve();
-    }
+	function waitForDomReady() {
+		if (document.readyState !== 'loading') {
+			return Promise.resolve();
+		}
 
-    return new Promise((resolve) => {
-      window.addEventListener('DOMContentLoaded', resolve, { once: true });
-    });
-  }
+		return new Promise((resolve) => {
+			window.addEventListener('DOMContentLoaded', resolve, { once: true });
+		});
+	}
 
-  function getRuntime() {
-    if (typeof browser !== 'undefined' && browser.runtime) {
-      return browser.runtime;
-    }
+	function getRuntime() {
+		if (typeof browser !== 'undefined' && browser.runtime) {
+			return browser.runtime;
+		}
 
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      return chrome.runtime;
-    }
+		if (typeof chrome !== 'undefined' && chrome.runtime) {
+			return chrome.runtime;
+		}
 
-    return null;
-  }
+		return null;
+	}
 
-  function sendRuntimeMessage(message) {
-    const runtime = getRuntime();
-    if (!runtime) {
-      return Promise.resolve(null);
-    }
+	function sendRuntimeMessage(message) {
+		const runtime = getRuntime();
+		if (!runtime) {
+			return Promise.resolve(null);
+		}
 
-    if (typeof browser !== 'undefined' && browser.runtime?.sendMessage) {
-      return browser.runtime.sendMessage(message);
-    }
+		if (typeof browser !== 'undefined' && browser.runtime?.sendMessage) {
+			return browser.runtime.sendMessage(message);
+		}
 
-    return new Promise((resolve, reject) => {
-      runtime.sendMessage(message, (response) => {
-        if (chrome.runtime?.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
+		return new Promise((resolve, reject) => {
+			runtime.sendMessage(message, (response) => {
+				if (chrome.runtime?.lastError) {
+					reject(new Error(chrome.runtime.lastError.message));
+					return;
+				}
 
-        resolve(response);
-      });
-    });
-  }
+				resolve(response);
+			});
+		});
+	}
 
-  class FloatingNotificationCard {
-    constructor(notification, options = {}) {
-      this.notification = notification;
-      this.onRemove = typeof options.onRemove === 'function' ? options.onRemove : () => {};
-      this.host = document.createElement('div');
-      this.host.style.position = 'fixed';
-      this.host.style.top = '20px';
-      this.host.style.right = '20px';
-      this.host.style.left = 'auto';
-      this.host.style.bottom = 'auto';
-      this.host.style.zIndex = '2147483647';
-      this.host.style.pointerEvents = 'auto';
+	class FloatingNotificationCard {
+		constructor(notification, options = {}) {
+			this.notification = notification;
+			this.onRemove = typeof options.onRemove === 'function' ? options.onRemove : () => {};
+			this.host = document.createElement('div');
+			this.host.style.position = 'fixed';
+			this.host.style.top = '20px';
+			this.host.style.right = '20px';
+			this.host.style.left = 'auto';
+			this.host.style.bottom = 'auto';
+			this.host.style.zIndex = '2147483647';
+			this.host.style.pointerEvents = 'auto';
 
-      this.shadow = this.host.attachShadow({ mode: 'open' });
-      this.shadow.appendChild(this.buildStyles());
-      this.shadow.appendChild(this.buildCard());
-    }
+			this.shadow = this.host.attachShadow({ mode: 'open' });
+			this.shadow.appendChild(this.buildStyles());
+			this.shadow.appendChild(this.buildCard());
+		}
 
-    buildStyles() {
-      const isVersionUpdate = this.notification.type === 'version-update';
-      const style = document.createElement('style');
-      style.textContent = `
+		buildStyles() {
+			const isVersionUpdate = this.notification.type === 'version-update';
+			const style = document.createElement('style');
+			style.textContent = `
         :host {
           all: initial;
         }
@@ -384,291 +386,291 @@
           opacity: 1;
         }
       `;
-      return style;
-    }
+			return style;
+		}
 
-    buildCard() {
-      const isVersionUpdate = this.notification.type === 'version-update';
-      const isMilestone = this.notification.type === 'support-milestone';
+		buildCard() {
+			const isVersionUpdate = this.notification.type === 'version-update';
+			const isMilestone = this.notification.type === 'support-milestone';
 
-      const card = document.createElement('section');
-      card.className = 'card';
+			const card = document.createElement('section');
+			card.className = 'card';
 
-      // ── Accent stripe (version-update only) ──
-      if (isVersionUpdate) {
-        const stripe = document.createElement('div');
-        stripe.className = 'accent-stripe';
-        card.appendChild(stripe);
-      }
+			// ── Accent stripe (version-update only) ──
+			if (isVersionUpdate) {
+				const stripe = document.createElement('div');
+				stripe.className = 'accent-stripe';
+				card.appendChild(stripe);
+			}
 
-      // ── Header ──
-      const header = document.createElement('div');
-      header.className = 'header';
+			// ── Header ──
+			const header = document.createElement('div');
+			header.className = 'header';
 
-      const eyebrow = document.createElement('div');
-      eyebrow.className = 'eyebrow';
-      eyebrow.textContent = isVersionUpdate ? 'SnipSnip Update' : 'Milestone';
+			const eyebrow = document.createElement('div');
+			eyebrow.className = 'eyebrow';
+			eyebrow.textContent = isVersionUpdate ? 'SnipSnip Update' : 'Milestone';
 
-      const close = document.createElement('button');
-      close.className = 'close';
-      close.type = 'button';
-      close.setAttribute('aria-label', 'Dismiss notification');
-      close.textContent = '✕';
-      close.addEventListener('pointerdown', (event) => {
-        event.stopPropagation();
-      });
-      close.addEventListener('click', () => {
-        void sendRuntimeMessage({
-          type: 'dismiss-notification',
-          notificationId: this.notification.id
-        }).catch(() => {});
-        this.remove();
-      });
+			const close = document.createElement('button');
+			close.className = 'close';
+			close.type = 'button';
+			close.setAttribute('aria-label', 'Dismiss notification');
+			close.textContent = '✕';
+			close.addEventListener('pointerdown', (event) => {
+				event.stopPropagation();
+			});
+			close.addEventListener('click', () => {
+				void sendRuntimeMessage({
+					type: 'dismiss-notification',
+					notificationId: this.notification.id,
+				}).catch(() => {});
+				this.remove();
+			});
 
-      header.appendChild(eyebrow);
-      header.appendChild(close);
+			header.appendChild(eyebrow);
+			header.appendChild(close);
 
-      // ── Body ──
-      const body = document.createElement('div');
-      body.className = 'body';
+			// ── Body ──
+			const body = document.createElement('div');
+			body.className = 'body';
 
-      // ── Milestone hero (milestone only) ──
-      if (isMilestone && this.notification.milestone) {
-        const hero = document.createElement('div');
-        hero.className = 'milestone-hero';
+			// ── Milestone hero (milestone only) ──
+			if (isMilestone && this.notification.milestone) {
+				const hero = document.createElement('div');
+				hero.className = 'milestone-hero';
 
-        const number = document.createElement('div');
-        number.className = 'milestone-number';
-        number.textContent = new Intl.NumberFormat('en-US').format(this.notification.milestone);
+				const number = document.createElement('div');
+				number.className = 'milestone-number';
+				number.textContent = new Intl.NumberFormat('en-US').format(this.notification.milestone);
 
-        const label = document.createElement('div');
-        label.className = 'milestone-label';
-        label.textContent = 'pages exported';
+				const label = document.createElement('div');
+				label.className = 'milestone-label';
+				label.textContent = 'pages exported';
 
-        // Sparkle particles
-        for (let i = 1; i <= 3; i++) {
-          const sparkle = document.createElement('span');
-          sparkle.className = `sparkle sparkle-${i}`;
-          hero.appendChild(sparkle);
-        }
+				// Sparkle particles
+				for (let i = 1; i <= 3; i++) {
+					const sparkle = document.createElement('span');
+					sparkle.className = `sparkle sparkle-${i}`;
+					hero.appendChild(sparkle);
+				}
 
-        hero.appendChild(number);
-        hero.appendChild(label);
-        body.appendChild(hero);
+				hero.appendChild(number);
+				hero.appendChild(label);
+				body.appendChild(hero);
 
-        // Divider after hero
-        const divider = document.createElement('hr');
-        divider.className = 'body-divider';
-        body.appendChild(divider);
-      }
+				// Divider after hero
+				const divider = document.createElement('hr');
+				divider.className = 'body-divider';
+				body.appendChild(divider);
+			}
 
-      // ── Title ──
-      const title = document.createElement('h2');
-      title.className = 'title';
-      title.textContent = this.notification.title || 'SnipSnip notification';
-      body.appendChild(title);
+			// ── Title ──
+			const title = document.createElement('h2');
+			title.className = 'title';
+			title.textContent = this.notification.title || 'SnipSnip notification';
+			body.appendChild(title);
 
-      // ── Version badge (version-update only) ──
-      if (isVersionUpdate && this.notification.currentVersion) {
-        const badge = document.createElement('span');
-        badge.className = 'version-badge';
-        badge.textContent = `v${this.notification.currentVersion}`;
-        body.appendChild(badge);
-      }
+			// ── Version badge (version-update only) ──
+			if (isVersionUpdate && this.notification.currentVersion) {
+				const badge = document.createElement('span');
+				badge.className = 'version-badge';
+				badge.textContent = `v${this.notification.currentVersion}`;
+				body.appendChild(badge);
+			}
 
-      // ── Message ──
-      const message = document.createElement('p');
-      message.className = 'message';
-      message.textContent = this.notification.message || '';
-      body.appendChild(message);
+			// ── Message ──
+			const message = document.createElement('p');
+			message.className = 'message';
+			message.textContent = this.notification.message || '';
+			body.appendChild(message);
 
-      // ── Highlights (version-update) ──
-      if (Array.isArray(this.notification.highlights) && this.notification.highlights.length > 0) {
-        const highlights = document.createElement('ul');
-        highlights.className = 'highlights';
+			// ── Highlights (version-update) ──
+			if (Array.isArray(this.notification.highlights) && this.notification.highlights.length > 0) {
+				const highlights = document.createElement('ul');
+				highlights.className = 'highlights';
 
-        this.notification.highlights.forEach((highlight) => {
-          const item = document.createElement('li');
-          item.textContent = highlight;
-          highlights.appendChild(item);
-        });
+				this.notification.highlights.forEach((highlight) => {
+					const item = document.createElement('li');
+					item.textContent = highlight;
+					highlights.appendChild(item);
+				});
 
-        body.appendChild(highlights);
-      }
+				body.appendChild(highlights);
+			}
 
-      // ── Action buttons ──
-      const actions = document.createElement('div');
-      actions.className = 'actions';
+			// ── Action buttons ──
+			const actions = document.createElement('div');
+			actions.className = 'actions';
 
-      if (this.notification.primaryAction?.url) {
-        actions.appendChild(
-          this.createAction(this.notification.primaryAction, 'action-primary', false)
-        );
-      }
+			if (this.notification.primaryAction?.url) {
+				actions.appendChild(
+					this.createAction(this.notification.primaryAction, 'action-primary', false),
+				);
+			}
 
-      if (this.notification.secondaryAction?.url) {
-        actions.appendChild(
-          this.createAction(this.notification.secondaryAction, 'action-secondary', true)
-        );
-      }
+			if (this.notification.secondaryAction?.url) {
+				actions.appendChild(
+					this.createAction(this.notification.secondaryAction, 'action-secondary', true),
+				);
+			}
 
-      if (actions.childNodes.length > 0) {
-        body.appendChild(actions);
-      }
+			if (actions.childNodes.length > 0) {
+				body.appendChild(actions);
+			}
 
-      card.appendChild(header);
-      card.appendChild(body);
+			card.appendChild(header);
+			card.appendChild(body);
 
-      this.enableDragging(header);
+			this.enableDragging(header);
 
-      return card;
-    }
+			return card;
+		}
 
-    createAction(action, variantClass, showArrow = false) {
-      const anchor = document.createElement('a');
-      anchor.className = `action ${variantClass}`;
-      anchor.href = action.url;
-      anchor.target = '_blank';
-      anchor.rel = 'noopener noreferrer';
-      anchor.textContent = action.label;
+		createAction(action, variantClass, showArrow = false) {
+			const anchor = document.createElement('a');
+			anchor.className = `action ${variantClass}`;
+			anchor.href = action.url;
+			anchor.target = '_blank';
+			anchor.rel = 'noopener noreferrer';
+			anchor.textContent = action.label;
 
-      if (showArrow) {
-        const arrow = document.createElement('span');
-        arrow.className = 'action-arrow';
-        arrow.textContent = '→';
-        anchor.appendChild(arrow);
-      }
+			if (showArrow) {
+				const arrow = document.createElement('span');
+				arrow.className = 'action-arrow';
+				arrow.textContent = '→';
+				anchor.appendChild(arrow);
+			}
 
-      return anchor;
-    }
+			return anchor;
+		}
 
-    enableDragging(handle) {
-      let pointerId = null;
-      let offsetX = 0;
-      let offsetY = 0;
+		enableDragging(handle) {
+			let pointerId = null;
+			let offsetX = 0;
+			let offsetY = 0;
 
-      handle.addEventListener('pointerdown', (event) => {
-        pointerId = event.pointerId;
-        handle.setPointerCapture(pointerId);
+			handle.addEventListener('pointerdown', (event) => {
+				pointerId = event.pointerId;
+				handle.setPointerCapture(pointerId);
 
-        const rect = this.host.getBoundingClientRect();
-        offsetX = event.clientX - rect.left;
-        offsetY = event.clientY - rect.top;
+				const rect = this.host.getBoundingClientRect();
+				offsetX = event.clientX - rect.left;
+				offsetY = event.clientY - rect.top;
 
-        this.host.style.left = `${rect.left}px`;
-        this.host.style.top = `${rect.top}px`;
-        this.host.style.right = 'auto';
-        this.host.style.bottom = 'auto';
-      });
+				this.host.style.left = `${rect.left}px`;
+				this.host.style.top = `${rect.top}px`;
+				this.host.style.right = 'auto';
+				this.host.style.bottom = 'auto';
+			});
 
-      handle.addEventListener('pointermove', (event) => {
-        if (pointerId !== event.pointerId) {
-          return;
-        }
+			handle.addEventListener('pointermove', (event) => {
+				if (pointerId !== event.pointerId) {
+					return;
+				}
 
-        const maxX = Math.max(0, window.innerWidth - this.host.offsetWidth);
-        const maxY = Math.max(0, window.innerHeight - this.host.offsetHeight);
-        const nextLeft = Math.min(Math.max(0, event.clientX - offsetX), maxX);
-        const nextTop = Math.min(Math.max(0, event.clientY - offsetY), maxY);
+				const maxX = Math.max(0, window.innerWidth - this.host.offsetWidth);
+				const maxY = Math.max(0, window.innerHeight - this.host.offsetHeight);
+				const nextLeft = Math.min(Math.max(0, event.clientX - offsetX), maxX);
+				const nextTop = Math.min(Math.max(0, event.clientY - offsetY), maxY);
 
-        this.host.style.left = `${nextLeft}px`;
-        this.host.style.top = `${nextTop}px`;
-      });
+				this.host.style.left = `${nextLeft}px`;
+				this.host.style.top = `${nextTop}px`;
+			});
 
-      const stopDragging = (event) => {
-        if (pointerId !== event.pointerId) {
-          return;
-        }
+			const stopDragging = (event) => {
+				if (pointerId !== event.pointerId) {
+					return;
+				}
 
-        handle.releasePointerCapture(pointerId);
-        pointerId = null;
-      };
+				handle.releasePointerCapture(pointerId);
+				pointerId = null;
+			};
 
-      handle.addEventListener('pointerup', stopDragging);
-      handle.addEventListener('pointercancel', stopDragging);
-    }
+			handle.addEventListener('pointerup', stopDragging);
+			handle.addEventListener('pointercancel', stopDragging);
+		}
 
-    mount() {
-      (document.body || document.documentElement).appendChild(this.host);
-    }
+		mount() {
+			(document.body || document.documentElement).appendChild(this.host);
+		}
 
-    remove() {
-      this.host.remove();
-      this.onRemove();
-    }
-  }
+		remove() {
+			this.host.remove();
+			this.onRemove();
+		}
+	}
 
-  function createNotificationHostController() {
-    let currentCard = null;
-    let currentNotificationId = null;
-    let displayTask = null;
+	function createNotificationHostController() {
+		let currentCard = null;
+		let currentNotificationId = null;
+		let displayTask = null;
 
-    function clearCurrentCard(card) {
-      if (currentCard === card) {
-        currentCard = null;
-        currentNotificationId = null;
-      }
-    }
+		function clearCurrentCard(card) {
+			if (currentCard === card) {
+				currentCard = null;
+				currentNotificationId = null;
+			}
+		}
 
-    async function showPendingNotification() {
-      if (displayTask) {
-        return displayTask;
-      }
+		async function showPendingNotification() {
+			if (displayTask) {
+				return displayTask;
+			}
 
-      displayTask = (async () => {
-        await waitForDomReady();
-        await delay(DISPLAY_DELAY_MS);
+			displayTask = (async () => {
+				await waitForDomReady();
+				await delay(DISPLAY_DELAY_MS);
 
-        const notification = await sendRuntimeMessage({ type: 'get-pending-notification' }).catch(() => null);
-        if (!notification || !notification.id) {
-          return false;
-        }
+				const notification = await sendRuntimeMessage({ type: 'get-pending-notification' }).catch(() => null);
+				if (!notification || !notification.id) {
+					return false;
+				}
 
-        if (
-          currentCard &&
-          currentNotificationId === notification.id &&
-          currentCard.host.isConnected
-        ) {
-          return true;
-        }
+				if (
+					currentCard
+					&& currentNotificationId === notification.id
+					&& currentCard.host.isConnected
+				) {
+					return true;
+				}
 
-        if (currentCard) {
-          currentCard.remove();
-        }
+				if (currentCard) {
+					currentCard.remove();
+				}
 
-        const card = new FloatingNotificationCard(notification, {
-          onRemove: () => clearCurrentCard(card)
-        });
+				const card = new FloatingNotificationCard(notification, {
+					onRemove: () => clearCurrentCard(card),
+				});
 
-        currentCard = card;
-        currentNotificationId = notification.id;
-        card.mount();
+				currentCard = card;
+				currentNotificationId = notification.id;
+				card.mount();
 
-        void sendRuntimeMessage({
-          type: 'mark-notification-shown',
-          notificationId: notification.id
-        }).catch(() => {});
+				void sendRuntimeMessage({
+					type: 'mark-notification-shown',
+					notificationId: notification.id,
+				}).catch(() => {});
 
-        return true;
-      })().finally(() => {
-        displayTask = null;
-      });
+				return true;
+			})().finally(() => {
+				displayTask = null;
+			});
 
-      return displayTask;
-    }
+			return displayTask;
+		}
 
-    return {
-      showPendingNotification
-    };
-  }
+		return {
+			showPendingNotification,
+		};
+	}
 
-  const notificationHost = (
-    window.markSnipNotificationHost &&
-    typeof window.markSnipNotificationHost.showPendingNotification === 'function'
-  )
-    ? window.markSnipNotificationHost
-    : createNotificationHostController();
+	const notificationHost = (
+			window.snipSnipNotificationHost
+			&& typeof window.snipSnipNotificationHost.showPendingNotification === 'function'
+		)
+		? window.snipSnipNotificationHost
+		: createNotificationHostController();
 
-  window.markSnipNotificationHost = notificationHost;
-  void notificationHost.showPendingNotification();
+	window.snipSnipNotificationHost = notificationHost;
+	void notificationHost.showPendingNotification();
 })();

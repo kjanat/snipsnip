@@ -2,9 +2,8 @@
 name: Feature request
 about: Suggest a new feature or improvement for SnipSnip
 title: "[Feature]: "
-labels: ''
-assignees: ''
-
+labels: ""
+assignees: ""
 ---
 
 **Summary**
@@ -12,6 +11,7 @@ A clear and concise description of the feature or improvement you'd like to see 
 
 **Feature category**
 Which area of SnipSnip does this relate to? (check all that apply)
+
 - [ ] Page clipping / article extraction
 - [ ] Markdown conversion (formatting, tables, code blocks, math)
 - [ ] Image handling
@@ -22,7 +22,7 @@ Which area of SnipSnip does this relate to? (check all that apply)
 - [ ] Front/back matter templates
 - [ ] Extension popup / UI
 - [ ] New browser/platform support
-- [ ] Other: 
+- [ ] Other:
 
 **Problem this solves**
 Is your feature request related to a problem? Describe it.

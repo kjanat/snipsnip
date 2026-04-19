@@ -1,10 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  push: { branches: [master] }
+  pull_request: { branches: [master] }
+
+env:
+  NODE_VERSION: 24
+  GO_VERSION: 1.26
 
 jobs:
   test:
@@ -12,17 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: "src/package-lock.json"
 
       - name: Setup npm
-        run: npm install --global npm@11.8.0
+        run: npm install --global npm@latest
 
       - name: Show tool versions
         run: |
@@ -47,24 +49,29 @@ jobs:
 
       - name: Run deterministic E2E tests
         working-directory: src
-        run: xvfb-run -a npx playwright test tests/e2e/extension.spec.js tests/e2e/notifications.spec.js tests/e2e/batch-processing.spec.js tests/e2e/command-download-regression.spec.js
+        run: |
+          xvfb-run -a npx playwright test \
+            tests/e2e/extension.spec.js \
+            tests/e2e/notifications.spec.js \
+            tests/e2e/batch-processing.spec.js \
+            tests/e2e/command-download-regression.spec.js
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: "src/package-lock.json"
 
       - name: Setup npm
-        run: npm install --global npm@11.8.0
+        run: npm install --global npm@latest
 
       - name: Show tool versions
         run: |

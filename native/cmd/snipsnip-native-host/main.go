@@ -223,7 +223,7 @@ func writeJSON(w http.ResponseWriter, statusCode int, payload any) {
 }
 
 func buildDebugLogger() func(string, ...any) {
-	if os.Getenv("MARKSNIP_BRIDGE_DEBUG") != "1" {
+	if os.Getenv("SNIPSNIP_BRIDGE_DEBUG") != "1" {
 		return func(string, ...any) {}
 	}
 

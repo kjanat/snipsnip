@@ -4,9 +4,9 @@
  */
 
 module.exports = {
-  // Simple article with basic formatting
-  simpleArticle: {
-    html: `
+	// Simple article with basic formatting
+	simpleArticle: {
+		html: `
       <article>
         <h1>Test Article Title</h1>
         <p>This is a simple paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
@@ -18,7 +18,7 @@ module.exports = {
         </ul>
       </article>
     `,
-    expectedMarkdown: `# Test Article Title
+		expectedMarkdown: `# Test Article Title
 
 This is a simple paragraph with **bold text** and *italic text*.
 
@@ -26,12 +26,12 @@ Another paragraph with a [link](https://example.com).
 
 - First item
 - Second item
-- Third item`
-  },
+- Third item`,
+	},
 
-  // Article with headings at multiple levels
-  multiLevelHeadings: {
-    html: `
+	// Article with headings at multiple levels
+	multiLevelHeadings: {
+		html: `
       <article>
         <h1>Main Title</h1>
         <h2>Section 1</h2>
@@ -42,7 +42,7 @@ Another paragraph with a [link](https://example.com).
         <p>Content under section 2</p>
       </article>
     `,
-    expectedMarkdown: `# Main Title
+		expectedMarkdown: `# Main Title
 
 ## Section 1
 
@@ -54,12 +54,12 @@ Content under subsection 1.1
 
 ## Section 2
 
-Content under section 2`
-  },
+Content under section 2`,
+	},
 
-  // Code blocks with syntax highlighting
-  codeBlocks: {
-    html: `
+	// Code blocks with syntax highlighting
+	codeBlocks: {
+		html: `
       <article>
         <h1>Code Examples</h1>
         <p>Here's some inline <code>code</code> in a paragraph.</p>
@@ -70,7 +70,7 @@ Content under section 2`
     print('Hello, world!')</code></pre>
       </article>
     `,
-    expectedMarkdown: `# Code Examples
+		expectedMarkdown: `# Code Examples
 
 Here's some inline \`code\` in a paragraph.
 
@@ -83,12 +83,12 @@ function hello() {
 \`\`\`python
 def hello():
     print('Hello, world!')
-\`\`\``
-  },
+\`\`\``,
+	},
 
-  // Tables with various content
-  simpleTables: {
-    html: `
+	// Tables with various content
+	simpleTables: {
+		html: `
       <article>
         <h1>Table Example</h1>
         <table>
@@ -114,17 +114,17 @@ def hello():
         </table>
       </article>
     `,
-    expectedMarkdown: `# Table Example
+		expectedMarkdown: `# Table Example
 
 | Name | Age | City     |
 | ---- | --- | -------- |
 | John | 25  | New York |
-| Jane | 30  | London   |`
-  },
+| Jane | 30  | London   |`,
+	},
 
-  // Complex table with formatting
-  complexTable: {
-    html: `
+	// Complex table with formatting
+	complexTable: {
+		html: `
       <table>
         <thead>
           <tr>
@@ -147,15 +147,15 @@ def hello():
         </tbody>
       </table>
     `,
-    expectedMarkdown: `| Feature              | Description                                 | Status     |
+		expectedMarkdown: `| Feature              | Description                                 | Status     |
 | -------------------- | ------------------------------------------- | ---------- |
 | **Bold Feature**     | A feature with [a link](https://example.com) | *Active*   |
-| Plain Feature        | Simple description                          | Inactive   |`
-  },
+| Plain Feature        | Simple description                          | Inactive   |`,
+	},
 
-  // Blockquotes
-  blockquotes: {
-    html: `
+	// Blockquotes
+	blockquotes: {
+		html: `
       <article>
         <h1>Quotes</h1>
         <blockquote>
@@ -167,18 +167,18 @@ def hello():
         </blockquote>
       </article>
     `,
-    expectedMarkdown: `# Quotes
+		expectedMarkdown: `# Quotes
 
 > This is a simple blockquote.
 
 > This is a multi-paragraph blockquote.
 >
-> Second paragraph in the blockquote.`
-  },
+> Second paragraph in the blockquote.`,
+	},
 
-  // Images
-  images: {
-    html: `
+	// Images
+	images: {
+		html: `
       <article>
         <h1>Images</h1>
         <p>Here's an image:</p>
@@ -187,7 +187,7 @@ def hello():
         <img src="https://example.com/image2.jpg" alt="Another Image" title="Image Title">
       </article>
     `,
-    expectedMarkdown: `# Images
+		expectedMarkdown: `# Images
 
 Here's an image:
 
@@ -195,12 +195,12 @@ Here's an image:
 
 Image with title:
 
-![Another Image](https://example.com/image2.jpg "Image Title")`
-  },
+![Another Image](https://example.com/image2.jpg "Image Title")`,
+	},
 
-  // Ordered and unordered lists
-  mixedLists: {
-    html: `
+	// Ordered and unordered lists
+	mixedLists: {
+		html: `
       <article>
         <h1>Lists</h1>
         <ol>
@@ -220,7 +220,7 @@ Image with title:
         </ul>
       </article>
     `,
-    expectedMarkdown: `# Lists
+		expectedMarkdown: `# Lists
 
 1. First ordered item
 2. Second ordered item
@@ -230,12 +230,12 @@ Image with title:
 - Unordered item 2
   - Nested item 1
   - Nested item 2
-- Unordered item 3`
-  },
+- Unordered item 3`,
+	},
 
-  // Horizontal rules
-  horizontalRules: {
-    html: `
+	// Horizontal rules
+	horizontalRules: {
+		html: `
       <article>
         <h1>Section 1</h1>
         <p>Content of section 1</p>
@@ -244,7 +244,7 @@ Image with title:
         <p>Content of section 2</p>
       </article>
     `,
-    expectedMarkdown: `# Section 1
+		expectedMarkdown: `# Section 1
 
 Content of section 1
 
@@ -252,12 +252,12 @@ Content of section 1
 
 # Section 2
 
-Content of section 2`
-  },
+Content of section 2`,
+	},
 
-  // Task lists (GitHub Flavored Markdown)
-  taskLists: {
-    html: `
+	// Task lists (GitHub Flavored Markdown)
+	taskLists: {
+		html: `
       <article>
         <h1>Todo List</h1>
         <ul>
@@ -267,29 +267,29 @@ Content of section 2`
         </ul>
       </article>
     `,
-    expectedMarkdown: `# Todo List
+		expectedMarkdown: `# Todo List
 
 - [x] Completed task
 - [ ] Incomplete task
-- [ ] Another incomplete task`
-  },
+- [ ] Another incomplete task`,
+	},
 
-  // Strikethrough
-  strikethrough: {
-    html: `
+	// Strikethrough
+	strikethrough: {
+		html: `
       <article>
         <p>This text has <del>strikethrough</del> formatting.</p>
         <p>This also uses <s>strikethrough</s> tag.</p>
       </article>
     `,
-    expectedMarkdown: `This text has ~~strikethrough~~ formatting.
+		expectedMarkdown: `This text has ~~strikethrough~~ formatting.
 
-This also uses ~~strikethrough~~ tag.`
-  },
+This also uses ~~strikethrough~~ tag.`,
+	},
 
-  // Obsidian documentation page (simplified version of user's example)
-  obsidianDocPage: {
-    html: `
+	// Obsidian documentation page (simplified version of user's example)
+	obsidianDocPage: {
+		html: `
       <article>
         <h1 class="page-header">Writing</h1>
         <div data-callout="caution" class="callout">
@@ -332,15 +332,15 @@ This also uses ~~strikethrough~~ tag.`
         </table>
       </article>
     `,
-    metadata: {
-      title: 'Writing - Advanced URI Documentation',
-      url: 'https://publish.obsidian.md/advanced-uri-doc/Actions/Writing'
-    }
-  },
+		metadata: {
+			title: 'Writing - Advanced URI Documentation',
+			url: 'https://publish.obsidian.md/advanced-uri-doc/Actions/Writing',
+		},
+	},
 
-  // Relative URLs that need resolution
-  relativeUrls: {
-    html: `
+	// Relative URLs that need resolution
+	relativeUrls: {
+		html: `
       <article>
         <h1>Relative Links</h1>
         <p>Link to <a href="/docs/guide">guide</a>.</p>
@@ -349,8 +349,8 @@ This also uses ~~strikethrough~~ tag.`
         <img src="../assets/photo.jpg" alt="Photo">
       </article>
     `,
-    baseUrl: 'https://example.com/blog/post',
-    expectedMarkdown: `# Relative Links
+		baseUrl: 'https://example.com/blog/post',
+		expectedMarkdown: `# Relative Links
 
 Link to [guide](https://example.com/docs/guide).
 
@@ -358,12 +358,12 @@ Link to [about page](https://example.com/about).
 
 ![Logo](https://example.com/images/logo.png)
 
-![Photo](https://example.com/assets/photo.jpg)`
-  },
+![Photo](https://example.com/assets/photo.jpg)`,
+	},
 
-  // Legacy table-heavy page with mixed inline images (modeled after user-reported regressions)
-  legacyTableHeavyPage: {
-    html: `
+	// Legacy table-heavy page with mixed inline images (modeled after user-reported regressions)
+	legacyTableHeavyPage: {
+		html: `
       <article>
         <h1>Aether Notes Archive</h1>
         <p>Intro paragraph before the table.</p>
@@ -393,12 +393,12 @@ Link to [about page](https://example.com/about).
         </table>
         <p>Closing paragraph.</p>
       </article>
-    `
-  },
+    `,
+	},
 
-  // Article with metadata
-  articleWithMetadata: {
-    html: `
+	// Article with metadata
+	articleWithMetadata: {
+		html: `
       <html>
         <head>
           <title>Test Article</title>
@@ -416,12 +416,12 @@ Link to [about page](https://example.com/about).
         </body>
       </html>
     `,
-    metadata: {
-      title: 'Test Article',
-      author: 'John Doe',
-      description: 'A test article for SnipSnip',
-      keywords: ['test', 'markdown', 'clipper'],
-      publishedTime: '2024-01-15T10:00:00Z'
-    }
-  }
+		metadata: {
+			title: 'Test Article',
+			author: 'John Doe',
+			description: 'A test article for SnipSnip',
+			keywords: ['test', 'markdown', 'clipper'],
+			publishedTime: '2024-01-15T10:00:00Z',
+		},
+	},
 };

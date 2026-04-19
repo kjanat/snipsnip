@@ -14,7 +14,7 @@ global.chrome = global.browser; // Chrome uses 'chrome' instead of 'browser'
 
 // Mock DOMParser if not available
 if (typeof DOMParser === 'undefined' && typeof window !== 'undefined') {
-  global.DOMParser = window.DOMParser;
+	global.DOMParser = window.DOMParser;
 }
 
 // Mock console methods to reduce noise during tests (optional)
@@ -33,5 +33,5 @@ global.fetch = jest.fn();
 
 // Clean up after each test
 afterEach(() => {
-  jest.clearAllMocks();
+	jest.clearAllMocks();
 });

@@ -2,9 +2,9 @@
 
 Markdown web clipper for Chrome and Firefox. Save pages as clean Markdown, copy content to clipboard, or send notes directly to Obsidian.
 
-[Chrome Web Store](https://chromewebstore.google.com/detail/marksnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm?hl=en) | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/marksnip-markdown-web-clipper/) | [User Guide](docs/guides/user-guide.md) | [Agent Bridge Walkthrough](docs/guides/agent-bridge.md) | [Changelog](CHANGELOG.md) | [Privacy Policy](PRIVACY.md)
+[Chrome Web Store](https://chromewebstore.google.com/detail/snipsnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm?hl=en) | [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/snipsnip-markdown-web-clipper/) | [User Guide](docs/guides/user-guide.md) | [Agent Bridge Walkthrough](docs/guides/agent-bridge.md) | [Changelog](CHANGELOG.md) | [Privacy Policy](PRIVACY.md)
 
-[![SnipSnip Promo](media/marksnip_promo.gif)](https://www.youtube.com/watch?v=IO6PjI79drY)
+[![SnipSnip Promo](media/snipsnip_promo.gif)](https://www.youtube.com/watch?v=IO6PjI79drY)
 
 ## Why SnipSnip
 
@@ -34,12 +34,12 @@ Core pipeline:
 
 ### Chrome (stable)
 
-Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/marksnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm?hl=en).
+Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/snipsnip-markdown-web-cli/kcbaglhfgbkjdnpeokaamjjkddempipm?hl=en).
 
 ### Firefox (stable)
 
 Firefox support is available starting in `v4.0.6`.
-Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/marksnip-markdown-web-clipper/).
+Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/snipsnip-markdown-web-clipper/).
 
 ### Load unpacked (local build)
 
@@ -69,13 +69,13 @@ Agent Bridge:
 1. Install the matching companion archive from GitHub Releases.
 2. Run the install command for your OS:
 
-   Windows: `.\marksnip.exe install-host`
-   macOS/Linux: `./marksnip install-host`
+   Windows: `.\snipsnip.exe install-host`
+   macOS/Linux: `./snipsnip install-host`
 3. Enable **Agent Bridge** in SnipSnip Settings and approve the native messaging prompt if it appears.
 4. Run the clip command for your OS:
 
-   Windows: `.\marksnip.exe clip`
-   macOS/Linux: `./marksnip clip`
+   Windows: `.\snipsnip.exe clip`
+   macOS/Linux: `./snipsnip clip`
 
 For local unpacked Chrome testing on Windows, you can first look up the unpacked extension ID with:
 
@@ -91,14 +91,14 @@ Windows:
 
 ```powershell
 cd .\native
-.\marksnip.exe install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
+.\snipsnip.exe install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
 ```
 
 macOS/Linux:
 
 ```bash
 cd ./native
-./marksnip install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
+./snipsnip install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
 ```
 
 If the unpacked Chrome extension ID changes later, rerun that command with the new ID.
@@ -146,7 +146,7 @@ npm ci
 - `npm run build` - Firefox package build via `web-ext`
 - `npm run build:chrome` - Chrome ZIP package
 - `npm run build:all` - Build Firefox + Chrome artifacts
-- `go build ./cmd/marksnip` and `go build ./cmd/marksnip-native-host` from `native/` - Agent Bridge companion
+- `go build ./cmd/snipsnip` and `go build ./cmd/snipsnip-native-host` from `native/` - Agent Bridge companion
 
 ## Build Architecture
 
@@ -166,12 +166,12 @@ GitHub Actions workflow [`.github/workflows/build-release.yml`](.github/workflow
 1. Runs unit and integration tests.
 2. Builds browser manifests.
 3. Packages:
-   - `marksnip-chrome-<version>.zip`
-   - `marksnip-firefox-<version>.xpi`
-   - `marksnip-agent-bridge-windows-amd64.zip`
-   - `marksnip-agent-bridge-macos-amd64.tar.gz`
-   - `marksnip-agent-bridge-macos-arm64.tar.gz`
-   - `marksnip-agent-bridge-linux-amd64.tar.gz`
+   - `snipsnip-chrome-<version>.zip`
+   - `snipsnip-firefox-<version>.xpi`
+   - `snipsnip-agent-bridge-windows-amd64.zip`
+   - `snipsnip-agent-bridge-macos-amd64.tar.gz`
+   - `snipsnip-agent-bridge-macos-arm64.tar.gz`
+   - `snipsnip-agent-bridge-linux-amd64.tar.gz`
 4. Publishes a GitHub Release on `v*` tags (or manual `workflow_dispatch`).
 
 To publish:

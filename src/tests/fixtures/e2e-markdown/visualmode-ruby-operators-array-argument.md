@@ -19,5 +19,5 @@ odd_finder(1, 2, 3, 4, 5)
 
 ### [References](https://www.visualmode.dev/ruby-operators/array-argument#references)
 
--   [Array/Hash Arguments | Ruby Docs ↗](https://ruby-doc.org/3.3.6/syntax/methods_rdoc.html#label-Array-2FHash+Argument)
--   [Named Rest Arguments ↗](https://dev.to/pimp_my_ruby/the-simplest-guide-on-ruby-methods-arguments-25pk#named-rest-arguments)
+- [Array/Hash Arguments | Ruby Docs ↗](https://ruby-doc.org/3.3.6/syntax/methods_rdoc.html#label-Array-2FHash+Argument)
+- [Named Rest Arguments ↗](https://dev.to/pimp_my_ruby/the-simplest-guide-on-ruby-methods-arguments-25pk#named-rest-arguments)

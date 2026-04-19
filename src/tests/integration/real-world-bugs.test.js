@@ -8,72 +8,70 @@ const { createBrowserEnvironment, createTurndownService, parseArticle } = requir
 const htmlSamples = require('../fixtures/html-samples');
 
 function prepareDocumentForRecoveryTest(document, recoveryApi) {
-  document.querySelectorAll('a')?.forEach(anchor => {
-    const heading = Array.from(anchor.children).find(child =>
-      /^H[1-6]$/.test(child.nodeName)
-    );
-    if (heading && anchor.children.length === 1) {
-      anchor.parentNode.insertBefore(heading, anchor);
-      anchor.parentNode.removeChild(anchor);
-    }
-  });
+	document.querySelectorAll('a')?.forEach(anchor => {
+		const heading = Array.from(anchor.children).find(child => /^H[1-6]$/.test(child.nodeName));
+		if (heading && anchor.children.length === 1) {
+			anchor.parentNode.insertBefore(heading, anchor);
+			anchor.parentNode.removeChild(anchor);
+		}
+	});
 
-  document.querySelectorAll('h1, h2, h3, h4, h5, h6')?.forEach(header => {
-    header.className = '';
-    header.outerHTML = header.outerHTML;
-  });
+	document.querySelectorAll('h1, h2, h3, h4, h5, h6')?.forEach(header => {
+		header.className = '';
+		header.outerHTML = header.outerHTML;
+	});
 
-  recoveryApi.annotateStructuralAnchors(document);
+	recoveryApi.annotateStructuralAnchors(document);
 }
 
 function inspectRecoveryPlan(html, url = 'https://example.com') {
-  const env = createBrowserEnvironment();
-  const dom = new JSDOM(html, { url });
-  prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
+	const env = createBrowserEnvironment();
+	const dom = new JSDOM(html, { url });
+	prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
 
-  const firstPassDom = new JSDOM(dom.serialize(), { url });
-  const firstPassArticle = new env.Readability(firstPassDom.window.document).parse();
-  const recoveryPlan = firstPassArticle?.content
-    ? env.ReadabilityRecovery.analyzeNarrowExtraction(dom.window.document, firstPassArticle.content)
-    : null;
+	const firstPassDom = new JSDOM(dom.serialize(), { url });
+	const firstPassArticle = new env.Readability(firstPassDom.window.document).parse();
+	const recoveryPlan = firstPassArticle?.content
+		? env.ReadabilityRecovery.analyzeNarrowExtraction(dom.window.document, firstPassArticle.content)
+		: null;
 
-  return {
-    article: firstPassArticle,
-    recoveryPlan
-  };
+	return {
+		article: firstPassArticle,
+		recoveryPlan,
+	};
 }
 
 describe('Real-World Bug Fixes', () => {
-  describe('Weather API Documentation Bug', () => {
-    test('should convert <mark> tags to inline code', () => {
-      const { service } = createTurndownService();
-      const html = '<p>The API endpoint <mark>/v1/forecast</mark> accepts coordinates.</p>';
-      const result = service.turndown(html);
+	describe('Weather API Documentation Bug', () => {
+		test('should convert <mark> tags to inline code', () => {
+			const { service } = createTurndownService();
+			const html = '<p>The API endpoint <mark>/v1/forecast</mark> accepts coordinates.</p>';
+			const result = service.turndown(html);
 
-      // Currently fails - <mark> is not converted to code
-      expect(result).toContain('`/v1/forecast`');
-    });
+			// Currently fails - <mark> is not converted to code
+			expect(result).toContain('`/v1/forecast`');
+		});
 
-    test('should not wrap headings in links when they contain anchors', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should not wrap headings in links when they contain anchors', () => {
+			const { service } = createTurndownService();
+			const html = `
         <div>
           <a href="#api_documentation">
             <h2 id="api_documentation">API Documentation</h2>
           </a>
         </div>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      // Should be clean heading, not wrapped in link syntax
-      expect(result).toContain('## API Documentation');
-      expect(result).not.toContain('[##');
-      expect(result).not.toContain('](#api');
-    });
+			// Should be clean heading, not wrapped in link syntax
+			expect(result).toContain('## API Documentation');
+			expect(result).not.toContain('[##');
+			expect(result).not.toContain('](#api');
+		});
 
-    test('should handle <br> in table cells correctly', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should handle <br> in table cells correctly', () => {
+			const { service } = createTurndownService();
+			const html = `
         <table>
           <tr>
             <th>Variable</th>
@@ -85,35 +83,35 @@ describe('Real-World Bug Fixes', () => {
           </tr>
         </table>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      // Should convert line breaks to something readable
-      // Either commas or preserve line breaks, but not break table formatting
-      expect(result).toContain('wind_speed');
-      expect(result).toContain('|');
-    });
+			// Should convert line breaks to something readable
+			// Either commas or preserve line breaks, but not break table formatting
+			expect(result).toContain('wind_speed');
+			expect(result).toContain('|');
+		});
 
-    test('should not escape underscores in table cells', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should not escape underscores in table cells', () => {
+			const { service } = createTurndownService();
+			const html = `
         <table>
           <tr><th>Variable</th></tr>
           <tr><td>temperature_2m</td></tr>
           <tr><td>apparent_temperature</td></tr>
         </table>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      // Should NOT have escaped underscores
-      expect(result).toContain('temperature_2m');
-      expect(result).toContain('apparent_temperature');
-      expect(result).not.toContain('temperature\\_2m');
-      expect(result).not.toContain('apparent\\_temperature');
-    });
+			// Should NOT have escaped underscores
+			expect(result).toContain('temperature_2m');
+			expect(result).toContain('apparent_temperature');
+			expect(result).not.toContain('temperature\\_2m');
+			expect(result).not.toContain('apparent\\_temperature');
+		});
 
-    test('should convert complete weather API docs correctly', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should convert complete weather API docs correctly', () => {
+			const { service } = createTurndownService();
+			const html = `
         <div class="mt-6 md:mt-12">
           <a href="#api_documentation">
             <h2 id="api_documentation">API Documentation</h2>
@@ -152,23 +150,23 @@ describe('Real-World Bug Fixes', () => {
         </div>
       `;
 
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      // Verify correct conversion
-      expect(result).toContain('## API Documentation');
-      expect(result).not.toContain('[##');
-      expect(result).toContain('`/v1/forecast`');
-      expect(result).toContain('`&forecast_days=16`');
-      expect(result).toContain('`&latitude=52.52`');
-      expect(result).toContain('`fahrenheit`');
-      expect(result).toContain('temperature_unit');
-      expect(result).not.toContain('temperature\\_unit');
-    });
-  });
+			// Verify correct conversion
+			expect(result).toContain('## API Documentation');
+			expect(result).not.toContain('[##');
+			expect(result).toContain('`/v1/forecast`');
+			expect(result).toContain('`&forecast_days=16`');
+			expect(result).toContain('`&latitude=52.52`');
+			expect(result).toContain('`fahrenheit`');
+			expect(result).toContain('temperature_unit');
+			expect(result).not.toContain('temperature\\_unit');
+		});
+	});
 
-  describe('Readability Detection for Technical Docs', () => {
-    test('should extract API documentation as main content', () => {
-      const html = `
+	describe('Readability Detection for Technical Docs', () => {
+		test('should extract API documentation as main content', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Weather API Documentation</title></head>
@@ -198,23 +196,22 @@ describe('Real-World Bug Fixes', () => {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      // Should extract the API documentation
-      // Note: Readability may extract different portions depending on content heuristics
-      expect(article).not.toBeNull();
-      // At minimum, it should extract some content from the main section
-      expect(article.content).toBeTruthy();
-      // Check for at least one of the expected sections
-      const hasExpectedContent =
-        article.content.includes('API Documentation') ||
-        article.content.includes('Hourly Parameter') ||
-        article.content.includes('temperature_2m');
-      expect(hasExpectedContent).toBe(true);
-    });
+			// Should extract the API documentation
+			// Note: Readability may extract different portions depending on content heuristics
+			expect(article).not.toBeNull();
+			// At minimum, it should extract some content from the main section
+			expect(article.content).toBeTruthy();
+			// Check for at least one of the expected sections
+			const hasExpectedContent = article.content.includes('API Documentation')
+				|| article.content.includes('Hourly Parameter')
+				|| article.content.includes('temperature_2m');
+			expect(hasExpectedContent).toBe(true);
+		});
 
-    test('should recover repeated section siblings when the first pass lands on an inner body wrapper', () => {
-      const html = `
+		test('should recover repeated section siblings when the first pass lands on an inner body wrapper', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -328,19 +325,19 @@ file wrapper.o, main.o</code></pre>
         </html>
       `;
 
-      const { article } = parseArticle(html, 'https://example.com/toolchain-notes.html');
+			const { article } = parseArticle(html, 'https://example.com/toolchain-notes.html');
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('This guide collects the setup notes');
-      expect(article.content).toContain('Explicit FAR pointer');
-      expect(article.content).toContain('Replacing the wrapper');
-      expect(article.content).toContain('Full code');
-      expect(article.content).toContain('wrapper.asm');
-      expect(article.content).toContain('main.lnk');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('This guide collects the setup notes');
+			expect(article.content).toContain('Explicit FAR pointer');
+			expect(article.content).toContain('Replacing the wrapper');
+			expect(article.content).toContain('Full code');
+			expect(article.content).toContain('wrapper.asm');
+			expect(article.content).toContain('main.lnk');
+		});
 
-    test('should recover repeated nested-heading section siblings when the first pass lands on a wrapped body', () => {
-      const html = `
+		test('should recover repeated nested-heading section siblings when the first pass lands on a wrapped body', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Gateway Integration Guide</title></head>
@@ -447,27 +444,30 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article } = parseArticle(html, 'https://example.com/redoc-like.html');
-      const { article: firstPassArticle, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/redoc-like.html');
+			const { article } = parseArticle(html, 'https://example.com/redoc-like.html');
+			const { article: firstPassArticle, recoveryPlan } = inspectRecoveryPlan(
+				html,
+				'https://example.com/redoc-like.html',
+			);
 
-      expect(firstPassArticle).not.toBeNull();
-      expect(recoveryPlan).not.toBeNull();
-      expect(firstPassArticle.content).not.toContain('Introduction');
-      expect(firstPassArticle.content).toContain('This section provides samples of how to integrate with the gateway');
+			expect(firstPassArticle).not.toBeNull();
+			expect(recoveryPlan).not.toBeNull();
+			expect(firstPassArticle.content).not.toContain('Introduction');
+			expect(firstPassArticle.content).toContain('This section provides samples of how to integrate with the gateway');
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('This guide explains how merchants can integrate with the gateway');
-      expect(article.content).toContain('Introduction');
-      expect(article.content).toContain('Authentication');
-      expect(article.content).toContain('HTTP Requests');
-      expect(article.content).toContain('Example Integration Code');
-      expect(article.content).toContain('This section provides samples of how to integrate with the gateway');
-      expect((article.content.match(/Introduction/g) || [])).toHaveLength(1);
-      expect((article.content.match(/Example Integration Code/g) || [])).toHaveLength(1);
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('This guide explains how merchants can integrate with the gateway');
+			expect(article.content).toContain('Introduction');
+			expect(article.content).toContain('Authentication');
+			expect(article.content).toContain('HTTP Requests');
+			expect(article.content).toContain('Example Integration Code');
+			expect(article.content).toContain('This section provides samples of how to integrate with the gateway');
+			expect(article.content.match(/Introduction/g) || []).toHaveLength(1);
+			expect(article.content.match(/Example Integration Code/g) || []).toHaveLength(1);
+		});
 
-    test('should preserve FAQ questions when headings are wrapped with decorative controls', () => {
-      const html = `
+		test('should preserve FAQ questions when headings are wrapped with decorative controls', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Color FAQ Guide</title></head>
@@ -510,17 +510,17 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article } = parseArticle(html, 'https://example.com/color-faq.html');
+			const { article } = parseArticle(html, 'https://example.com/color-faq.html');
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('What are the main colors in the palette?');
-      expect(article.content).toContain('The main colors are ember orange, slate gray, warm ivory, and white.');
-      expect(article.content).toContain('How are the colors used in the product?');
-      expect(article.content).toContain('The palette highlights primary actions, keeps neutral surfaces calm');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('What are the main colors in the palette?');
+			expect(article.content).toContain('The main colors are ember orange, slate gray, warm ivory, and white.');
+			expect(article.content).toContain('How are the colors used in the product?');
+			expect(article.content).toContain('The palette highlights primary actions, keeps neutral surfaces calm');
+		});
 
-    test('should restore semantic tables when extracted markup is downgraded to ARIA table roles', () => {
-      const sourceHtml = `
+		test('should restore semantic tables when extracted markup is downgraded to ARIA table roles', () => {
+			const sourceHtml = `
         <!DOCTYPE html>
         <html>
           <head><title>Brand Palette</title></head>
@@ -545,14 +545,14 @@ if (!verification.valid) {
         </html>
       `;
 
-      const env = createBrowserEnvironment();
-      const dom = new JSDOM(sourceHtml, { url: 'https://example.com/palette.html' });
-      prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
+			const env = createBrowserEnvironment();
+			const dom = new JSDOM(sourceHtml, { url: 'https://example.com/palette.html' });
+			prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
 
-      const sourceTable = dom.window.document.querySelector('table');
-      const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
-      const extractedHtml = `
-        <div role="table" data-marksnip-node-id="${tableAnchorId}">
+			const sourceTable = dom.window.document.querySelector('table');
+			const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
+			const extractedHtml = `
+        <div role="table" data-snipsnip-node-id="${tableAnchorId}">
           <div role="row">
             <div role="cell"><p>#c15f3c</p></div>
             <div role="cell"><p>193, 95, 60</p></div>
@@ -560,19 +560,19 @@ if (!verification.valid) {
         </div>
       `;
 
-      const restoredHtml = env.ReadabilityRecovery.restoreSemanticTables(dom.window.document, extractedHtml);
-      const { service } = createTurndownService();
-      const markdown = service.turndown(restoredHtml);
+			const restoredHtml = env.ReadabilityRecovery.restoreSemanticTables(dom.window.document, extractedHtml);
+			const { service } = createTurndownService();
+			const markdown = service.turndown(restoredHtml);
 
-      expect(restoredHtml).toContain('<table');
-      expect(restoredHtml).toContain('HEX');
-      expect(markdown).toContain('| HEX | RGB |');
-      expect(markdown).toContain('#c15f3c');
-      expect(markdown).toContain('193, 95, 60');
-    });
+			expect(restoredHtml).toContain('<table');
+			expect(restoredHtml).toContain('HEX');
+			expect(markdown).toContain('| HEX | RGB |');
+			expect(markdown).toContain('#c15f3c');
+			expect(markdown).toContain('193, 95, 60');
+		});
 
-    test('should rebuild semantic tables from role-based source tables with separate header rows', () => {
-      const sourceHtml = `
+		test('should rebuild semantic tables from role-based source tables with separate header rows', () => {
+			const sourceHtml = `
         <!DOCTYPE html>
         <html>
           <head><title>Brand Palette</title></head>
@@ -594,14 +594,14 @@ if (!verification.valid) {
         </html>
       `;
 
-      const env = createBrowserEnvironment();
-      const dom = new JSDOM(sourceHtml, { url: 'https://example.com/role-table.html' });
-      prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
+			const env = createBrowserEnvironment();
+			const dom = new JSDOM(sourceHtml, { url: 'https://example.com/role-table.html' });
+			prepareDocumentForRecoveryTest(dom.window.document, env.ReadabilityRecovery);
 
-      const sourceTable = dom.window.document.querySelector('[role="table"]');
-      const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
-      const extractedHtml = `
-        <div role="table" data-marksnip-node-id="${tableAnchorId}">
+			const sourceTable = dom.window.document.querySelector('[role="table"]');
+			const tableAnchorId = sourceTable.getAttribute(env.ReadabilityRecovery.anchorAttribute);
+			const extractedHtml = `
+        <div role="table" data-snipsnip-node-id="${tableAnchorId}">
           <div role="row">
             <div role="cell"><p>#c15f3c</p></div>
             <div role="cell"><p>193, 95, 60</p></div>
@@ -609,21 +609,21 @@ if (!verification.valid) {
         </div>
       `;
 
-      const restoredHtml = env.ReadabilityRecovery.restoreSemanticTables(dom.window.document, extractedHtml);
-      const { service } = createTurndownService();
-      const markdown = service.turndown(restoredHtml);
+			const restoredHtml = env.ReadabilityRecovery.restoreSemanticTables(dom.window.document, extractedHtml);
+			const { service } = createTurndownService();
+			const markdown = service.turndown(restoredHtml);
 
-      expect(restoredHtml).toContain('<table');
-      expect(restoredHtml).toContain('HEX');
-      expect(restoredHtml).toContain('RGB');
-      expect(restoredHtml).not.toContain('Hidden column');
-      expect(markdown).toContain('| HEX | RGB |');
-      expect(markdown).toContain('#c15f3c');
-      expect(markdown).toContain('193, 95, 60');
-    });
+			expect(restoredHtml).toContain('<table');
+			expect(restoredHtml).toContain('HEX');
+			expect(restoredHtml).toContain('RGB');
+			expect(restoredHtml).not.toContain('Hidden column');
+			expect(markdown).toContain('| HEX | RGB |');
+			expect(markdown).toContain('#c15f3c');
+			expect(markdown).toContain('193, 95, 60');
+		});
 
-    test('should not trigger recovery on repeated card listings', () => {
-      const html = `
+		test('should not trigger recovery on repeated card listings', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Tooling Catalog</title></head>
@@ -668,17 +668,17 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/catalog.html');
+			const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/catalog.html');
 
-      expect(article).not.toBeNull();
-      expect(recoveryPlan).toBeNull();
-      expect(article.content).toContain('Assembler Basics');
-      expect(article.content).toContain('Linker Maps');
-      expect(article.content).toContain('Debugger Tips');
-    });
+			expect(article).not.toBeNull();
+			expect(recoveryPlan).toBeNull();
+			expect(article.content).toContain('Assembler Basics');
+			expect(article.content).toContain('Linker Maps');
+			expect(article.content).toContain('Debugger Tips');
+		});
 
-    test('should not trigger recovery on nested-heading catalog cards', () => {
-      const html = `
+		test('should not trigger recovery on nested-heading catalog cards', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Tooling Catalog</title></head>
@@ -734,17 +734,17 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/catalog-cards.html');
+			const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/catalog-cards.html');
 
-      expect(article).not.toBeNull();
-      expect(recoveryPlan).toBeNull();
-      expect(article.content).toContain('assembler workflow');
-      expect(article.content).not.toContain('Linker Maps');
-      expect(article.content).not.toContain('Debugger Tips');
-    });
+			expect(article).not.toBeNull();
+			expect(recoveryPlan).toBeNull();
+			expect(article.content).toContain('assembler workflow');
+			expect(article.content).not.toContain('Linker Maps');
+			expect(article.content).not.toContain('Debugger Tips');
+		});
 
-    test('should restore wrapped catalog headings without duplicating catalog entries', () => {
-      const html = `
+		test('should restore wrapped catalog headings without duplicating catalog entries', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Design Pattern Catalog</title></head>
@@ -799,26 +799,29 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article: firstPassArticle, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/catalog-faq-like.html');
-      const { article } = parseArticle(html, 'https://example.com/catalog-faq-like.html');
+			const { article: firstPassArticle, recoveryPlan } = inspectRecoveryPlan(
+				html,
+				'https://example.com/catalog-faq-like.html',
+			);
+			const { article } = parseArticle(html, 'https://example.com/catalog-faq-like.html');
 
-      expect(article).not.toBeNull();
-      expect(firstPassArticle).not.toBeNull();
-      expect(recoveryPlan).toBeNull();
-      expect(article.content).toContain('search interfaces, refinement controls');
-      expect(article.content).toContain('Search Patterns');
-      expect(article.content).toContain('Checkout Patterns');
-      expect(article.content).toContain('Onboarding Patterns');
-      expect((article.content.match(/Search Patterns/g) || [])).toHaveLength(1);
-      expect((article.content.match(/Checkout Patterns/g) || [])).toHaveLength(1);
-      expect((article.content.match(/Onboarding Patterns/g) || [])).toHaveLength(1);
-      expect(firstPassArticle.content).toContain('search interfaces, refinement controls');
-      expect(firstPassArticle.content).toContain('checkout flows, field grouping');
-      expect(firstPassArticle.content).toContain('onboarding tours, first-run prompts');
-    });
+			expect(article).not.toBeNull();
+			expect(firstPassArticle).not.toBeNull();
+			expect(recoveryPlan).toBeNull();
+			expect(article.content).toContain('search interfaces, refinement controls');
+			expect(article.content).toContain('Search Patterns');
+			expect(article.content).toContain('Checkout Patterns');
+			expect(article.content).toContain('Onboarding Patterns');
+			expect(article.content.match(/Search Patterns/g) || []).toHaveLength(1);
+			expect(article.content.match(/Checkout Patterns/g) || []).toHaveLength(1);
+			expect(article.content.match(/Onboarding Patterns/g) || []).toHaveLength(1);
+			expect(firstPassArticle.content).toContain('search interfaces, refinement controls');
+			expect(firstPassArticle.content).toContain('checkout flows, field grouping');
+			expect(firstPassArticle.content).toContain('onboarding tours, first-run prompts');
+		});
 
-    test('should not trigger recovery on high-link-density accordion sections', () => {
-      const html = `
+		test('should not trigger recovery on high-link-density accordion sections', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Documentation Index</title></head>
@@ -857,17 +860,17 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/index.html');
+			const { article, recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/index.html');
 
-      expect(article).not.toBeNull();
-      expect(recoveryPlan).toBeNull();
-      expect(article.content).toContain('Use this index to jump');
-      expect(article.content).toContain('Linker script reference');
-      expect(article.content).toContain('Breakpoint reference');
-    });
+			expect(article).not.toBeNull();
+			expect(recoveryPlan).toBeNull();
+			expect(article.content).toContain('Use this index to jump');
+			expect(article.content).toContain('Linker script reference');
+			expect(article.content).toContain('Breakpoint reference');
+		});
 
-    test('should leave already-correct article extraction unchanged', () => {
-      const html = `
+		test('should leave already-correct article extraction unchanged', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Existing Article</title></head>
@@ -894,24 +897,24 @@ if (!verification.valid) {
         </html>
       `;
 
-      const { article } = parseArticle(html, 'https://example.com/article.html');
-      const { recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/article.html');
+			const { article } = parseArticle(html, 'https://example.com/article.html');
+			const { recoveryPlan } = inspectRecoveryPlan(html, 'https://example.com/article.html');
 
-      expect(article).not.toBeNull();
-      expect(recoveryPlan).toBeNull();
-      expect(article.title).toBe('Existing Article');
-      expect(article.content).toContain('Build steps');
-      expect(article.content).toContain('Verification');
-      expect(article.content).not.toContain('Related content');
-      expect((article.content.match(/Build steps/g) || [])).toHaveLength(1);
-      expect((article.content.match(/Verification/g) || [])).toHaveLength(1);
-    });
-  });
+			expect(article).not.toBeNull();
+			expect(recoveryPlan).toBeNull();
+			expect(article.title).toBe('Existing Article');
+			expect(article.content).toContain('Build steps');
+			expect(article.content).toContain('Verification');
+			expect(article.content).not.toContain('Related content');
+			expect(article.content.match(/Build steps/g) || []).toHaveLength(1);
+			expect(article.content.match(/Verification/g) || []).toHaveLength(1);
+		});
+	});
 
-  describe('Other Common Markdown Conversion Issues', () => {
-    test('should strip images inside table cells when imageStyle is noImage', () => {
-      const { service } = createTurndownService({ imageStyle: 'noImage' });
-      const html = `
+	describe('Other Common Markdown Conversion Issues', () => {
+		test('should strip images inside table cells when imageStyle is noImage', () => {
+			const { service } = createTurndownService({ imageStyle: 'noImage' });
+			const html = `
         <table>
           <tr>
             <th>Label</th>
@@ -924,59 +927,59 @@ if (!verification.valid) {
         </table>
       `;
 
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      expect(result).toContain('| Diagram |');
-      expect(result).not.toContain('![');
-      expect(result).not.toContain('diagram.png');
-    });
+			expect(result).toContain('| Diagram |');
+			expect(result).not.toContain('![');
+			expect(result).not.toContain('diagram.png');
+		});
 
-    test('should strip all image markdown from legacy table-heavy pages when imageStyle is noImage', () => {
-      const { service } = createTurndownService({ imageStyle: 'noImage' });
-      const result = service.turndown(htmlSamples.legacyTableHeavyPage.html);
+		test('should strip all image markdown from legacy table-heavy pages when imageStyle is noImage', () => {
+			const { service } = createTurndownService({ imageStyle: 'noImage' });
+			const result = service.turndown(htmlSamples.legacyTableHeavyPage.html);
 
-      expect(result).toContain('Aether Notes Archive');
-      expect(result).toContain('| Year |');
-      expect(result).toContain('Notebook summary with inline references.');
-      expect(result).toContain('Closing paragraph.');
-      expect(result).not.toContain('![');
-      expect(result).not.toContain('plate-a.jpg');
-      expect(result).not.toContain('1901-chart.png');
-      expect(result).not.toContain('plate-b.jpg');
-    });
+			expect(result).toContain('Aether Notes Archive');
+			expect(result).toContain('| Year |');
+			expect(result).toContain('Notebook summary with inline references.');
+			expect(result).toContain('Closing paragraph.');
+			expect(result).not.toContain('![');
+			expect(result).not.toContain('plate-a.jpg');
+			expect(result).not.toContain('1901-chart.png');
+			expect(result).not.toContain('plate-b.jpg');
+		});
 
-    test('should handle nested emphasis in tables', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should handle nested emphasis in tables', () => {
+			const { service } = createTurndownService();
+			const html = `
         <table>
           <tr>
             <td><strong>Bold text</strong> with <em>italic</em></td>
           </tr>
         </table>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      expect(result).toContain('**Bold text**');
-      expect(result).toContain('*italic*');
-    });
+			expect(result).toContain('**Bold text**');
+			expect(result).toContain('*italic*');
+		});
 
-    test('should preserve code blocks in tables', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should preserve code blocks in tables', () => {
+			const { service } = createTurndownService();
+			const html = `
         <table>
           <tr>
             <td><code>code example</code></td>
           </tr>
         </table>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      expect(result).toContain('`code example`');
-    });
+			expect(result).toContain('`code example`');
+		});
 
-    test('should handle complex table headers with scope attributes', () => {
-      const { service } = createTurndownService();
-      const html = `
+		test('should handle complex table headers with scope attributes', () => {
+			const { service } = createTurndownService();
+			const html = `
         <table>
           <thead>
             <tr>
@@ -992,12 +995,12 @@ if (!verification.valid) {
           </tbody>
         </table>
       `;
-      const result = service.turndown(html);
+			const result = service.turndown(html);
 
-      expect(result).toContain('Parameter');
-      expect(result).toContain('Format');
-      expect(result).toContain('latitude');
-      expect(result).toContain('Floating point');
-    });
-  });
+			expect(result).toContain('Parameter');
+			expect(result).toContain('Format');
+			expect(result).toContain('latitude');
+			expect(result).toContain('Floating point');
+		});
+	});
 });

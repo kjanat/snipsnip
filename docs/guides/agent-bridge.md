@@ -33,13 +33,13 @@ The CLI only talks to the local browser on your machine. Nothing is sent to a re
 **Windows**
 
 ```powershell
-.\marksnip.exe install-host
+.\snipsnip.exe install-host
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip install-host
+./snipsnip install-host
 ```
 
 4. Open SnipSnip Settings.
@@ -54,19 +54,19 @@ If you use a local unpacked Chrome build during development, install the host wi
 **Windows**
 
 ```powershell
-.\marksnip.exe install-host --chrome-extension-id <your-unpacked-id>
+.\snipsnip.exe install-host --chrome-extension-id <your-unpacked-id>
 ```
 
 Example:
 
 ```powershell
-.\marksnip.exe install-host --chrome-extension-id jfmmhkkjnbhkkjnbhkkjnbhkkjnbhkkj
+.\snipsnip.exe install-host --chrome-extension-id jfmmhkkjnbhkkjnbhkkjnbhkkjnbhkkj
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip install-host --chrome-extension-id <your-unpacked-id>
+./snipsnip install-host --chrome-extension-id <your-unpacked-id>
 ```
 
 If that unpacked Chrome extension ID ever changes, rerun the same command with the new ID so Chrome can reconnect to the native host.
@@ -80,19 +80,19 @@ If that unpacked Chrome extension ID ever changes, rerun the same command with t
 **Windows**
 
 ```powershell
-.\marksnip.exe status
-.\marksnip.exe clip
-.\marksnip.exe clip --json
-.\marksnip.exe clip --fresh
+.\snipsnip.exe status
+.\snipsnip.exe clip
+.\snipsnip.exe clip --json
+.\snipsnip.exe clip --fresh
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip status
-./marksnip clip
-./marksnip clip --json
-./marksnip clip --fresh
+./snipsnip status
+./snipsnip clip
+./snipsnip clip --json
+./snipsnip clip --fresh
 ```
 
 What each command does:
@@ -121,13 +121,13 @@ If you do not want the edited popup version, use:
 **Windows**
 
 ```powershell
-.\marksnip.exe clip --fresh
+.\snipsnip.exe clip --fresh
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip clip --fresh
+./snipsnip clip --fresh
 ```
 
 ## Using It With Other Tools
@@ -137,13 +137,13 @@ Raw Markdown to stdout:
 **Windows**
 
 ```powershell
-.\marksnip.exe clip
+.\snipsnip.exe clip
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip clip
+./snipsnip clip
 ```
 
 JSON for scripts:
@@ -151,25 +151,25 @@ JSON for scripts:
 **Windows**
 
 ```powershell
-.\marksnip.exe clip --json
+.\snipsnip.exe clip --json
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip clip --json
+./snipsnip clip --json
 ```
 
 Example PowerShell pipeline:
 
 ```powershell
-.\marksnip.exe clip | Set-Clipboard
+.\snipsnip.exe clip | Set-Clipboard
 ```
 
 Example fresh JSON capture on macOS/Linux:
 
 ```bash
-./marksnip clip --json --fresh
+./snipsnip clip --json --fresh
 ```
 
 ## What To Expect
@@ -224,14 +224,14 @@ Once you have the unpacked extension ID, run:
 
 ```powershell
 cd .\native
-.\marksnip.exe install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
+.\snipsnip.exe install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
 ```
 
 **macOS/Linux**
 
 ```bash
 cd ./native
-./marksnip install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
+./snipsnip install-host --chrome-extension-id <YOUR_UNPACKED_EXTENSION_ID>
 ```
 
 If the unpacked extension ID changes later, run the same command again with the new ID.
@@ -250,16 +250,16 @@ If the unpacked extension ID changes later, run the same command again with the 
 
 ```powershell
 cd .\native
-.\marksnip.exe status
-.\marksnip.exe clip --json --fresh
+.\snipsnip.exe status
+.\snipsnip.exe clip --json --fresh
 ```
 
 **macOS/Linux**
 
 ```bash
 cd ./native
-./marksnip status
-./marksnip clip --json --fresh
+./snipsnip status
+./snipsnip clip --json --fresh
 ```
 
 Expected result:
@@ -272,13 +272,13 @@ If you want to remove the companion:
 **Windows**
 
 ```powershell
-.\marksnip.exe uninstall-host
+.\snipsnip.exe uninstall-host
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip uninstall-host
+./snipsnip uninstall-host
 ```
 
 ## Quick Reference
@@ -286,21 +286,21 @@ If you want to remove the companion:
 **Windows**
 
 ```powershell
-.\marksnip.exe install-host
-.\marksnip.exe status
-.\marksnip.exe clip
-.\marksnip.exe clip --json
-.\marksnip.exe clip --fresh
-.\marksnip.exe uninstall-host
+.\snipsnip.exe install-host
+.\snipsnip.exe status
+.\snipsnip.exe clip
+.\snipsnip.exe clip --json
+.\snipsnip.exe clip --fresh
+.\snipsnip.exe uninstall-host
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip install-host
-./marksnip status
-./marksnip clip
-./marksnip clip --json
-./marksnip clip --fresh
-./marksnip uninstall-host
+./snipsnip install-host
+./snipsnip status
+./snipsnip clip
+./snipsnip clip --json
+./snipsnip clip --fresh
+./snipsnip uninstall-host
 ```

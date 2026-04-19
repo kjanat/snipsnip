@@ -4,21 +4,21 @@ Desktop companion binaries for the SnipSnip browser extension.
 
 Files:
 
-- Windows: `marksnip.exe` and `marksnip-native-host.exe`
-- macOS/Linux: `marksnip` and `marksnip-native-host`
+- Windows: `snipsnip.exe` and `snipsnip-native-host.exe`
+- macOS/Linux: `snipsnip` and `snipsnip-native-host`
 
 Typical setup:
 
 **Windows**
 
 ```powershell
-.\marksnip.exe install-host
+.\snipsnip.exe install-host
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip install-host
+./snipsnip install-host
 ```
 
 Typical usage:
@@ -26,17 +26,17 @@ Typical usage:
 **Windows**
 
 ```powershell
-.\marksnip.exe status
-.\marksnip.exe clip
-.\marksnip.exe clip --json
-.\marksnip.exe clip --fresh
+.\snipsnip.exe status
+.\snipsnip.exe clip
+.\snipsnip.exe clip --json
+.\snipsnip.exe clip --fresh
 ```
 
 **macOS/Linux**
 
 ```bash
-./marksnip status
-./marksnip clip
-./marksnip clip --json
-./marksnip clip --fresh
+./snipsnip status
+./snipsnip clip
+./snipsnip clip --json
+./snipsnip clip --fresh
 ```

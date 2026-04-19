@@ -4,23 +4,23 @@ The book "17 Equations That Changed The World" by Ian Stewart outlines 17 fundam
 
 ## Table of contents
 
-1.  [The Pythagorean Theorem](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-pythagorean-theorem)
-2.  [Logarithms](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#logarithms)
-3.  [Calculus](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#calculus)
-4.  [Newton's universal law of gravitation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#newtons-universal-law-of-gravitation)
-5.  [Complex numbers](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#complex-numbers)
-6.  [Euler's formula for polyhedra](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#eulers-formula-for-polyhedra)
-7.  [The normal distribution](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-normal-distribution)
-8.  [The wave equation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-wave-equation)
-9.  [The Fourier transform](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-fourier-transform)
-10.  [The Navier-Stokes equations](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-navierstokes-equations)
-11.  [Maxwell's equations](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#maxwells-equations)
-12.  [Second law of thermodynamics](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#second-law-of-thermodynamics)
-13.  [Einstein's theory of relativity](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#einsteins-theory-of-relativity)
-14.  [Schrödinger equation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#schrdinger-equation)
-15.  [Shannon's information theory](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#shannons-information-theory)
-16.  [Logistic model for population growth](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#logistic-model-for-population-growth)
-17.  [Black–Scholes model](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#blackscholes-model)
+1. [The Pythagorean Theorem](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-pythagorean-theorem)
+2. [Logarithms](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#logarithms)
+3. [Calculus](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#calculus)
+4. [Newton's universal law of gravitation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#newtons-universal-law-of-gravitation)
+5. [Complex numbers](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#complex-numbers)
+6. [Euler's formula for polyhedra](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#eulers-formula-for-polyhedra)
+7. [The normal distribution](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-normal-distribution)
+8. [The wave equation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-wave-equation)
+9. [The Fourier transform](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-fourier-transform)
+10. [The Navier-Stokes equations](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#the-navierstokes-equations)
+11. [Maxwell's equations](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#maxwells-equations)
+12. [Second law of thermodynamics](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#second-law-of-thermodynamics)
+13. [Einstein's theory of relativity](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#einsteins-theory-of-relativity)
+14. [Schrödinger equation](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#schrdinger-equation)
+15. [Shannon's information theory](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#shannons-information-theory)
+16. [Logistic model for population growth](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#logistic-model-for-population-growth)
+17. [Black–Scholes model](https://runjs.app/blog/equations-that-changed-the-world-rewritten-in-javascript#blackscholes-model)
 
 ## The Pythagorean Theorem
 
@@ -33,11 +33,13 @@ In the above equation, $c$ is the length of the hypotenuse, and $a$ and $b$ are 
 In JavaScript, you can write a function to calculate the length of the hypotenuse given $a$ and $b$ like this:
 
 ```javascript
-function calculateHypotenuse(a, b) {  return Math.sqrt(a * a + b * b);}
+function calculateHypotenuse(a, b) {
+	return Math.sqrt(a * a + b * b);
+}
 // Example usage:const a = 3;const b = 4;const hypotenuse = calculateHypotenuse(a, b);console.log(`Hypotenuse: ${hypotenuse}`);
 ```
 
-___
+---
 
 ## Logarithms
 
@@ -55,7 +57,7 @@ const logxy = Math.log(x * y);const logx_plus_logy = Math.log(x) + Math.log(y);
 
 In this example, set `x` and `y` each to a positive number to calculate and compare both sides of the equation. This will show you that `log(xy)` is indeed equal to `log(x) + log(y)` due to the properties of logarithms.
 
-___
+---
 
 ## Calculus
 
@@ -75,7 +77,7 @@ The `derivative` function approximates the derivative of the function $f$ at the
 
 The output of this script gives the slope of the tangent line to $f(x) = x^2$ at $x = 3$, which is the derivative of $f$ at that point. For $x^2$, the exact derivative at any point $x$ is $2x$, so at $x = 3$, we expect the derivative to be 6. The JavaScript function should give a result very close to this, demonstrating both the power and the limitations of numerical derivative approximation.
 
-___
+---
 
 ## Newton's universal law of gravitation
 
@@ -85,10 +87,10 @@ Newton's Universal Law of Gravitation, formulated by Sir Isaac Newton in the 17t
 
 This law is mathematically represented by the above equation where:
 
--   $F$ is the magnitude of the gravitational force between the two masses
--   $G$ is the gravitational constant ($6.674 \times 10^{-11} \, \text{Nm}^2/\text{kg}^2$)
--   $m_1$ and $m_2$ are the masses of the two objects
--   $r$ is the distance between the centers of the two masses
+- $F$ is the magnitude of the gravitational force between the two masses
+- $G$ is the gravitational constant ($6.674 \times 10^{-11} \, \text{Nm}^2/\text{kg}^2$)
+- $m_1$ and $m_2$ are the masses of the two objects
+- $r$ is the distance between the centers of the two masses
 
 Here's how you could implement this in JavaScript:
 
@@ -102,7 +104,7 @@ This function `calculateGravitationalForce` takes the masses of two objects and 
 
 This implementation demonstrates the application of Newton's Universal Law of Gravitation using JavaScript, making it possible to calculate the gravitational force between any two masses given their masses and the distance between them. This can be useful in educational software, simulations, and scientific calculations related to physics.
 
-___
+---
 
 ## Complex numbers
 
@@ -127,7 +129,7 @@ This Complex class provides a straightforward way to work with complex numbers i
 
 The example demonstrates creating the imaginary unit $i$ as a complex number with 0 real part and 1 as the imaginary part, then multiplying $i$ by itself to show that $i^2$ results in -1 (plus 0 times the imaginary unit, which is typically omitted when it equals 0).
 
-___
+---
 
 ## Euler's formula for polyhedra
 
@@ -138,14 +140,16 @@ Euler's formula for polyhedra, where $V$ stands for the number of vertices, $E$ 
 You can write a JavaScript function to check if a given set of vertices, edges, and faces satisfies Euler's formula like this:
 
 ```javascript
-function satisfiesEulersFormula(vertices, edges, faces) {  return vertices - edges + faces === 2;}
+function satisfiesEulersFormula(vertices, edges, faces) {
+	return vertices - edges + faces === 2;
+}
 // Example usage:const vertices = 8; // For a cubeconst edges = 12; // For a cubeconst faces = 6; // For a cube
-console.log(  `Does the given polyhedron satisfy Euler's formula? ${satisfiesEulersFormula(    vertices,    edges,    faces  )}`);
+console.log(`Does the given polyhedron satisfy Euler's formula? ${satisfiesEulersFormula(vertices, edges, faces)}`);
 ```
 
 This function simply takes the numbers of vertices, edges, and faces of a polyhedron as inputs and checks if they satisfy Euler's formula. You can use this function to verify the formula for various polyhedra by changing the `vertices`, `edges`, and `faces` variables accordingly.
 
-___
+---
 
 ## The normal distribution
 
@@ -155,23 +159,28 @@ The normal distribution is a foundational concept in statistics and probability 
 
 The above equation represents the probability density function (PDF) of the normal distribution where:
 
--   $x$ is the variable
--   $\mu$ is the mean of the distribution
--   $\sigma$ is the standard deviation of the distribution
--   $e$ is the base of the natural logarithm ($\approx 2.71828$)
--   $\pi$ is Pi (\\approx 3.14159)
+- $x$ is the variable
+- $\mu$ is the mean of the distribution
+- $\sigma$ is the standard deviation of the distribution
+- $e$ is the base of the natural logarithm ($\approx 2.71828$)
+- $\pi$ is Pi (\\approx 3.14159)
 
 In JavaScript, you can write a function to compute the PDF of the normal distribution for a given $x$, $\mu$ (mean), and $\sigma$ (standard deviation) as follows:
 
 ```javascript
-function normalDistributionPDF(x, mu, sigma) {  const sqrtTwoPi = Math.sqrt(2 * Math.PI);  const exponent = -0.5 * ((x - mu) / sigma) ** 2;  return (1 / (sigma * sqrtTwoPi)) * Math.exp(exponent);}
+function normalDistributionPDF(x, mu, sigma) {
+	const sqrtTwoPi = Math.sqrt(2 * Math.PI);
+	const exponent = -0.5 * ((x - mu) / sigma) ** 2;
+	return (1 / (sigma * sqrtTwoPi)) * Math.exp(exponent);
+}
 // Example usage:const mu = 0; // Meanconst sigma = 1; // Standard deviation (for a standard normal distribution)const x = 1; // Value to evaluate the PDF at
-const pdfValue = normalDistributionPDF(x, mu, sigma);console.log(`PDF value at x = ${x}: ${pdfValue}`);
+const pdfValue = normalDistributionPDF(x, mu, sigma);
+console.log(`PDF value at x = ${x}: ${pdfValue}`);
 ```
 
 This function calculates the value of the probability density function (PDF) of the normal distribution at a specific point $x$, given the distribution's mean ($\mu$) and standard deviation ($\sigma$). The function is useful for statistical analyses, including probability and statistics applications, data analysis, and machine learning algorithms, where the normal distribution plays a crucial role.
 
-___
+---
 
 ## The wave equation
 
@@ -181,10 +190,10 @@ The wave equation is a fundamental partial differential equation that describes 
 
 The above equation represents a one-dimensional wave moving along the $x$\-axis where:
 
--   $u(x, t)$ is the displacement of the wave at position $x$ and time $t$
--   $c$ is the speed of the wave in the medium
--   $\frac{\partial^2 u}{\partial t^2}$ is the second partial derivative of $u$ with respect to time, indicating acceleration
--   $\frac{\partial^2 u}{\partial x^2}$ is the second partial derivative of $u$ with respect to position, indicating curvature of the wave
+- $u(x, t)$ is the displacement of the wave at position $x$ and time $t$
+- $c$ is the speed of the wave in the medium
+- $\frac{\partial^2 u}{\partial t^2}$ is the second partial derivative of $u$ with respect to time, indicating acceleration
+- $\frac{\partial^2 u}{\partial x^2}$ is the second partial derivative of $u$ with respect to position, indicating curvature of the wave
 
 Simulating or solving the wave equation in JavaScript requires numerical methods, as analytical solutions are only available for specific initial and boundary conditions. A simple approach to numerically solve this equation is to use the finite difference method (FDM), discretizing both time and space. Here's a basic implementation idea:
 
@@ -205,7 +214,7 @@ This code sets up a basic structure for simulating the wave equation under very 
 
 This example uses a very basic initial condition and does not account for more complex scenarios or boundary conditions. For actual applications, you'd need to adapt the initialization and possibly the update loop to reflect your specific needs, including different initial conditions, boundary conditions, and more sophisticated numerical methods for stability and accuracy.
 
-___
+---
 
 ## The Fourier transform
 
@@ -217,11 +226,11 @@ The implementation here is for the Discrete Fourier Transform (DFT), since the F
 
 The above formula can be described as follows:
 
--   $X_k$ is the $k$th component of the transformed signal
--   $x_n$ is the $n$th sample of the original signal
--   $N$ is the total number of samples
--   $e$ is the base of the natural logarithm
--   $i$ is the imaginary unit ($\sqrt{-1}$)
+- $X_k$ is the $k$th component of the transformed signal
+- $x_n$ is the $n$th sample of the original signal
+- $N$ is the total number of samples
+- $e$ is the base of the natural logarithm
+- $i$ is the imaginary unit ($\sqrt{-1}$)
 
 Here's how you could write a function in JavaScript to compute the DFT of a signal:
 
@@ -237,18 +246,40 @@ function discreteFourierTransform(signal) {  const N = signal.length;  let X = n
 However, JavaScript does not natively support complex numbers (like the `1j` in the code), so you need to implement or use a library for complex arithmetic. Here's a basic way to handle complex numbers and adapt the DFT function accordingly:
 
 ```javascript
-class Complex {  constructor(re, im = 0) {    this.re = re;    this.im = im;  }
-  add(other) {    return new Complex(this.re + other.re, this.im + other.im);  }
-  multiply(other) {    return new Complex(      this.re * other.re - this.im * other.im,      this.re * other.im + this.im * other.re    );  }
-  static exp(phi) {    return new Complex(Math.cos(phi), Math.sin(phi));  }}
-function discreteFourierTransform(signal) {  const N = signal.length;  let X = new Array(N).fill(null).map(() => new Complex(0));
-  for (let k = 0; k < N; k++) {    let sum = new Complex(0, 0);
-    for (let n = 0; n < N; n++) {      const phi = (-2 * Math.PI * k * n) / N;      const c = Complex.exp(phi);      sum = sum.add(c.multiply(new Complex(signal[n])));    }    X[k] = sum;  }  return X;}// Example usage:const signal = [0, 1, 2, 3, 4, 5, 6, 7]; // An example signalconst DFT = discreteFourierTransform(signal).map(  (c) => `${c.re.toFixed(2)}, ${c.im.toFixed(2)}`);console.log(DFT);
+class Complex {
+	constructor(re, im = 0) {
+		this.re = re;
+		this.im = im;
+	}
+	add(other) {
+		return new Complex(this.re + other.re, this.im + other.im);
+	}
+	multiply(other) {
+		return new Complex(this.re * other.re - this.im * other.im, this.re * other.im + this.im * other.re);
+	}
+	static exp(phi) {
+		return new Complex(Math.cos(phi), Math.sin(phi));
+	}
+}
+function discreteFourierTransform(signal) {
+	const N = signal.length;
+	let X = new Array(N).fill(null).map(() => new Complex(0));
+	for (let k = 0; k < N; k++) {
+		let sum = new Complex(0, 0);
+		for (let n = 0; n < N; n++) {
+			const phi = (-2 * Math.PI * k * n) / N;
+			const c = Complex.exp(phi);
+			sum = sum.add(c.multiply(new Complex(signal[n])));
+		}
+		X[k] = sum;
+	}
+	return X;
+} // Example usage:const signal = [0, 1, 2, 3, 4, 5, 6, 7]; // An example signalconst DFT = discreteFourierTransform(signal).map(  (c) => `${c.re.toFixed(2)}, ${c.im.toFixed(2)}`);console.log(DFT);
 ```
 
 This adapted version uses a `Complex` class to handle complex numbers and their arithmetic, enabling the DFT calculation to work correctly. The DFT output is an array of `Complex` objects, where each represents a frequency component of the original signal. The `toFixed(2)` method is used to format the output for readability, showing each component's real and imaginary parts. Keep in mind, for large signals or real-world applications, you'd likely use an existing library or the FFT algorithm for efficiency.
 
-___
+---
 
 ## The Navier-Stokes equations
 
@@ -262,11 +293,11 @@ This example won't fully solve the Navier-Stokes equations but will illustrate h
 
 Assumptions:
 
--   The fluid is incompressible ($\nabla \cdot \mathbf{u} = 0$)
--   The density $\rho$ is constant
--   We're working in a 2D domain with $x$ and $y$ dimensions
--   External forces $\mathbf{f}$ are neglected for simplicity
--   Time stepping with a simple Euler method
+- The fluid is incompressible ($\nabla \cdot \mathbf{u} = 0$)
+- The density $\rho$ is constant
+- We're working in a 2D domain with $x$ and $y$ dimensions
+- External forces $\mathbf{f}$ are neglected for simplicity
+- Time stepping with a simple Euler method
 
 ```cpp
 // Parametersconst nx = 20; // Number of grid points in x directionconst ny = 20; // Number of grid points in y directionconst nu = 0.01; // Kinematic viscosityconst dt = 0.1; // Time stepconst rho = 1.0; // Density, assuming constant
@@ -282,7 +313,7 @@ Assumptions:
 
 As mentioned, this code does not directly solve the Navier-Stokes equations but provides a structure that demonstrates how you could go about implementing them.
 
-___
+---
 
 ## Maxwell's equations
 
@@ -294,11 +325,11 @@ Implementing the above equation in JavaScript involves simulating how a magnetic
 
 Assuming:
 
--   $H$ is a magnetic field vector
--   $J$ is the current density vector
--   $E$ is the electric field vector
--   $\epsilon_0$ is the vacuum permittivity
--   $\frac{\partial \mathbf{E}}{\partial t}$ is approximated by the finite difference $\frac{\Delta \mathbf{E}}{\Delta t}$
+- $H$ is a magnetic field vector
+- $J$ is the current density vector
+- $E$ is the electric field vector
+- $\epsilon_0$ is the vacuum permittivity
+- $\frac{\partial \mathbf{E}}{\partial t}$ is approximated by the finite difference $\frac{\Delta \mathbf{E}}{\Delta t}$
 
 Here is how you could write this in JavaScript:
 
@@ -309,7 +340,7 @@ const epsilon0 = 8.854187817e-12; // Vacuum permittivity in F/m (farads per mete
 // Function to update the magnetic field based on Ampère's Law with Maxwell's additionfunction updateMagneticField(H, J, rateOfChangeE, epsilon0) {  // Assuming a simple model where each component of H is updated directly  // This is a conceptual demonstration and not a direct numerical solution of the curl equation  return H.map(    (value, index) =>      value + J[index] + epsilon0 * rateOfChangeE[index]  );}
 // Calculate the rate of change of Econst rateOfChangeEVector = rateOfChangeE(E, E_prev, deltaTime);
 // Update the magnetic field Hconst updatedH = updateMagneticField(  H,  J,  rateOfChangeEVector,  epsilon0);
-console.log(`Updated Magnetic Field H: [${updatedH.join(", ")}]`);
+console.log(`Updated Magnetic Field H: [${updatedH.join(', ')}]`);
 ```
 
 This code calculates the rate of change of the electric field vector ($E$) between two time steps and uses it to update the magnetic field vector ($H$) based on Ampère's Law with Maxwell's addition.
@@ -320,7 +351,7 @@ The `updateMagneticField` function updates $H$ by adding both the effects of the
 
 This demonstration is highly simplified and abstracts away the complexity of solving the vector differential equations. In a real application, solving Maxwell's equations for $H$ and $E$ fields often requires numerical methods like finite element analysis (FEA) or finite difference time domain (FDTD) methods, and typically, such computations are performed using specialized software or libraries designed for computational electromagnetics.
 
-___
+---
 
 ## Second law of thermodynamics
 
@@ -332,9 +363,9 @@ While the Second Law itself is a principle rather than a mathematical formula, w
 
 Where:
 
--   $\Delta S$ is the change in entropy
--   $Q$ is the heat added to the system (in joules)
--   $T$ is the absolute temperature of the system (in kelvins)
+- $\Delta S$ is the change in entropy
+- $Q$ is the heat added to the system (in joules)
+- $T$ is the absolute temperature of the system (in kelvins)
 
 This formula assumes a reversible process and constant temperature for simplicity. Here's how you might write a JavaScript function to calculate this:
 
@@ -349,7 +380,7 @@ This function calculates the change in entropy for a given amount of heat added 
 
 The Second Law of Thermodynamics underpins much of physical chemistry and thermodynamics, including the direction of heat transfer, the efficiency of engines, and the spontaneous nature of certain chemical reactions. For more complex systems or processes, the calculations would need to account for the specific conditions and interactions occurring within the system.
 
-___
+---
 
 ## Einstein's theory of relativity
 
@@ -370,7 +401,7 @@ function massEnergyEquivalence(mass) {  const speedOfLight = 3.0e8; // Speed of 
 
 This function calculates the energy (in joules) equivalent to a given mass (in kilograms).
 
-___
+---
 
 ## Schrödinger equation
 
@@ -380,12 +411,12 @@ The Schrödinger equation, formulated by Erwin Schrödinger in 1926, is a founda
 
 Writing the Schrödinger equation in JavaScript involves a simplification, as the equation itself is a complex partial differential equation used to describe the quantum state of a physical system. The above equation is the time-independent Schrödinger equation in one dimension where:
 
--   $h$ is the reduced Planck's constant
--   $m$ is the mass of the particle
--   $\frac{d^2\psi(x)}{dx^2}$ is the second derivative of the wave function $\psi(x)$ with respect to position $x$
--   $V(x)$ is the potential energy as a function of position
--   $E$ is the total energy of the particle
--   $\psi(x)$ is the wave function of the particle
+- $h$ is the reduced Planck's constant
+- $m$ is the mass of the particle
+- $\frac{d^2\psi(x)}{dx^2}$ is the second derivative of the wave function $\psi(x)$ with respect to position $x$
+- $V(x)$ is the potential energy as a function of position
+- $E$ is the total energy of the particle
+- $\psi(x)$ is the wave function of the particle
 
 Solving this equation analytically or numerically for $\psi(x)$ given a potential $V(x)$ requires understanding of differential equations and numerical methods, which can be complex and beyond the scope of a simple JavaScript function.
 
@@ -405,7 +436,7 @@ console.log(psi); // This would output the wave function array (placeholder valu
 
 This script sets up a basic structure but does not actually solve the Schrödinger equation, as implementing a numerical solution (like the finite difference method) requires more complex code and understanding of numerical analysis. The real challenge in solving the Schrödinger equation numerically is in setting up and solving the associated linear algebra problem, which typically involves constructing and diagonalizing a Hamiltonian matrix that represents the equation. For real-world applications, you would likely use specialized numerical libraries and software designed for scientific computations, such as SciPy in Python, rather than implementing from scratch in JavaScript.
 
-___
+---
 
 ## Shannon's information theory
 
@@ -430,7 +461,7 @@ function calculateEntropy(probabilities, base = 2) {  // probabilities: an array
 
 This function `calculateEntropy` calculates the Shannon entropy of a distribution given its probabilities and the base of the logarithm. The entropy measures the average information content you can expect from a random variable's outcome. In the context of information theory, a higher entropy value means more uncertainty or more information content in the message, while a lower entropy value indicates less uncertainty or redundancy.
 
-___
+---
 
 ## Logistic model for population growth
 
@@ -440,9 +471,9 @@ The logistic model for population growth, as re-examined by Robert May in the 19
 
 The above equation assumes the following:
 
--   $P_n$ is the population at time step $n$
--   $r$ is the growth rate
--   $P_{n+1}$ is the population at the next time step ($n+1$)
+- $P_n$ is the population at time step $n$
+- $r$ is the growth rate
+- $P_{n+1}$ is the population at the next time step ($n+1$)
 
 In this model, the population size is normalized such that the carrying capacity $K = 1$, and $P_n$ represents the proportion of the carrying capacity (hence, $0 \leq P_n \leq 1$).
 
@@ -459,7 +490,7 @@ const populationAtN = logisticMap(r, P0, n);console.log(  `Population proportion
 
 This function calculates the population proportion after $n$ iterations, starting from an initial proportion $P_0$ and growing at a rate $r$. The value of $r$ is critical in this model; depending on its value, the system can exhibit stable, periodic, or chaotic behavior. For example, when $r$ is between 1 and 3, the population size reaches a stable equilibrium. Between 3 and approximately 3.57, the population enters a period of oscillations, and beyond 3.57, the system can show chaotic behavior, meaning small changes in the initial condition ($P_0$) or the parameter $r$ can lead to vastly different outcomes.
 
-___
+---
 
 ## Black–Scholes model
 
@@ -471,36 +502,44 @@ The Black-Scholes model, developed in the early 1970s by economists Fischer Blac
 
 The above eqations can be used to calculate the theoretical price of European call and put options, respectively, where:
 
--   $C$ is the call option price
--   $P$ is the put option price
--   $S_0$ is the current stock price
--   $K$ is the strike price of the option
--   $r$ is the risk-free interest rate
--   $T$ is the time to maturity (in years)
--   $N(\cdot)$ is the cumulative distribution function of the standard normal distribution
--   $d_1$ and $d_2$ are calculated as follows:
+- $C$ is the call option price
+- $P$ is the put option price
+- $S_0$ is the current stock price
+- $K$ is the strike price of the option
+- $r$ is the risk-free interest rate
+- $T$ is the time to maturity (in years)
+- $N(\cdot)$ is the cumulative distribution function of the standard normal distribution
+- $d_1$ and $d_2$ are calculated as follows:
 
 $d_1 = \frac{\ln(\frac{S_0}{K}) + (r + \frac{\sigma^2}{2})T}{\sigma\sqrt{T}}$
 
 $d_2 = d_1 - \sigma\sqrt{T}$
 
--   $\sigma$ is the volatility of the stock's return
+- $\sigma$ is the volatility of the stock's return
 
 In JavaScript, you can calculate the call and put option prices with the Black-Scholes formula like this:
 
 ```javascript
-function normCDF(x) {  // Approximation of the cumulative distribution function for the standard normal distribution  const a1 = 0.254829592;  const a2 = -0.284496736;  const a3 = 1.421413741;  const a4 = -1.453152027;  const a5 = 1.061405429;  const p = 0.3275911;  const t = 1 / (1 + p * x);  const y =    1 -    ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) *      t *      Math.exp(-x * x);
-  return 0.5 * (1 + Math.sign(x) * y);}
-function blackScholes(S, K, T, r, sigma, optionType) {  const d1 =    (Math.log(S / K) + (r + (sigma * sigma) / 2) * T) /    (sigma * Math.sqrt(T));
-  const d2 = d1 - sigma * Math.sqrt(T);  if (optionType === "call") {    return S * normCDF(d1) - K * Math.exp(-r * T) * normCDF(d2);  } else if (optionType === "put") {    return K * Math.exp(-r * T) * normCDF(-d2) - S * normCDF(-d1);  } else {    throw new Error("optionType must be either 'call' or 'put'");  }}
+function normCDF(x) { // Approximation of the cumulative distribution function for the standard normal distribution  const a1 = 0.254829592;  const a2 = -0.284496736;  const a3 = 1.421413741;  const a4 = -1.453152027;  const a5 = 1.061405429;  const p = 0.3275911;  const t = 1 / (1 + p * x);  const y =    1 -    ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) *      t *      Math.exp(-x * x);
+	return 0.5 * (1 + Math.sign(x) * y);
+}
+function blackScholes(S, K, T, r, sigma, optionType) {
+	const d1 = (Math.log(S / K) + (r + (sigma * sigma) / 2) * T) / (sigma * Math.sqrt(T));
+	const d2 = d1 - sigma * Math.sqrt(T);
+	if (optionType === 'call') return S * normCDF(d1) - K * Math.exp(-r * T) * normCDF(d2);
+	else if (optionType === 'put') return K * Math.exp(-r * T) * normCDF(-d2) - S * normCDF(-d1);
+	else throw new Error("optionType must be either 'call' or 'put'");
+}
 // Example usage:const currentStockPrice = 100; // Sconst strikePrice = 100; // Kconst timeToMaturity = 1; // T in yearsconst riskFreeInterestRate = 0.05; // rconst volatility = 0.2; // sigma
-const callOptionPrice = blackScholes(  currentStockPrice,  strikePrice,  timeToMaturity,  riskFreeInterestRate,  volatility,  "call");const putOptionPrice = blackScholes(  currentStockPrice,  strikePrice,  timeToMaturity,  riskFreeInterestRate,  volatility,  "put");
-console.log("Call Option Price: " + callOptionPrice.toFixed(2));console.log("Put Option Price: " + putOptionPrice.toFixed(2));
+const callOptionPrice = blackScholes(currentStockPrice, strikePrice, timeToMaturity, riskFreeInterestRate, volatility, 'call');
+const putOptionPrice = blackScholes(currentStockPrice, strikePrice, timeToMaturity, riskFreeInterestRate, volatility, 'put');
+console.log('Call Option Price: ' + callOptionPrice.toFixed(2));
+console.log('Put Option Price: ' + putOptionPrice.toFixed(2));
 ```
 
 This JavaScript function calculates the price of a call or put option based on the Black-Scholes model. Note that `normCDF` is an approximation of the cumulative distribution function of the standard normal distribution, which is used to calculate $N(d_1)$ and $N(d_2)$. Remember, the Black-Scholes model has limitations and assumptions, such as constant volatility and no dividends, which might not hold true in all market conditions.
 
-___
+---
 
 ## Final thoughts
 

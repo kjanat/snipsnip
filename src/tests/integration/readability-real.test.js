@@ -6,9 +6,9 @@
 const { parseArticle } = require('../helpers/browser-env');
 
 describe('Real Readability Integration', () => {
-  describe('Article Extraction', () => {
-    test('should extract article from simple blog post', () => {
-      const html = `
+	describe('Article Extraction', () => {
+		test('should extract article from simple blog post', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -35,17 +35,17 @@ describe('Real Readability Integration', () => {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.title).toContain('Test Blog Post');
-      expect(article.content).toContain('main content');
-      expect(article.content).not.toContain('Advertisement');
-      expect(article.content).not.toContain('Site Navigation');
-    });
+			expect(article).not.toBeNull();
+			expect(article.title).toContain('Test Blog Post');
+			expect(article.content).toContain('main content');
+			expect(article.content).not.toContain('Advertisement');
+			expect(article.content).not.toContain('Site Navigation');
+		});
 
-    test('should extract metadata from article', () => {
-      const html = `
+		test('should extract metadata from article', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -63,15 +63,15 @@ describe('Real Readability Integration', () => {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.title).toBe('Article Title');
-      expect(article.byline).toContain('Jane Smith');
-    });
+			expect(article).not.toBeNull();
+			expect(article.title).toBe('Article Title');
+			expect(article.byline).toContain('Jane Smith');
+		});
 
-    test('should extract from page without explicit article tag', () => {
-      const html = `
+		test('should extract from page without explicit article tag', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -89,15 +89,15 @@ describe('Real Readability Integration', () => {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.title).toBe('News Article');
-      expect(article.content).toContain('main content');
-    });
+			expect(article).not.toBeNull();
+			expect(article.title).toBe('News Article');
+			expect(article.content).toContain('main content');
+		});
 
-    test('should preserve images in article', () => {
-      const html = `
+		test('should preserve images in article', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -112,16 +112,16 @@ describe('Real Readability Integration', () => {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('featured.jpg');
-      expect(article.content).toContain('inline.jpg');
-      expect(article.content).toContain('img');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('featured.jpg');
+			expect(article.content).toContain('inline.jpg');
+			expect(article.content).toContain('img');
+		});
 
-    test('should preserve code blocks in article', () => {
-      const html = `
+		test('should preserve code blocks in article', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -139,15 +139,15 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('function hello');
-      expect(article.content).toContain('console.log');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('function hello');
+			expect(article.content).toContain('console.log');
+		});
 
-    test('should preserve lists in article', () => {
-      const html = `
+		test('should preserve lists in article', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -167,17 +167,17 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('First item');
-      expect(article.content).toContain('Step one');
-      expect(article.content).toContain('<ul>');
-      expect(article.content).toContain('<ol>');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('First item');
+			expect(article.content).toContain('Step one');
+			expect(article.content).toContain('<ul>');
+			expect(article.content).toContain('<ol>');
+		});
 
-    test('should preserve tables in article', () => {
-      const html = `
+		test('should preserve tables in article', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -197,18 +197,18 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('Item 1');
-      expect(article.content).toContain('100');
-      expect(article.content).toContain('<table');
-    });
-  });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('Item 1');
+			expect(article.content).toContain('100');
+			expect(article.content).toContain('<table');
+		});
+	});
 
-  describe('Content Filtering', () => {
-    test('should filter out navigation', () => {
-      const html = `
+	describe('Content Filtering', () => {
+		test('should filter out navigation', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -226,15 +226,15 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).not.toContain('Home');
-      expect(article.content).not.toContain('About');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).not.toContain('Home');
+			expect(article.content).not.toContain('About');
+		});
 
-    test('should filter out footer', () => {
-      const html = `
+		test('should filter out footer', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -252,15 +252,15 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).not.toContain('Copyright 2024');
-      expect(article.content).not.toContain('Contact:');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).not.toContain('Copyright 2024');
+			expect(article.content).not.toContain('Contact:');
+		});
 
-    test('should filter out ads', () => {
-      const html = `
+		test('should filter out ads', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -277,17 +277,17 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      // Readability should filter out obvious ad containers
-      expect(article.content).toContain('Article content');
-    });
-  });
+			expect(article).not.toBeNull();
+			// Readability should filter out obvious ad containers
+			expect(article.content).toContain('Article content');
+		});
+	});
 
-  describe('Edge Cases', () => {
-    test('should handle very short content', () => {
-      const html = `
+	describe('Edge Cases', () => {
+		test('should handle very short content', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -299,20 +299,22 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      // Readability might not extract very short content
-      // But it shouldn't crash
-      expect(() => parseArticle(html)).not.toThrow();
-    });
+			// Readability might not extract very short content
+			// But it shouldn't crash
+			expect(() => parseArticle(html)).not.toThrow();
+		});
 
-    test('should handle very long articles', () => {
-      const paragraphs = [];
-      for (let i = 0; i < 100; i++) {
-        paragraphs.push(`<p>Paragraph ${i} with substantial content about the topic. This ensures we have enough content for Readability to extract properly.</p>`);
-      }
+		test('should handle very long articles', () => {
+			const paragraphs = [];
+			for (let i = 0; i < 100; i++) {
+				paragraphs.push(
+					`<p>Paragraph ${i} with substantial content about the topic. This ensures we have enough content for Readability to extract properly.</p>`,
+				);
+			}
 
-      const html = `
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -324,15 +326,15 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.content).toContain('Paragraph 0');
-      expect(article.content).toContain('Paragraph 99');
-    });
+			expect(article).not.toBeNull();
+			expect(article.content).toContain('Paragraph 0');
+			expect(article.content).toContain('Paragraph 99');
+		});
 
-    test('should handle malformed HTML', () => {
-      const html = `
+		test('should handle malformed HTML', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -346,12 +348,12 @@ function hello() {
         </html>
       `;
 
-      // Should not crash
-      expect(() => parseArticle(html)).not.toThrow();
-    });
+			// Should not crash
+			expect(() => parseArticle(html)).not.toThrow();
+		});
 
-    test('should handle HTML with special characters', () => {
-      const html = `
+		test('should handle HTML with special characters', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head>
@@ -369,16 +371,16 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.title).toContain('Special Characters');
-      expect(article.content).toContain('émojis');
-      expect(article.content).toContain('🎉');
-    });
+			expect(article).not.toBeNull();
+			expect(article.title).toContain('Special Characters');
+			expect(article.content).toContain('émojis');
+			expect(article.content).toContain('🎉');
+		});
 
-    test('should handle multiple articles in page', () => {
-      const html = `
+		test('should handle multiple articles in page', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -396,18 +398,18 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      // Readability should extract one of them (usually the first/longest)
-      expect(article).not.toBeNull();
-      // Title extraction may vary - check for content instead
-      expect(article.content).toBeTruthy();
-    });
-  });
+			// Readability should extract one of them (usually the first/longest)
+			expect(article).not.toBeNull();
+			// Title extraction may vary - check for content instead
+			expect(article.content).toBeTruthy();
+		});
+	});
 
-  describe('Article Properties', () => {
-    test('should extract title', () => {
-      const html = `
+	describe('Article Properties', () => {
+		test('should extract title', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <head><title>Page Title</title></head>
@@ -421,14 +423,14 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.title).toBeTruthy();
-    });
+			expect(article).not.toBeNull();
+			expect(article.title).toBeTruthy();
+		});
 
-    test('should calculate text length', () => {
-      const html = `
+		test('should calculate text length', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -441,14 +443,14 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      expect(article.length).toBeGreaterThan(0);
-    });
+			expect(article).not.toBeNull();
+			expect(article.length).toBeGreaterThan(0);
+		});
 
-    test('should extract excerpt', () => {
-      const html = `
+		test('should extract excerpt', () => {
+			const html = `
         <!DOCTYPE html>
         <html>
           <body>
@@ -461,12 +463,12 @@ function hello() {
         </html>
       `;
 
-      const { article } = parseArticle(html);
+			const { article } = parseArticle(html);
 
-      expect(article).not.toBeNull();
-      if (article.excerpt) {
-        expect(article.excerpt).toContain('beginning');
-      }
-    });
-  });
+			expect(article).not.toBeNull();
+			if (article.excerpt) {
+				expect(article.excerpt).toContain('beginning');
+			}
+		});
+	});
 });

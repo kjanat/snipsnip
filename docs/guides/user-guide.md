@@ -29,16 +29,16 @@ The main area of the popup is a syntax-highlighted Markdown editor (powered by C
 Above the editor are two buttons:
 
 - **Copy All** — copies all the Markdown to your clipboard.
-- **Copy Selection** — appears when you select text _inside the editor_, allowing you to copy just the highlighted portion.
+- **Copy Selection** — appears when you select text *inside the editor*, allowing you to copy just the highlighted portion.
 
 ### Action Buttons
 
 At the bottom of the popup:
 
-| Button                 | Action                                                                                                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Download**           | Exports the popup clip using your configured default format: Markdown (`.md`), Plain text (`.txt`), HTML (`.html`), or PDF.                                            |
-| **Download Selection** | Appears when text is selected inside the editor; exports only the selected text using the same popup default format.                                                     |
+| Button                 | Action                                                                                                                                                                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Download**           | Exports the popup clip using your configured default format: Markdown (`.md`), Plain text (`.txt`), HTML (`.html`), or PDF.                                                                                                                           |
+| **Download Selection** | Appears when text is selected inside the editor; exports only the selected text using the same popup default format.                                                                                                                                  |
 | **Send to Obsidian**   | Copies the Markdown to the clipboard and opens Obsidian via the Advanced URI plugin to create a new note (only visible when Obsidian integration is enabled in settings). Images remain remote links; attachment files are not copied into the vault. |
 
 The popup export format setting only affects popup exports. Context menus, keyboard download shortcuts, batch exports, Library exports, Agent Bridge, and Obsidian actions remain Markdown-based.
@@ -151,7 +151,7 @@ Controls the popup's title field and the resulting filename. Uses [Custom Text S
 
 A subfolder within your browser's downloads folder where Markdown files are saved. Uses [Custom Text Substitutions](#custom-text-substitutions).
 
-**Default:** _(empty)_
+**Default:** *(empty)*
 
 ### Disallowed Characters
 
@@ -181,7 +181,7 @@ author: {byline}
 ---
 ```
 
-**Default back template:** _(empty)_
+**Default back template:** *(empty)*
 
 ### Context Menus
 
@@ -219,7 +219,7 @@ Enable this to show the **Send to Obsidian** button in the popup and the Obsidia
 
 | Mode                              | Description                                                                                                                                                          |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Downloads API** _(recommended)_ | Uses the browser's download API. Supports subfolders, image downloads, and Save As dialogs.                                                                          |
+| **Downloads API** *(recommended)* | Uses the browser's download API. Supports subfolders, image downloads, and Save As dialogs.                                                                          |
 | **Content Link**                  | Falls back to a content link for downloading. More limited — disables image downloads and subfolders. Use this if the Downloads API conflicts with other extensions. |
 
 ### Show Save As Dialog
@@ -253,54 +253,54 @@ A prefix or subfolder for downloaded images. Uses [Custom Text Substitutions](#c
 | Style           | Example                                       |
 | --------------- | --------------------------------------------- |
 | Setext          | `All About Dogs` followed by `==============` |
-| Atx _(default)_ | `# All About Dogs`                            |
+| Atx *(default)* | `# All About Dogs`                            |
 
 ### Horizontal Rule Style
 
 - `***`
 - `---`
-- `___` _(default)_
+- `___` *(default)*
 
 ### Bullet List Marker
 
 - `*`
-- `-` _(default)_
+- `-` *(default)*
 - `+`
 
 ### Code Block Style
 
-| Style              | Example                          |
-| ------------------ | -------------------------------- |
-| Indented           | Four-space indented code         |
-| Fenced _(default)_ | Code wrapped in ` ``` ` or `~~~` |
+| Style              | Example                            |
+| ------------------ | ---------------------------------- |
+| Indented           | Four-space indented code           |
+| Fenced *(default)* | Code wrapped in `` ``` `` or `~~~` |
 
 ### Preserve Code Block HTML Formatting
 
-When enabled, preserves the original HTML formatting inside code blocks (useful for maintaining exact visual formatting). When disabled _(default)_, produces clean code blocks.
+When enabled, preserves the original HTML formatting inside code blocks (useful for maintaining exact visual formatting). When disabled *(default)*, produces clean code blocks.
 
 ### Code Block Fence
 
 **Only when Code Block Style is "Fenced".**
 
-- ` ``` ` _(default)_
+- `` ``` `` *(default)*
 - `~~~`
 
 ### Emphasis (Italics) Delimiter
 
-- `_italics_` _(default)_
+- `_italics_` *(default)*
 - `*italics*`
 - `__italics__` (non-standard — for Roam)
 
 ### Strong (Bold) Delimiter
 
-- `**bold**` _(default)_
+- `**bold**` *(default)*
 - `__bold__`
 
 ### Link Style
 
 | Style               | Output                                                      |
 | ------------------- | ----------------------------------------------------------- |
-| Inlined _(default)_ | `[Google](http://google.com)`                               |
+| Inlined *(default)* | `[Google](http://google.com)`                               |
 | Referenced          | `[Google]` with `[Google]: http://google.com` at the bottom |
 | Strip Links         | `Google` (link removed)                                     |
 
@@ -317,8 +317,8 @@ When enabled, preserves the original HTML formatting inside code blocks (useful 
 | Style                      | Output                            | Requires Download Images |
 | -------------------------- | --------------------------------- | ------------------------ |
 | Original Source            | `![](http://example.com/img.jpg)` | No                       |
-| Strip Images               | _(image removed)_                 | No                       |
-| Pure Markdown _(default)_  | `![](folder/image.jpg)`           | Yes                      |
+| Strip Images               | *(image removed)*                 | No                       |
+| Pure Markdown *(default)*  | `![](folder/image.jpg)`           | Yes                      |
 | Base64 Encoded             | `![](data:image/png;base64,...)`  | Yes                      |
 | Obsidian Internal Embed    | `![[folder/image.jpg]]`           | Yes                      |
 | Obsidian Embed (no folder) | `![[image.jpg]]`                  | Yes                      |
@@ -327,7 +327,7 @@ When enabled, preserves the original HTML formatting inside code blocks (useful 
 
 **Only when Image Style is a Markdown style (not Obsidian-styled).**
 
-- **Inlined** _(default)_: `![](address/of/image.jpg)`
+- **Inlined** *(default)*: `![](address/of/image.jpg)`
 - **Referenced**: `![][fig1]` with `[fig1]: address/of/image.jpg` at the bottom
 
 ### Escape Markdown Characters
@@ -340,7 +340,7 @@ Backslash-escapes special Markdown characters in the HTML source to prevent misi
 
 Controls how hashtag-like words are written in clipped text. Useful for tools like Obsidian that treat `#tag` as a note tag.
 
-- **Keep** _(default)_: keeps hashtags unchanged, e.g. `#research`
+- **Keep** *(default)*: keeps hashtags unchanged, e.g. `#research`
 - **Remove #**: removes only the leading `#`, e.g. `#research` → `research`
 - **Escape #**: writes hashtags as escaped markdown, e.g. `#research` → `\#research`
 
@@ -374,32 +374,32 @@ The [Title Template](#title-template), [Downloads Subfolder](#downloads-subfolde
 
 ### Article Metadata
 
-| Variable               | Description                                                            |
-| ---------------------- | ---------------------------------------------------------------------- |
-| `{title}`              | Article title (as determined by Readability)                           |
-| `{pageTitle}`          | Title of the actual page (`<title>` tag)                               |
-| `{length}`             | Length of the article in characters                                    |
-| `{excerpt}`            | Article description or short excerpt                                   |
-| `{byline}`             | Author metadata                                                        |
-| `{dir}`                | Content direction (e.g. `ltr`)                                         |
-| `{baseURI}`            | Parsed document/base URI (legacy behavior)                             |
-| `{pageURL}` / `{tabURL}` | Actual address-bar URL of the tab                                   |
-| `{keywords}`           | Meta keywords, comma-separated                                         |
-| `{keywords:SEPARATOR}` | Meta keywords with a custom separator (e.g. `{keywords: }` for spaces) |
+| Variable                 | Description                                                            |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `{title}`                | Article title (as determined by Readability)                           |
+| `{pageTitle}`            | Title of the actual page (`<title>` tag)                               |
+| `{length}`               | Length of the article in characters                                    |
+| `{excerpt}`              | Article description or short excerpt                                   |
+| `{byline}`               | Author metadata                                                        |
+| `{dir}`                  | Content direction (e.g. `ltr`)                                         |
+| `{baseURI}`              | Parsed document/base URI (legacy behavior)                             |
+| `{pageURL}` / `{tabURL}` | Actual address-bar URL of the tab                                      |
+| `{keywords}`             | Meta keywords, comma-separated                                         |
+| `{keywords:SEPARATOR}`   | Meta keywords with a custom separator (e.g. `{keywords: }` for spaces) |
 
 ### URL Components
 
-| Variable     | Description                                         |
-| ------------ | --------------------------------------------------- |
-| `{origin}`   | Scheme + domain + port (e.g. `https://example.com`) |
-| `{host}`     | Hostname + port                                     |
-| `{hostname}` | Domain only                                         |
-| `{port}`     | Port number                                         |
-| `{protocol}` | Protocol with trailing `:` (e.g. `https:`)          |
-| `{pathname}` | URL path (e.g. `/blog/post`)                        |
-| `{search}`   | Query string including `?`                          |
-| `{hash}`     | Fragment identifier including `#`                   |
-| `{pageOrigin}` / `{pageHost}` / `{pageHostname}` / `{pagePort}` / `{pageProtocol}` / `{pagePathname}` / `{pageSearch}` / `{pageHash}` | URL components from `{pageURL}` |
+| Variable                                                                                                                              | Description                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `{origin}`                                                                                                                            | Scheme + domain + port (e.g. `https://example.com`) |
+| `{host}`                                                                                                                              | Hostname + port                                     |
+| `{hostname}`                                                                                                                          | Domain only                                         |
+| `{port}`                                                                                                                              | Port number                                         |
+| `{protocol}`                                                                                                                          | Protocol with trailing `:` (e.g. `https:`)          |
+| `{pathname}`                                                                                                                          | URL path (e.g. `/blog/post`)                        |
+| `{search}`                                                                                                                            | Query string including `?`                          |
+| `{hash}`                                                                                                                              | Fragment identifier including `#`                   |
+| `{pageOrigin}` / `{pageHost}` / `{pageHostname}` / `{pagePort}` / `{pageProtocol}` / `{pagePathname}` / `{pageSearch}` / `{pageHash}` | URL components from `{pageURL}`                     |
 
 ### Date/Time
 

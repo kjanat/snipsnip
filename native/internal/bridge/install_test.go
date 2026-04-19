@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuildChromeManifest(t *testing.T) {
-	manifest := BuildChromeManifest(`C:\SnipSnip\marksnip-native-host.exe`, DefaultChromeID)
+	manifest := BuildChromeManifest(`C:\SnipSnip\snipsnip-native-host.exe`, DefaultChromeID)
 	origins := manifest["allowed_origins"].([]string)
 	if len(origins) != 1 || origins[0] != "chrome-extension://"+DefaultChromeID+"/" {
 		t.Fatalf("unexpected allowed origins: %#v", origins)
@@ -96,8 +96,8 @@ func TestHostExecutableForCLIByPlatform(t *testing.T) {
 	t.Parallel()
 
 	tempDir := t.TempDir()
-	unixHostPath := filepath.Join(tempDir, "marksnip-native-host")
-	windowsHostPath := filepath.Join(tempDir, "marksnip-native-host.exe")
+	unixHostPath := filepath.Join(tempDir, "snipsnip-native-host")
+	windowsHostPath := filepath.Join(tempDir, "snipsnip-native-host.exe")
 
 	if err := os.WriteFile(unixHostPath, []byte("unix"), 0o755); err != nil {
 		t.Fatalf("WriteFile unix host: %v", err)
@@ -115,13 +115,13 @@ func TestHostExecutableForCLIByPlatform(t *testing.T) {
 		{
 			name:    "windows",
 			goos:    "windows",
-			cliPath: filepath.Join(tempDir, "marksnip.exe"),
+			cliPath: filepath.Join(tempDir, "snipsnip.exe"),
 			want:    windowsHostPath,
 		},
 		{
 			name:    "linux",
 			goos:    "linux",
-			cliPath: filepath.Join(tempDir, "marksnip"),
+			cliPath: filepath.Join(tempDir, "snipsnip"),
 			want:    unixHostPath,
 		},
 	}
@@ -154,8 +154,8 @@ func TestInstallAndUninstallHostAcrossPlatforms(t *testing.T) {
 		{
 			name:     "windows",
 			goos:     "windows",
-			cliName:  "marksnip.exe",
-			hostName: "marksnip-native-host.exe",
+			cliName:  "snipsnip.exe",
+			hostName: "snipsnip-native-host.exe",
 			expectedRegAdds: []string{
 				`HKCU\Software\Google\Chrome\NativeMessagingHosts\` + HostName,
 				`HKCU\Software\Mozilla\NativeMessagingHosts\` + HostName,
@@ -168,14 +168,14 @@ func TestInstallAndUninstallHostAcrossPlatforms(t *testing.T) {
 		{
 			name:     "darwin",
 			goos:     "darwin",
-			cliName:  "marksnip",
-			hostName: "marksnip-native-host",
+			cliName:  "snipsnip",
+			hostName: "snipsnip-native-host",
 		},
 		{
 			name:     "linux",
 			goos:     "linux",
-			cliName:  "marksnip",
-			hostName: "marksnip-native-host",
+			cliName:  "snipsnip",
+			hostName: "snipsnip-native-host",
 		},
 	}
 

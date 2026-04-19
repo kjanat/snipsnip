@@ -1,99 +1,99 @@
 const agentBridgeState = require('../../shared/agent-bridge-state');
 
 describe('agent-bridge-state helpers', () => {
-  test('normalizes settings to disabled by default', () => {
-    expect(agentBridgeState.normalizeSettings()).toEqual({ enabled: false });
-    expect(agentBridgeState.normalizeSettings({ enabled: true })).toEqual({ enabled: true });
-  });
+	test('normalizes settings to disabled by default', () => {
+		expect(agentBridgeState.normalizeSettings()).toEqual({ enabled: false });
+		expect(agentBridgeState.normalizeSettings({ enabled: true })).toEqual({ enabled: true });
+	});
 
-  test('normalizes status with an explicit connecting state', () => {
-    expect(agentBridgeState.normalizeStatus()).toEqual({
-      enabled: false,
-      permissionGranted: false,
-      connecting: false,
-      connected: false,
-      hostInstalled: false,
-      browser: '',
-      hostVersion: '',
-      lastError: '',
-      updatedAt: ''
-    });
+	test('normalizes status with an explicit connecting state', () => {
+		expect(agentBridgeState.normalizeStatus()).toEqual({
+			enabled: false,
+			permissionGranted: false,
+			connecting: false,
+			connected: false,
+			hostInstalled: false,
+			browser: '',
+			hostVersion: '',
+			lastError: '',
+			updatedAt: '',
+		});
 
-    expect(agentBridgeState.normalizeStatus({
-      enabled: true,
-      permissionGranted: true,
-      connecting: true,
-      connected: false,
-      hostInstalled: true,
-      browser: ' Chrome ',
-      hostVersion: ' 0.1.0 ',
-      lastError: ' waiting ',
-      updatedAt: ' 2026-03-22T00:00:00.000Z '
-    })).toEqual({
-      enabled: true,
-      permissionGranted: true,
-      connecting: true,
-      connected: false,
-      hostInstalled: true,
-      browser: 'chrome',
-      hostVersion: '0.1.0',
-      lastError: 'waiting',
-      updatedAt: '2026-03-22T00:00:00.000Z'
-    });
-  });
+		expect(agentBridgeState.normalizeStatus({
+			enabled: true,
+			permissionGranted: true,
+			connecting: true,
+			connected: false,
+			hostInstalled: true,
+			browser: ' Chrome ',
+			hostVersion: ' 0.1.0 ',
+			lastError: ' waiting ',
+			updatedAt: ' 2026-03-22T00:00:00.000Z ',
+		})).toEqual({
+			enabled: true,
+			permissionGranted: true,
+			connecting: true,
+			connected: false,
+			hostInstalled: true,
+			browser: 'chrome',
+			hostVersion: '0.1.0',
+			lastError: 'waiting',
+			updatedAt: '2026-03-22T00:00:00.000Z',
+		});
+	});
 
-  test('normalizes latest clip and strips hashes from page urls', () => {
-    const clip = agentBridgeState.normalizeLatestClip({
-      title: 'Doc',
-      markdown: '# Hello',
-      pageUrl: 'https://example.com/path#intro',
-      source: 'popup'
-    });
+	test('normalizes latest clip and strips hashes from page urls', () => {
+		const clip = agentBridgeState.normalizeLatestClip({
+			title: 'Doc',
+			markdown: '# Hello',
+			pageUrl: 'https://example.com/path#intro',
+			source: 'popup',
+		});
 
-    expect(clip.pageUrl).toBe('https://example.com/path#intro');
-    expect(clip.normalizedPageUrl).toBe('https://example.com/path');
-    expect(clip.source).toBe('popup');
-  });
+		expect(clip.pageUrl).toBe('https://example.com/path#intro');
+		expect(clip.normalizedPageUrl).toBe('https://example.com/path');
+		expect(clip.source).toBe('popup');
+	});
 
-  test('matches latest clip to the active page using normalized urls', () => {
-    const clip = {
-      title: 'Doc',
-      markdown: '# Hello',
-      pageUrl: 'https://example.com/path#intro',
-      source: 'popup'
-    };
+	test('matches latest clip to the active page using normalized urls', () => {
+		const clip = {
+			title: 'Doc',
+			markdown: '# Hello',
+			pageUrl: 'https://example.com/path#intro',
+			source: 'popup',
+		};
 
-    expect(agentBridgeState.shouldUseLatestClipForPage(clip, 'https://example.com/path#summary')).toBe(true);
-    expect(agentBridgeState.shouldUseLatestClipForPage(clip, 'https://example.com/other')).toBe(false);
-  });
+		expect(agentBridgeState.shouldUseLatestClipForPage(clip, 'https://example.com/path#summary')).toBe(true);
+		expect(agentBridgeState.shouldUseLatestClipForPage(clip, 'https://example.com/other')).toBe(false);
+	});
 
-  test('persists settings and latest clip through storage helpers', async () => {
-    const storage = {
-      values: {},
-      async get(key) {
-        return { [key]: this.values[key] };
-      },
-      async set(payload) {
-        this.values = { ...this.values, ...payload };
-      },
-      async remove(key) {
-        delete this.values[key];
-      }
-    };
+	test('persists settings and latest clip through storage helpers', async () => {
+		const storage = {
+			values: {},
+			async get(key) {
+				return { [key]: this.values[key] };
+			},
+			async set(payload) {
+				this.values = { ...this.values, ...payload };
+			},
+			async remove(key) {
+				delete this.values[key];
+			},
+		};
 
-    await agentBridgeState.saveSettings({ enabled: true }, storage);
-    await agentBridgeState.saveLatestClip({
-      title: 'Saved',
-      markdown: 'body',
-      pageUrl: 'https://example.com/path#part',
-      source: 'popup'
-    }, storage);
+		await agentBridgeState.saveSettings({ enabled: true }, storage);
+		await agentBridgeState.saveLatestClip({
+			title: 'Saved',
+			markdown: 'body',
+			pageUrl: 'https://example.com/path#part',
+			source: 'popup',
+		}, storage);
 
-    const settings = await agentBridgeState.loadSettings(storage);
-    const latestClip = await agentBridgeState.loadLatestClip(storage);
+		const settings = await agentBridgeState.loadSettings(storage);
+		const latestClip = await agentBridgeState.loadLatestClip(storage);
 
-    expect(settings).toEqual({ enabled: true });
-    expect(latestClip.title).toBe('Saved');
-    expect(latestClip.normalizedPageUrl).toBe('https://example.com/path');
-  });
+		expect(settings).toEqual({ enabled: true });
+		expect(latestClip.title).toBe('Saved');
+		expect(latestClip.normalizedPageUrl).toBe('https://example.com/path');
+	});
 });
