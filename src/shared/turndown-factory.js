@@ -1,11 +1,5 @@
-((root, factory) => {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipTurndownFactory = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
+const root = typeof globalThis !== 'undefined' ? globalThis : this;
+const api = (() => {
 	const defaultOptions = {
 		headingStyle: 'atx',
 		hr: '---',
@@ -107,4 +101,8 @@
 		createTurndownService,
 		defaultOptions,
 	};
-});
+})();
+
+root.snipSnipTurndownFactory = api;
+
+export default api;

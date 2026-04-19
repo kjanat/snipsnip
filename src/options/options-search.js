@@ -9,13 +9,85 @@
  *   normalizeSearchText(value)    → string
  *   searchSettings(index, query)  → { query, tokens, stage, results, matches }
  */
-((root) => {
-	const core = root.snipSnipSearchCore;
 
+/**
+ * @typedef {Object} SearchField
+ * @property {string}  normalized  - Normalized text content of the field
+ * @property {string}  source      - Where the field was extracted from (e.g. 'card-title')
+ * @property {boolean} primary     - Whether this field is a primary qualifier
+ * @property {boolean} qualifies   - Whether a match here is enough to surface the entry
+ * @property {boolean} [isAlias]   - Whether the field comes from a data-search-keywords alias
+ * @property {boolean} [allowFuzzy] - Whether fuzzy matching is permitted for this field
+ */
+
+/**
+ * @typedef {Object} SearchEntry
+ * @property {Element}       card    - The `.setting-card` DOM element
+ * @property {Element}       section - The parent `.section` DOM element
+ * @property {SearchField[]} fields  - All indexed fields for this card
+ */
+
+/**
+ * @typedef {Object} TokenMatch
+ * @property {string}   token   - The individual query token
+ * @property {string}   field   - The normalized field text that matched
+ * @property {number}   score   - Match score for this token/field pair
+ */
+
+/**
+ * @typedef {Object} SearchResult
+ * @property {Element}       card         - The `.setting-card` DOM element
+ * @property {Element}       section      - The parent `.section` DOM element
+ * @property {SearchField[]} fields       - Indexed fields
+ * @property {boolean}       matches      - Whether this entry matched the query
+ * @property {number}        score        - Aggregate relevance score
+ * @property {TokenMatch[]}  tokenMatches - Per-token match details
+ */
+
+/**
+ * @typedef {'none'|'strict'|'fallback'} SearchStage
+ */
+
+/**
+ * @typedef {Object} SearchResponse
+ * @property {string}         query   - Normalized query string that was searched
+ * @property {string[]}       tokens  - Individual tokens derived from the query
+ * @property {SearchStage}    stage   - Which scoring pass produced these results
+ * @property {SearchResult[]} results - All entries, scored and sorted
+ * @property {SearchResult[]} matches - Subset of results that matched
+ */
+
+/**
+ * @typedef {Object} CreateFieldOptions
+ * @property {string}   source      - Field source identifier
+ * @property {boolean}  primary     - Whether the field is primary
+ * @property {boolean}  qualifies   - Whether a match qualifies the entry
+ * @property {boolean}  [isAlias]   - Whether the field is an alias
+ * @property {boolean}  [allowFuzzy] - Whether fuzzy matching is allowed
+ * @property {function(Element): string} [clean] - Optional text extractor override
+ */
+
+/**
+ * @typedef {Object} OptionsSearchAPI
+ * @property {typeof buildSearchIndex}    buildSearchIndex
+ * @property {typeof normalizeSearchText} normalizeSearchText
+ * @property {typeof searchSettings}      searchSettings
+ */
+
+/** @type {OptionsSearchAPI} */
+const api = ((root) => {
+	const core = root.snipSnipSearchCore;
 	/* Re-export helpers the options page already depends on */
 	const normalizeSearchText = core.normalizeSearchText;
 
 	/* ── DOM helpers ── */
+
+	/**
+	 * Returns the text content of an element after removing matched descendants.
+	 * @param {Element|null|undefined} element
+	 * @param {string[]} [selectorsToRemove]
+	 * @returns {string}
+	 */
 	function getCleanText(element, selectorsToRemove) {
 		if (!element) return '';
 		const clone = element.cloneNode(true);
@@ -25,6 +97,13 @@
 		return clone.textContent || '';
 	}
 
+	/**
+	 * Creates a SearchField via core and appends it to the entry if not duplicate.
+	 * @param {SearchEntry & { fieldKeys: Set<string> }} entry
+	 * @param {string|null|undefined} rawText
+	 * @param {CreateFieldOptions} options
+	 * @returns {void}
+	 */
 	function addField(entry, rawText, options) {
 		const field = core.createField(rawText, options);
 		if (!field) return;
@@ -39,10 +118,22 @@
 		entry.fields.push(field);
 	}
 
+	/**
+	 * Returns true if the node or any ancestor has `data-search-exclude`.
+	 * @param {Node|null|undefined} node
+	 * @returns {boolean}
+	 */
 	function isSearchExcluded(node) {
 		return !!node?.closest?.('[data-search-exclude]');
 	}
 
+	/**
+	 * Iterates a NodeList, skipping excluded nodes, and adds a field for each.
+	 * @param {SearchEntry & { fieldKeys: Set<string> }} entry
+	 * @param {NodeListOf<Element>} nodes
+	 * @param {CreateFieldOptions} options
+	 * @returns {void}
+	 */
 	function addFieldsFromNodeList(entry, nodes, options) {
 		nodes.forEach(node => {
 			if (isSearchExcluded(node)) return;
@@ -50,6 +141,12 @@
 		});
 	}
 
+	/**
+	 * Adds primary fields sourced from form control `name` and `id` attributes.
+	 * @param {SearchEntry & { fieldKeys: Set<string> }} entry
+	 * @param {Element} card
+	 * @returns {void}
+	 */
 	function addControlFields(entry, card) {
 		card.querySelectorAll('input, textarea, select').forEach(control => {
 			if (isSearchExcluded(control)) return;
@@ -58,6 +155,12 @@
 		});
 	}
 
+	/**
+	 * Parses `data-search-keywords` on the card and adds each as an alias field.
+	 * @param {SearchEntry & { fieldKeys: Set<string> }} entry
+	 * @param {HTMLElement} card
+	 * @returns {void}
+	 */
 	function addAliasFields(entry, card) {
 		const raw = card.dataset.searchKeywords;
 		if (!raw) return;
@@ -66,7 +169,15 @@
 		});
 	}
 
+	/**
+	 * Builds a single index entry from a setting card and its parent section.
+	 * @param {HTMLElement} card
+	 * @param {Element} section
+	 * @param {string} sectionTitle
+	 * @returns {SearchEntry}
+	 */
 	function createEntry(card, section, sectionTitle) {
+		/** @type {SearchEntry & { fieldKeys: Set<string> }} */
 		const entry = { card, section, fields: [], fieldKeys: new Set() };
 
 		addField(entry, sectionTitle, { source: 'section-title', primary: true, qualifies: false, allowFuzzy: true });
@@ -125,8 +236,15 @@
 		return entry;
 	}
 
+	/**
+	 * Walks the DOM under `rootNode` and builds a flat array of search entries,
+	 * one per `.setting-card`.
+	 * @param {Element|Document|null|undefined} rootNode
+	 * @returns {SearchEntry[]}
+	 */
 	function buildSearchIndex(rootNode) {
 		const rootEl = rootNode?.querySelectorAll ? rootNode : document;
+		/** @type {SearchEntry[]} */
 		const index = [];
 		rootEl.querySelectorAll('.section').forEach(section => {
 			const sectionTitle = section.querySelector('.section-title')?.textContent || section.dataset.sectionLabel || '';
@@ -137,6 +255,13 @@
 		return index;
 	}
 
+	/**
+	 * Runs a fuzzy search over the index, falling back to relaxed thresholds
+	 * when the strict pass returns no matches.
+	 * @param {SearchEntry[]} index
+	 * @param {string} query
+	 * @returns {SearchResponse}
+	 */
 	function searchSettings(index, query) {
 		const nq = normalizeSearchText(query);
 		if (!nq) {
@@ -154,10 +279,9 @@
 			: core.runSearch(index, nq, core.FALLBACK_THRESHOLDS, 'fallback');
 	}
 
-	const api = { buildSearchIndex, normalizeSearchText, searchSettings };
-	root.snipSnipOptionsSearch = api;
-
-	if (typeof module !== 'undefined' && module.exports) {
-		module.exports = api;
-	}
+	return { buildSearchIndex, normalizeSearchText, searchSettings };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+globalThis.snipSnipOptionsSearch = api;
+
+export default api;

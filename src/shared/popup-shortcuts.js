@@ -114,5 +114,7 @@
 
 	const api = { COMMAND_LABELS, COMMAND_ORDER, splitShortcut, groupCommands, buildShortcutsFragment };
 	root.snipSnipPopupShortcuts = api;
-	if (typeof module !== 'undefined' && module.exports) module.exports = api;
+	return api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
+
+export default api;

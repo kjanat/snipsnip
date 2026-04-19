@@ -899,7 +899,7 @@
 
 	global.SnipSnipReadabilityRecovery = api;
 
-	if (typeof module === 'object' && module.exports) {
-		module.exports = api;
-	}
+	return api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
+
+export default api;

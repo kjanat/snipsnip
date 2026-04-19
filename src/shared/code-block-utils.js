@@ -1,11 +1,5 @@
-((root, factory) => {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipCodeBlockUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
+const root = typeof globalThis !== 'undefined' ? globalThis : this;
+const api = (() => {
 	function repeat(character, count) {
 		return Array(count + 1).join(character);
 	}
@@ -122,4 +116,8 @@
 		repeat,
 		convertToFencedCodeBlock,
 	};
-});
+})();
+
+root.snipSnipCodeBlockUtils = api;
+
+export default api;

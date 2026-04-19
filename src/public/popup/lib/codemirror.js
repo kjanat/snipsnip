@@ -8,12 +8,10 @@
 // at http://marijnhaverbeke.nl/blog/#cm-internals .
 
 ((global, factory) => {
-	typeof exports === 'object' && typeof module !== 'undefined'
-		? (module.exports = factory())
-		: typeof define === 'function' && define.amd
-		? define(factory)
-		: (global = global || self, global.CodeMirror = factory());
-})(this, () => {
+	return factory();
+})();
+
+const CodeMirror = (() => {
 	// Kludges for bugs and behavior differences that can't be feature
 	// detected are enabled based on userAgent etc sniffing.
 	var userAgent = navigator.userAgent;
@@ -11031,4 +11029,6 @@
 	CodeMirror.version = '5.59.1';
 
 	return CodeMirror;
-});
+})();
+
+export default CodeMirror;

@@ -1,11 +1,5 @@
-((root, factory) => {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipHashtagUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
+const root = typeof globalThis !== 'undefined' ? globalThis : this;
+const api = (() => {
 	const hashtagEscapeSentinel = '\uE000';
 
 	function normalizeHashtagHandlingMode(mode) {
@@ -73,4 +67,8 @@
 		applyHashtagHandlingToHtml,
 		applyHashtagHandlingToMarkdown,
 	};
-});
+})();
+
+root.snipSnipHashtagUtils = api;
+
+export default api;

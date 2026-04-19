@@ -1,11 +1,5 @@
-((root, factory) => {
-	if (typeof module === 'object' && module.exports) {
-		module.exports = factory(root);
-		return;
-	}
-
-	root.snipSnipSelectionUtils = factory(root);
-})(typeof globalThis !== 'undefined' ? globalThis : this, (root) => {
+const root = typeof globalThis !== 'undefined' ? globalThis : this;
+const api = (() => {
 	function buildDomWithSelection(domString, selectionHtml, shouldUseSelection = true) {
 		if (!shouldUseSelection || typeof selectionHtml !== 'string' || !selectionHtml.trim()) {
 			return domString;
@@ -37,4 +31,8 @@
 	return {
 		buildDomWithSelection,
 	};
-});
+})();
+
+root.snipSnipSelectionUtils = api;
+
+export default api;
