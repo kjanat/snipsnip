@@ -3,8 +3,13 @@
  * These tests intentionally hit public pages to restore the old live-site signal.
  */
 
-const { test, expect, chromium } = require('@playwright/test');
+const { test, expect, chromium } = require('playwright/test');
 const path = require('path');
+const {
+	repoRoot,
+	getExtensionPageUrl,
+	getExtensionLaunchArgs,
+} = require('../helpers/extension-target');
 const {
 	createSnapshotRecord,
 	loadLatestSuccessfulRun,
@@ -14,8 +19,7 @@ const {
 	attachSnapshotArtifacts,
 } = require('../helpers/live-public-artifacts');
 
-const extensionPath = path.join(__dirname, '../..');
-const livePublicArtifactRoot = path.join(extensionPath, 'test-artifacts', 'live-public');
+const livePublicArtifactRoot = path.join(repoRoot, 'test-artifacts', 'live-public');
 const liveClipCases = [
 	{
 		id: 'example-domain',
@@ -169,7 +173,7 @@ async function clipPageThroughPopup(context, extensionId, serviceWorker, liveCas
 		const tabId = await getTabIdForUrl(serviceWorker, livePage.url());
 		expect(tabId).toBeTruthy();
 
-		await popupPage.goto(`chrome-extension://${extensionId}/popup.html`);
+		await popupPage.goto(getExtensionPageUrl(extensionId));
 		await popupPage.waitForSelector('#container', { state: 'visible' });
 
 		await popupPage.evaluate(async (targetTabId) => {
@@ -260,10 +264,7 @@ test.describe('Live Public E2E', () => {
 	test.beforeAll(async () => {
 		context = await chromium.launchPersistentContext('', {
 			headless: false,
-			args: [
-				`--disable-extensions-except=${extensionPath}`,
-				`--load-extension=${extensionPath}`,
-			],
+			args: getExtensionLaunchArgs(),
 		});
 
 		const serviceWorkerPromise = context.waitForEvent('serviceworker', { timeout: 60000 }).catch(() => null);
@@ -285,7 +286,8 @@ test.describe('Live Public E2E', () => {
 	});
 
 	for (const liveCase of liveClipCases) {
-		test(liveCase.name, async ({}, testInfo) => {
+		test(liveCase.name, async (fixtures, testInfo) => {
+			void fixtures;
 			test.setTimeout(120000);
 			await clipPageThroughPopup(context, extensionId, serviceWorker, liveCase, testInfo);
 		});

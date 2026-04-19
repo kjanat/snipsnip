@@ -4,10 +4,9 @@
  */
 
 const fs = require('fs');
-const { test, expect, chromium } = require('@playwright/test');
+const { test, expect, chromium } = require('playwright/test');
 const path = require('path');
-
-const extensionPath = path.join(__dirname, '../..');
+const { getExtensionLaunchArgs } = require('../helpers/extension-target');
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const notificationHostPath = '/notifications/host.html';
 const notificationHostUrl = `${fixtureHost}${notificationHostPath}`;
@@ -37,10 +36,7 @@ async function installFixtureRoutes(context) {
 async function loadExtensionContext() {
 	const context = await chromium.launchPersistentContext('', {
 		headless: false,
-		args: [
-			`--disable-extensions-except=${extensionPath}`,
-			`--load-extension=${extensionPath}`,
-		],
+		args: getExtensionLaunchArgs(),
 	});
 
 	const serviceWorkerPromise = context.waitForEvent('serviceworker', { timeout: 60000 }).catch(() => null);
@@ -129,10 +125,9 @@ async function triggerInstallOnboarding(serviceWorker) {
 test.describe('Notifications E2E', () => {
 	let context;
 	let serviceWorker;
-	let extensionId;
 
 	test.beforeAll(async () => {
-		({ context, serviceWorker, extensionId } = await loadExtensionContext());
+		({ context, serviceWorker } = await loadExtensionContext());
 	});
 
 	test.beforeEach(async () => {

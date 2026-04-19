@@ -2,10 +2,11 @@
  * Playwright Configuration for E2E Tests
  */
 
-const { defineConfig } = require('@playwright/test');
+const { defineConfig } = require('playwright/test');
 
 module.exports = defineConfig({
-	testDir: './tests/e2e',
+	testDir: './src/tests/e2e',
+	testMatch: '**/*.spec.js',
 	timeout: 30000,
 	retries: 0,
 	use: {

@@ -5,9 +5,12 @@
 
 const fs = require('fs');
 const http = require('http');
-const { test, expect, chromium } = require('@playwright/test');
+const { test, expect, chromium } = require('playwright/test');
 const path = require('path');
-const extensionPath = path.join(__dirname, '../..');
+const {
+	getExtensionPageUrl,
+	getExtensionLaunchArgs,
+} = require('../helpers/extension-target');
 const fixturePathMap = {
 	'/batch/alpha.html': path.join(__dirname, '../fixtures/e2e-pages/batch/alpha.html'),
 	'/batch/beta.html': path.join(__dirname, '../fixtures/e2e-pages/batch/beta.html'),
@@ -169,7 +172,7 @@ async function runBatchCapture(context, extensionId, serviceWorker, urls, option
 	const batchSaveMode = options.batchSaveMode || 'zip';
 
 	try {
-		await launcher.goto(`chrome-extension://${extensionId}/popup.html`);
+		await launcher.goto(getExtensionPageUrl(extensionId));
 		await launcher.evaluate(({ urlObjects, batchSaveMode }) => {
 			browser.runtime.sendMessage({
 				type: 'start-batch-conversion',
@@ -293,10 +296,7 @@ test.describe('Batch Processing E2E', () => {
 	test.beforeAll(async () => {
 		context = await chromium.launchPersistentContext('', {
 			headless: false,
-			args: [
-				`--disable-extensions-except=${extensionPath}`,
-				`--load-extension=${extensionPath}`,
-			],
+			args: getExtensionLaunchArgs(),
 		});
 
 		({ server: fixtureServer, baseUrl: fixtureBaseUrl } = await startFixtureServer());

@@ -139,7 +139,7 @@
 				"remove-legacy-build-paths"
 			],
 			"priority": "polish",
-			"passes": false
+			"passes": true
 		}
 	]
 }

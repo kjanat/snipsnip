@@ -4,10 +4,9 @@
  */
 
 const fs = require('fs');
-const { test, expect, chromium } = require('@playwright/test');
+const { test, expect, chromium } = require('playwright/test');
 const path = require('path');
-
-const extensionPath = path.join(__dirname, '../..');
+const { getExtensionLaunchArgs } = require('../helpers/extension-target');
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixturePath = '/command-download/host.html';
 const fixtureFile = path.join(__dirname, '../fixtures/e2e-pages/command-download/host.html');
@@ -39,10 +38,7 @@ test.describe('Command And Download Regression E2E', () => {
 	test.beforeAll(async () => {
 		context = await chromium.launchPersistentContext('', {
 			headless: false,
-			args: [
-				`--disable-extensions-except=${extensionPath}`,
-				`--load-extension=${extensionPath}`,
-			],
+			args: getExtensionLaunchArgs(),
 		});
 		await installFixtureRoutes(context);
 

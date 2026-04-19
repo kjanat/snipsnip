@@ -1,7 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { chromium } = require('@playwright/test');
+const { chromium } = require('playwright/test');
 
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixturePathname = '/extension/deterministic-article.html';
