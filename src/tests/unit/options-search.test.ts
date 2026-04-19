@@ -1,15 +1,17 @@
-const { describe, test, expect, beforeEach, afterEach, mock } = require('bun:test');
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const fs = require('fs');
-const path = require('path');
-const { JSDOM } = require('../helpers/jsdom-shim');
+import libraryState from '../../shared/library-state.ts';
+import optionsState from '../../shared/options-state.ts';
+import searchCore from '../../shared/search-core.ts';
+import templateUtils from '../../shared/template-utils.ts';
+import { JSDOM } from '../helpers/jsdom-shim.ts';
 
-const searchCore = require('../../shared/search-core.ts');
-const libraryState = require('../../shared/library-state.ts');
-const optionsState = require('../../shared/options-state.ts');
-const templateUtils = require('../../shared/template-utils.ts');
 globalThis.snipSnipSearchCore = searchCore;
-const optionsSearch = require('../../options/options-search.ts');
+await import('../../options/options-search.ts');
+
+const optionsSearch = globalThis.snipSnipOptionsSearch;
 
 const optionsHtml = fs.readFileSync(
 	path.join(__dirname, '../../options/options.html'),
@@ -23,8 +25,19 @@ const optionsSource = fs.readFileSync(
 	path.join(__dirname, '../../options/options.ts'),
 	'utf8',
 );
-const momentModule = require('../../background/moment.min.ts');
-const moment = momentModule.default ?? momentModule;
+const moment = (value: Date | number | string | null = new Date()) => ({
+	format(pattern: string) {
+		if (pattern === 'YYYY-MM-DD') {
+			const nextDate = value instanceof Date ? value : new Date(value ?? Date.now());
+			const year = nextDate.getFullYear();
+			const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+			const day = String(nextDate.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
+		return new Date(value).toISOString();
+	},
+});
 
 const baseOptions = {
 	headingStyle: 'atx',
@@ -190,13 +203,44 @@ function createOptionsPageDom(optionOverrides = {}, libraryOverrides = {}) {
 		downloads: {},
 	};
 
+	const windowLibraryState = {
+		normalizeLibrarySettings: libraryState.normalizeLibrarySettings,
+		async saveLibrarySettings(nextSettings) {
+			const normalized = libraryState.normalizeLibrarySettings(nextSettings);
+			localState = { ...localState, librarySettings: normalized };
+			await browser.storage.local.set({ librarySettings: normalized });
+			return normalized;
+		},
+		async loadLibrarySettings() {
+			return libraryState.normalizeLibrarySettings(localState.librarySettings);
+		},
+		async resetLibrarySettings() {
+			const normalized = libraryState.normalizeLibrarySettings();
+			localState = { ...localState, librarySettings: normalized };
+			await browser.storage.local.set({ librarySettings: normalized });
+			return normalized;
+		},
+		async trimStoredLibraryItems(itemsToKeep) {
+			localState = {
+				...localState,
+				libraryItems: libraryState.trimLibraryItems(localState.libraryItems, itemsToKeep),
+			};
+			return localState.libraryItems;
+		},
+		async clearLibraryItems() {
+			localState = { ...localState, libraryItems: [] };
+			await browser.storage.local.remove('libraryItems');
+			return [];
+		},
+	};
+
 	dom.window.browser = browser;
 	dom.window.chrome = browser;
 	dom.window.moment = moment;
 	dom.window.createMenus = mock();
 	dom.window.eval(`var defaultOptions = ${JSON.stringify(storedOptions)};`);
 	dom.window.snipSnipSearchCore = searchCore;
-	dom.window.snipSnipLibraryState = libraryState;
+	dom.window.snipSnipLibraryState = windowLibraryState;
 	dom.window.snipSnipOptionsState = optionsState;
 	dom.window.snipSnipTemplateUtils = templateUtils;
 	dom.window.eval(optionsSearchSource);

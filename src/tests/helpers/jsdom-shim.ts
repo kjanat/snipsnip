@@ -1,8 +1,14 @@
-const vm = require('node:vm');
-const { Window } = require('happy-dom');
+import { Window } from 'happy-dom';
+import vm from 'node:vm';
 
-class JSDOM {
-	constructor(html = '<!DOCTYPE html><html><head></head><body></body></html>', options = {}) {
+export class JSDOM {
+	window: Window;
+	context: vm.Context;
+
+	constructor(
+		html = '<!DOCTYPE html><html><head></head><body></body></html>',
+		options: { url?: string } = {},
+	) {
 		this.window = new Window({
 			url: options.url,
 		});
@@ -61,7 +67,7 @@ class JSDOM {
 		this.window.SyntaxError = SyntaxError;
 		this.window.TypeError = TypeError;
 		this.context = vm.createContext(this.window);
-		this.window.eval = (code) => vm.runInContext(String(code), this.context);
+		this.window.eval = (code: string) => vm.runInContext(String(code), this.context);
 
 		const normalizedHtml = String(html).replace(/<!DOCTYPE[^>]*>/i, '');
 		this.window.document.documentElement.innerHTML = normalizedHtml;
@@ -72,6 +78,6 @@ class JSDOM {
 	}
 }
 
-module.exports = {
+export default {
 	JSDOM,
 };

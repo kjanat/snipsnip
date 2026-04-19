@@ -1,8 +1,24 @@
-const { describe, test, expect, afterEach, mock } = require('bun:test');
+import { afterEach, describe, expect, test } from 'bun:test';
+
+import templateUtilsModule, { textReplace } from '../../shared/template-utils.ts';
 
 describe('Template utils helpers', () => {
+	const createMomentStub = () => (value: Date | number | string | null = new Date()) => ({
+		format(pattern: string) {
+			if (pattern === 'YYYY-MM-DD') {
+				const nextDate = value instanceof Date ? value : new Date(value ?? Date.now());
+				const year = nextDate.getFullYear();
+				const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+				const day = String(nextDate.getDate()).padStart(2, '0');
+				return `${year}-${month}-${day}`;
+			}
+
+			return new Date(value).toISOString();
+		},
+	});
+
 	describe('generateValidFileName', () => {
-		const { generateValidFileName } = require('../../shared/template-utils');
+		const { generateValidFileName } = templateUtilsModule;
 
 		test('removes custom disallowed regex characters when provided', () => {
 			const raw = 'Archived [Notes] (2026)';
@@ -25,19 +41,23 @@ describe('Template utils helpers', () => {
 
 	describe('formatDate fallback', () => {
 		const originalMoment = global.moment;
-		const actualMomentModule = require('../../background/moment.min.ts');
-		const actualMoment = actualMomentModule.default ?? actualMomentModule;
+		const actualMoment = createMomentStub();
 
 		afterEach(() => {
-			mock.module('../../background/moment.min.ts', () => actualMoment);
 			global.moment = originalMoment;
 		});
 
 		test('falls back to ISO date when moment cannot be loaded', () => {
-			mock.module('../../background/moment.min.ts', () => ({}));
 			delete global.moment;
 
-			const { textReplace } = require('../../shared/template-utils');
+			const result = textReplace('Date: {date:YYYY-MM-DD}', {});
+
+			expect(result).toMatch(/^Date: \d{4}-\d{2}-\d{2}$/);
+		});
+
+		test('uses moment when available on globalThis', () => {
+			global.moment = actualMoment;
+
 			const result = textReplace('Date: {date:YYYY-MM-DD}', {});
 
 			expect(result).toMatch(/^Date: \d{4}-\d{2}-\d{2}$/);

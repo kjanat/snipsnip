@@ -1,14 +1,25 @@
+import templateUtilsModule, { textReplace } from '../../shared/template-utils.ts';
+
 /**
  * Template Processing Tests
  * Tests template variable substitution and text replacement functionality
  */
 
-const momentModule = require('../../background/moment.min.ts');
-const moment = momentModule.default ?? momentModule;
-const {
-	textReplace,
-	generateValidFileName,
-} = require('../../shared/template-utils');
+const moment = (value: Date | number | string | null = new Date()) => ({
+	format(pattern: string) {
+		if (pattern === 'YYYY-MM-DD') {
+			const nextDate = value instanceof Date ? value : new Date(value ?? Date.now());
+			const year = nextDate.getFullYear();
+			const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+			const day = String(nextDate.getDate()).padStart(2, '0');
+			return `${year}-${month}-${day}`;
+		}
+
+		return new Date(value).toISOString();
+	},
+});
+global.moment = moment;
+const { generateValidFileName } = templateUtilsModule;
 
 describe('Template Processing', () => {
 	// Mock article data for testing
