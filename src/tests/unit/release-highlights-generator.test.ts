@@ -1,8 +1,8 @@
-const {
+import {
 	buildReleaseHighlightsAsset,
 	extractReleaseSections,
 	normalizeBulletText,
-} = require('@/scripts/generate-release-highlights');
+} from '@/scripts/generate-release-highlights';
 
 describe('release highlights generator', () => {
 	const sampleChangelog = `
@@ -60,5 +60,21 @@ describe('release highlights generator', () => {
 		expect(() => buildReleaseHighlightsAsset(sampleChangelog, '9.9.9')).toThrow(
 			/missing release highlights/i,
 		);
+	});
+
+	test('accepts semver headings with build metadata', () => {
+		const semverBuildChangelog = `
+# Changelog
+
+## 5.0.0+dev
+
+### User Highlights
+
+- Preview build highlights still generate.
+`;
+
+		const asset = buildReleaseHighlightsAsset(semverBuildChangelog, '5.0.0+dev');
+
+		expect(asset.versions['5.0.0+dev']).toEqual(['Preview build highlights still generate.']);
 	});
 });

@@ -11,7 +11,7 @@
 	"scripts": {
 		"bd": "bun generate:highlights && bun run build && bun fmt",
 		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.ts",
-		"build": "bun build:chrome & bun build:firefox & wait",
+		"build": "bun run build:chrome && bun run build:firefox",
 		"build:chrome": "wxt build -b chrome --mv3",
 		"build:firefox": "wxt build -b firefox --mv3",
 		"check": "biome check",

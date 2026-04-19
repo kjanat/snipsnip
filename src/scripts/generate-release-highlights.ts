@@ -1,14 +1,30 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { exit } from 'node:process';
 
-const SRC_DIR = path.resolve(__dirname, '..');
-const ROOT_DIR = path.resolve(SRC_DIR, '..');
-const PACKAGE_PATH = path.join(ROOT_DIR, 'package.json');
-const CHANGELOG_PATH = path.join(ROOT_DIR, 'CHANGELOG.md');
-const OUTPUT_PATH = path.join(SRC_DIR, 'shared', 'release-highlights.json');
+const SRC_DIR = resolve(import.meta.dirname, '..');
+const ROOT_DIR = resolve(SRC_DIR, '..');
+const PACKAGE_PATH = join(ROOT_DIR, 'package.json');
+const CHANGELOG_PATH = join(ROOT_DIR, 'CHANGELOG.md');
+const OUTPUT_PATH = join(SRC_DIR, 'shared', 'release-highlights.json');
 const USER_HIGHLIGHTS_HEADING = 'user highlights';
+const SEMVER_HEADING_PATTERN = /^##\s+(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)\s*$/;
 
-function normalizeBulletText(line) {
+type ReleaseSections = Record<string, string[]>;
+
+type ReleaseHighlightsAsset = {
+	generatedAt: string;
+	source: 'CHANGELOG.md';
+	versions: ReleaseSections;
+};
+
+type GenerateReleaseHighlightsOptions = {
+	packagePath?: string;
+	changelogPath?: string;
+	outputPath?: string;
+};
+
+export function normalizeBulletText(line: string): string {
 	return line
 		.replace(/^\s*-\s+/, '')
 		.replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -18,13 +34,13 @@ function normalizeBulletText(line) {
 		.trim();
 }
 
-function extractReleaseSections(changelogText) {
+export function extractReleaseSections(changelogText: string): ReleaseSections {
 	const lines = changelogText.split(/\r?\n/);
-	const versions = {};
-	let currentVersion = null;
-	let topLevelBullets = [];
-	let userHighlights = [];
-	let currentSubheading = null;
+	const versions: ReleaseSections = {};
+	let currentVersion: string | null = null;
+	let topLevelBullets: string[] = [];
+	let userHighlights: string[] = [];
+	let currentSubheading: string | null = null;
 
 	function commitCurrentVersion() {
 		if (!currentVersion) {
@@ -35,7 +51,7 @@ function extractReleaseSections(changelogText) {
 	}
 
 	for (const line of lines) {
-		const headingMatch = line.match(/^##\s+(\d+\.\d+\.\d+)\s*$/);
+		const headingMatch = line.match(SEMVER_HEADING_PATTERN);
 		if (headingMatch) {
 			commitCurrentVersion();
 			currentVersion = headingMatch[1];
@@ -72,7 +88,11 @@ function extractReleaseSections(changelogText) {
 	return versions;
 }
 
-function buildReleaseHighlightsAsset(changelogText, manifestVersion, maxHighlights = 5) {
+export function buildReleaseHighlightsAsset(
+	changelogText: string,
+	manifestVersion: string,
+	maxHighlights = 5,
+): ReleaseHighlightsAsset {
 	const versions = extractReleaseSections(changelogText);
 	const currentHighlights = versions[manifestVersion];
 
@@ -80,7 +100,7 @@ function buildReleaseHighlightsAsset(changelogText, manifestVersion, maxHighligh
 		throw new Error(`CHANGELOG.md is missing release highlights for manifest version ${manifestVersion}`);
 	}
 
-	const normalizedVersions = {};
+	const normalizedVersions: ReleaseSections = {};
 	for (const [version, highlights] of Object.entries(versions)) {
 		if (!Array.isArray(highlights) || highlights.length === 0) {
 			continue;
@@ -95,38 +115,33 @@ function buildReleaseHighlightsAsset(changelogText, manifestVersion, maxHighligh
 	};
 }
 
-function generateReleaseHighlights(options = {}) {
+export function generateReleaseHighlights(
+	options: GenerateReleaseHighlightsOptions = {},
+): ReleaseHighlightsAsset {
 	const packagePath = options.packagePath || PACKAGE_PATH;
 	const changelogPath = options.changelogPath || CHANGELOG_PATH;
 	const outputPath = options.outputPath || OUTPUT_PATH;
 
-	const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-	const changelog = fs.readFileSync(changelogPath, 'utf8');
+	const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+	const changelog = readFileSync(changelogPath, 'utf8');
 	const asset = buildReleaseHighlightsAsset(changelog, pkg.version);
 
-	fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-	fs.writeFileSync(outputPath, `${JSON.stringify(asset, null, 2)}\n`, 'utf8');
+	mkdirSync(dirname(outputPath), { recursive: true });
+	writeFileSync(outputPath, `${JSON.stringify(asset, null, '\t')}\n`, 'utf8');
 
 	return asset;
 }
 
-if (require.main === module) {
+if (import.meta.main) {
 	try {
 		const asset = generateReleaseHighlights();
 		console.log(
 			`Generated release highlights for ${Object.keys(asset.versions).length} version(s): ${
-				path.relative(SRC_DIR, OUTPUT_PATH)
+				relative(SRC_DIR, OUTPUT_PATH)
 			}`,
 		);
 	} catch (error) {
-		console.error(error.message);
-		process.exit(1);
+		console.error(error instanceof Error ? error.message : String(error));
+		exit(1);
 	}
 }
-
-export default {
-	buildReleaseHighlightsAsset,
-	extractReleaseSections,
-	generateReleaseHighlights,
-	normalizeBulletText,
-};

@@ -1,15 +1,15 @@
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const { chromium } = require('playwright/test');
-
+import fs, { mkdtempSync } from 'node:fs';
+import os, { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { parseArgs } from 'node:util';
+import { chromium, type Page, type Worker } from 'playwright/test';
 const fixtureHost = 'https://fixtures.snipsnip.test';
 const fixturePathname = '/extension/deterministic-article.html';
 const fixtureUrl = `${fixtureHost}${fixturePathname}`;
-const fixtureFile = path.join(__dirname, '../tests/fixtures/e2e-pages/extension/deterministic-article.html');
+const fixtureFile = join(import.meta.dirname, '../tests/fixtures/e2e-pages/extension/deterministic-article.html');
 const clipSentinel = 'This page is routed by Playwright for deterministic extension E2E tests.';
 
-function parseArgs(argv) {
+function parseArgs(argv: string[]) {
 	const options = {
 		iterations: 10,
 		warmup: 1,
@@ -42,7 +42,7 @@ function parseArgs(argv) {
 	if (options.targets.length === 0) {
 		options.targets.push({
 			label: 'current',
-			extensionPath: path.resolve(path.join(__dirname, '../..')),
+			extensionPath: resolve(join(import.meta.dirname, '../..')),
 		});
 	}
 
@@ -76,8 +76,8 @@ async function installFixtureRoutes(context) {
 	});
 }
 
-async function loadExtensionContext(extensionPath) {
-	const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'snipsnip-popup-bench-'));
+async function loadExtensionContext(extensionPath: string) {
+	const userDataDir = mkdtempSync(join(tmpdir(), 'snipsnip-popup-bench-'));
 
 	const context = await chromium.launchPersistentContext(userDataDir, {
 		headless: false,
@@ -97,7 +97,7 @@ async function loadExtensionContext(extensionPath) {
 	return { context, serviceWorker, extensionId, userDataDir };
 }
 
-async function resetPopupBenchmarkState(serviceWorker) {
+async function resetPopupBenchmarkState(serviceWorker: Worker) {
 	await serviceWorker.evaluate(async () => {
 		await browser.storage.local.clear();
 		await browser.storage.sync.clear();
@@ -108,57 +108,51 @@ async function resetPopupBenchmarkState(serviceWorker) {
 				autoSaveOnPopupOpen: false,
 				itemsToKeep: 10,
 			},
-			libraryItems: [
-				{
-					id: 'bench-one',
-					pageUrl: 'https://example.com/alpha',
-					normalizedPageUrl: 'https://example.com/alpha',
-					title: 'Alpha',
-					markdown: '# Alpha',
-					savedAt: '2026-03-20T10:00:00.000Z',
-					previewText: 'Alpha',
+			libraryItems: [{
+				id: 'bench-one',
+				pageUrl: 'https://example.com/alpha',
+				normalizedPageUrl: 'https://example.com/alpha',
+				title: 'Alpha',
+				markdown: '# Alpha',
+				savedAt: '2026-03-20T10:00:00.000Z',
+				previewText: 'Alpha',
+			}, {
+				id: 'bench-two',
+				pageUrl: 'https://example.com/beta',
+				normalizedPageUrl: 'https://example.com/beta',
+				title: 'Beta',
+				markdown: '# Beta',
+				savedAt: '2026-03-20T09:00:00.000Z',
+				previewText: 'Beta',
+			}, {
+				id: 'bench-three',
+				pageUrl: 'https://example.com/gamma',
+				normalizedPageUrl: 'https://example.com/gamma',
+				title: 'Gamma',
+				markdown: '# Gamma',
+				savedAt: '2026-03-20T08:00:00.000Z',
+				previewText: 'Gamma',
+			}],
+			pendingNotifications: [{
+				id: 'popup-benchmark-notification',
+				type: 'support-milestone',
+				title: 'Benchmark notification',
+				message: 'Deferred popup notification benchmark body',
+				milestone: 100,
+				primaryAction: {
+					label: 'View release notes',
+					url: 'https://example.com/releases',
 				},
-				{
-					id: 'bench-two',
-					pageUrl: 'https://example.com/beta',
-					normalizedPageUrl: 'https://example.com/beta',
-					title: 'Beta',
-					markdown: '# Beta',
-					savedAt: '2026-03-20T09:00:00.000Z',
-					previewText: 'Beta',
+				secondaryAction: {
+					label: 'Buy Me a Coffee',
+					url: 'https://example.com/support',
 				},
-				{
-					id: 'bench-three',
-					pageUrl: 'https://example.com/gamma',
-					normalizedPageUrl: 'https://example.com/gamma',
-					title: 'Gamma',
-					markdown: '# Gamma',
-					savedAt: '2026-03-20T08:00:00.000Z',
-					previewText: 'Gamma',
-				},
-			],
-			pendingNotifications: [
-				{
-					id: 'popup-benchmark-notification',
-					type: 'support-milestone',
-					title: 'Benchmark notification',
-					message: 'Deferred popup notification benchmark body',
-					milestone: 100,
-					primaryAction: {
-						label: 'View release notes',
-						url: 'https://example.com/releases',
-					},
-					secondaryAction: {
-						label: 'Buy Me a Coffee',
-						url: 'https://example.com/support',
-					},
-				},
-			],
+			}],
 		});
 	});
 }
 
-async function waitForMetric(page, pageFunction, timeout, arg = null) {
+async function waitForMetric(page: Page, pageFunction, timeout, arg = null) {
 	const handle = await page.waitForFunction(pageFunction, arg, {
 		timeout,
 		polling: 'raf',
@@ -358,7 +352,9 @@ async function main() {
 	}
 }
 
-main().catch((error) => {
-	console.error(error);
-	process.exitCode = 1;
-});
+if (import.meta.main) {
+	main().catch((error) => {
+		console.error(error);
+		process.exitCode = 1;
+	});
+}
