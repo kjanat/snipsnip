@@ -12,9 +12,14 @@ const autoIcons: AutoIconsOptions = {
 export default defineConfig({
 	modules: ['@wxt-dev/auto-icons'],
 	srcDir: 'src',
-	publicDir: 'src/public',
 	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
+	vite: () => ({
+		build: {
+			sourcemap: 'inline',
+			minify: false,
+		},
+	}),
 	manifest: ({ browser }) => ({
 		name: 'SnipSnip - Markdown Web Clipper',
 		author: 'Kaj Kowalski',

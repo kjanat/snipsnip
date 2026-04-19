@@ -1,65 +1,70 @@
 import fs, { mkdtempSync } from 'node:fs';
-import os, { tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { chromium, type Page, type Worker } from 'playwright/test';
-const fixtureHost = 'https://fixtures.snipsnip.test';
-const fixturePathname = '/extension/deterministic-article.html';
-const fixtureUrl = `${fixtureHost}${fixturePathname}`;
+import { type BrowserContext, chromium, type Page, type Route, type Worker } from 'playwright/test';
+const fixture = new URL('/extension/deterministic-article.html', 'https://fixtures.snipsnip.test');
+const fixtureUrl = fixture.href; //
 const fixtureFile = join(import.meta.dirname, '../tests/fixtures/e2e-pages/extension/deterministic-article.html');
 const clipSentinel = 'This page is routed by Playwright for deterministic extension E2E tests.';
 
-function parseArgs(argv: string[]) {
-	const options = {
-		iterations: 10,
-		warmup: 1,
-		targets: [],
-	};
+type Target = { label: string; extensionPath: string };
 
-	for (let i = 0; i < argv.length; i++) {
-		const arg = argv[i];
-		if (arg === '--iterations') {
-			options.iterations = Number(argv[++i] || options.iterations);
-			continue;
-		}
-		if (arg === '--warmup') {
-			options.warmup = Number(argv[++i] || options.warmup);
-			continue;
-		}
-		if (arg === '--current') {
-			options.targets.push({ label: 'current', extensionPath: path.resolve(argv[++i]) });
-			continue;
-		}
-		if (arg === '--baseline') {
-			options.targets.push({ label: 'baseline', extensionPath: path.resolve(argv[++i]) });
-			continue;
-		}
-		if (arg === '--extension-path') {
-			options.targets.push({ label: 'target', extensionPath: path.resolve(argv[++i]) });
-		}
+type RunMetrics = {
+	shellVisibleMs: number;
+	editorReadyMs: number;
+	clipRenderedMs: number;
+	libraryBadgeReadyMs: number;
+	notificationVisibleMs: number;
+};
+
+type MetricSummary = { min: number; median: number; p95: number; mean: number; max: number };
+
+type RunSummary = Record<keyof RunMetrics, MetricSummary>;
+
+function parseCliArgs(argv: string[]) {
+	const { values } = parseArgs({
+		args: argv,
+		options: {
+			iterations: { type: 'string', default: '10' },
+			warmup: { type: 'string', default: '1' },
+			current: { type: 'string', multiple: true, default: [] },
+			baseline: { type: 'string', multiple: true, default: [] },
+			'extension-path': { type: 'string', multiple: true, default: [] },
+		},
+		strict: true,
+	});
+
+	const iterations = Number(values.iterations);
+	const warmup = Number(values.warmup);
+
+	if (!Number.isFinite(iterations) || iterations < 1) {
+		throw new Error(`Invalid --iterations value: ${values.iterations}`);
+	}
+	if (!Number.isFinite(warmup) || warmup < 0) {
+		throw new Error(`Invalid --warmup value: ${values.warmup}`);
 	}
 
-	if (options.targets.length === 0) {
-		options.targets.push({
+	const targets = [
+		...(values.current ?? []).map((p) => ({ label: 'current', extensionPath: resolve(p) })),
+		...(values.baseline ?? []).map((p) => ({ label: 'baseline', extensionPath: resolve(p) })),
+		...(values['extension-path'] ?? []).map((p) => ({ label: 'target', extensionPath: resolve(p) })),
+	];
+
+	if (targets.length === 0) {
+		targets.push({
 			label: 'current',
 			extensionPath: resolve(join(import.meta.dirname, '../..')),
 		});
 	}
 
-	if (!Number.isFinite(options.iterations) || options.iterations < 1) {
-		throw new Error(`Invalid --iterations value: ${options.iterations}`);
-	}
-	if (!Number.isFinite(options.warmup) || options.warmup < 0) {
-		throw new Error(`Invalid --warmup value: ${options.warmup}`);
-	}
-
-	return options;
+	return { iterations, warmup, targets };
 }
 
-async function installFixtureRoutes(context) {
-	await context.route(`${fixtureHost}/**`, async (route) => {
+async function installFixtureRoutes(context: BrowserContext) {
+	await context.route(`${fixture.origin}/**`, async (route: Route) => {
 		const url = new URL(route.request().url());
-		if (url.pathname !== fixturePathname) {
+		if (url.pathname !== fixture.pathname) {
 			await route.fulfill({
 				status: 404,
 				contentType: 'text/plain; charset=utf-8',
@@ -152,8 +157,13 @@ async function resetPopupBenchmarkState(serviceWorker: Worker) {
 	});
 }
 
-async function waitForMetric(page: Page, pageFunction, timeout, arg = null) {
-	const handle = await page.waitForFunction(pageFunction, arg, {
+async function waitForMetric<Arg = unknown>(
+	page: Page,
+	pageFunction: (arg: Arg) => unknown,
+	timeout: number,
+	arg: Arg = null as Arg,
+): Promise<number> {
+	const handle = await page.waitForFunction(pageFunction as never, arg, {
 		timeout,
 		polling: 'raf',
 	});
@@ -162,7 +172,11 @@ async function waitForMetric(page: Page, pageFunction, timeout, arg = null) {
 	return Number(value);
 }
 
-async function runIteration({ context, serviceWorker, extensionId }) {
+async function runIteration({ context, serviceWorker, extensionId }: {
+	context: BrowserContext;
+	serviceWorker: Worker;
+	extensionId: string;
+}): Promise<RunMetrics> {
 	await resetPopupBenchmarkState(serviceWorker);
 
 	const fixturePage = await context.newPage();
@@ -187,7 +201,8 @@ async function runIteration({ context, serviceWorker, extensionId }) {
 		const editorReadyMs = await waitForMetric(
 			popupPage,
 			() => {
-				if (window.cm && typeof window.cm.getValue === 'function') {
+				const cm = (window as typeof window & { cm?: { getValue?: () => unknown } }).cm;
+				if (cm && typeof cm.getValue === 'function') {
 					return performance.now();
 				}
 				return document.querySelector('.CodeMirror') ? performance.now() : 0;
@@ -198,8 +213,8 @@ async function runIteration({ context, serviceWorker, extensionId }) {
 		const clipRenderedMs = await waitForMetric(
 			popupPage,
 			(needle) => {
-				const titleValue = document.getElementById('title')?.value || '';
-				const textareaValue = document.getElementById('md')?.value || '';
+				const titleValue = document.querySelector<HTMLInputElement>('#title')?.value || '';
+				const textareaValue = document.querySelector<HTMLTextAreaElement>('#md')?.value || '';
 				const codeMirrorText = document.querySelector('.CodeMirror-code')?.textContent || '';
 				return (
 						titleValue.includes('Deterministic Markdown Fixture')
@@ -246,17 +261,17 @@ async function runIteration({ context, serviceWorker, extensionId }) {
 	}
 }
 
-function percentile(values, p) {
+function percentile(values: number[], p: number): number {
 	const sorted = values.slice().sort((a, b) => a - b);
 	const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * p) - 1));
 	return sorted[index];
 }
 
-function round(value) {
+function round(value: number): number {
 	return Math.round(value * 10) / 10;
 }
 
-function summarizeMetric(values) {
+function summarizeMetric(values: number[]): MetricSummary {
 	const sorted = values.slice().sort((a, b) => a - b);
 	const sum = sorted.reduce((total, value) => total + value, 0);
 	return {
@@ -268,26 +283,26 @@ function summarizeMetric(values) {
 	};
 }
 
-function summarizeRuns(runs) {
-	const metrics = Object.keys(runs[0]);
+function summarizeRuns(runs: RunMetrics[]): RunSummary {
+	const metrics = Object.keys(runs[0]) as (keyof RunMetrics)[];
 	return metrics.reduce((summary, metric) => {
 		summary[metric] = summarizeMetric(runs.map((run) => run[metric]));
 		return summary;
-	}, {});
+	}, {} as RunSummary);
 }
 
-function printTargetSummary(label, summary) {
+function printTargetSummary(label: string, summary: RunSummary): void {
 	console.log(`\n${label.toUpperCase()}`);
-	for (const [metric, stats] of Object.entries(summary)) {
+	for (const [metric, stats] of Object.entries(summary) as [string, MetricSummary][]) {
 		console.log(
 			`  ${metric}: median=${stats.median}ms p95=${stats.p95}ms mean=${stats.mean}ms min=${stats.min}ms max=${stats.max}ms`,
 		);
 	}
 }
 
-function printComparison(currentSummary, baselineSummary) {
+function printComparison(currentSummary: RunSummary, baselineSummary: RunSummary): void {
 	console.log('\nCOMPARISON (positive % means current is faster)');
-	for (const metric of Object.keys(currentSummary)) {
+	for (const metric of Object.keys(currentSummary) as (keyof RunMetrics)[]) {
 		const baselineMedian = baselineSummary[metric].median;
 		const currentMedian = currentSummary[metric].median;
 		const deltaMs = round(baselineMedian - currentMedian);
@@ -298,10 +313,12 @@ function printComparison(currentSummary, baselineSummary) {
 	}
 }
 
-async function benchmarkTarget(target, iterations, warmup) {
+type BenchmarkResult = { target: Target; runs: RunMetrics[]; summary: RunSummary };
+
+async function benchmarkTarget(target: Target, iterations: number, warmup: number): Promise<BenchmarkResult> {
 	const loaded = await loadExtensionContext(target.extensionPath);
 	try {
-		const runs = [];
+		const runs: RunMetrics[] = [];
 		const totalRuns = warmup + iterations;
 		for (let index = 0; index < totalRuns; index++) {
 			const run = await runIteration(loaded);
@@ -331,8 +348,8 @@ async function benchmarkTarget(target, iterations, warmup) {
 }
 
 async function main() {
-	const options = parseArgs(process.argv.slice(2));
-	const results = [];
+	const options = parseCliArgs(process.argv.slice(2));
+	const results: BenchmarkResult[] = [];
 
 	for (const target of options.targets) {
 		console.log(`\nBenchmarking ${target.label} at ${target.extensionPath}`);
