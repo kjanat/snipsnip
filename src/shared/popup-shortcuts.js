@@ -1,4 +1,4 @@
-((root) => {
+const api = ((root) => {
 	const COMMAND_LABELS = {
 		'_execute_action': 'Open SnipSnip popup',
 		'download_tab_as_markdown': 'Download tab as Markdown',
