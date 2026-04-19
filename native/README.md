@@ -1,6 +1,15 @@
 # SnipSnip Agent Bridge
 
+*Ez pz*
+
+```sh
+go install github.com/kjanat/snipsnip/native/cmd/snipsnip@latest
+go install github.com/kjanat/snipsnip/native/cmd/snipsnip-native-host@latest
+```
+
 Desktop companion binaries for the SnipSnip browser extension.
+
+---
 
 Files:
 
