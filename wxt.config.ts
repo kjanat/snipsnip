@@ -5,7 +5,7 @@ const autoIcons: AutoIconsOptions = {
 	enabled: true,
 	baseIconPath: 'assets/icon.png',
 	developmentIndicator: 'overlay',
-	sizes: [16, 32, 48, 128],
+	sizes: [16, 32, 48, 128, 192, 256, 512],
 };
 
 // See https://wxt.dev/api/config.html
