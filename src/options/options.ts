@@ -1,7 +1,11 @@
 import type {
+	ColorBlindTheme,
 	CustomSendToTargetInput,
+	DefaultExportType,
+	DownloadMode,
 	ExtensionOptions,
 	SendToCustomTarget,
+	SpecialTheme,
 	SnipSnipAgentBridgeStateApi,
 	SnipSnipLibraryStateApi,
 	SnipSnipOptionsStateApi,
@@ -11,7 +15,7 @@ import { getItemsBag, setItemsBag, storage } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
 
 type OptionsState =
-	& Omit<Partial<ExtensionOptions>, 'sendToCustomTargets' | 'defaultSendToTarget' | 'siteRules'>
+	& Omit<Partial<ExtensionOptions>, 'sendToCustomTargets' | 'defaultSendToTarget' | 'siteRules' | 'tableFormatting'>
 	& Record<string, unknown>
 	& {
 		sendToCustomTargets?: CustomSendToTarget[];
@@ -42,6 +46,7 @@ type OptionsState =
 type SiteRulesApi = NonNullable<typeof globalThis.snipSnipSiteRules> & {
 	collectOverrideKeys?: (overrides?: SiteRuleOverride) => string[];
 };
+type TableFormattingState = NonNullable<OptionsState['tableFormatting']>;
 type SearchIndexEntry = {
 	card: HTMLElement;
 	section: HTMLElement;
@@ -263,6 +268,30 @@ function getButtonById(id: string): HTMLButtonElement | null {
 
 function getHtmlElementById(id: string): HTMLElement | null {
 	return getElementByIdOfType(id, HTMLElement);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function normalizeSpecialTheme(value: unknown): SpecialTheme {
+	const normalized = String(value || 'none');
+	return ['none', 'claude', 'perplexity', 'openai', 'atla', 'ben10'].includes(normalized)
+		? normalized as SpecialTheme
+		: 'none';
+}
+
+function getTableFormattingState(value: unknown): TableFormattingState {
+	if (!isRecord(value)) {
+		return {};
+	}
+
+	return {
+		stripLinks: value.stripLinks === true,
+		stripFormatting: value.stripFormatting === true,
+		prettyPrint: value.prettyPrint === true,
+		centerText: value.centerText === true,
+	};
 }
 
 function getInputValueByName(name: string): string {
@@ -1546,16 +1575,17 @@ function handlePermissionDismiss() {
 
 function normalizeImportedOptionsState(importedOptions: unknown): OptionsState {
 	const optionsStateApi = getOptionsStateApi();
+	const importedOptionsRecord = isRecord(importedOptions) ? importedOptions : undefined;
 	if (optionsStateApi?.normalizeImportedOptions) {
-		return optionsStateApi.normalizeImportedOptions(importedOptions, defaultOptions);
+		return optionsStateApi.normalizeImportedOptions(importedOptionsRecord, defaultOptions) as OptionsState;
 	}
 
 	const normalizedOptions = {
 		...defaultOptions,
-		...(importedOptions || {}),
+		...(importedOptionsRecord || {}),
 		tableFormatting: {
 			...(defaultOptions.tableFormatting || {}),
-			...((importedOptions?.tableFormatting) || {}),
+			...(isRecord(importedOptionsRecord?.tableFormatting) ? importedOptionsRecord.tableFormatting : {}),
 		},
 	};
 
@@ -1666,10 +1696,10 @@ function applyContextMenuTransition(action: 'none' | 'create' | 'remove') {
 	}
 }
 
-function buildPopupThemeCacheSnapshot(source = options || defaultOptions) {
+function buildPopupThemeCacheSnapshot(source: OptionsState = options || defaultOptions) {
 	return {
 		popupTheme: source?.popupTheme || 'system',
-		specialTheme: source?.specialTheme || 'none',
+		specialTheme: normalizeSpecialTheme(source?.specialTheme),
 		colorBlindTheme: normalizeColorBlindTheme(source?.colorBlindTheme),
 		specialThemeIcon: source?.specialThemeIcon !== false,
 		popupAccent: source?.popupAccent || 'sage',
@@ -1678,7 +1708,7 @@ function buildPopupThemeCacheSnapshot(source = options || defaultOptions) {
 	};
 }
 
-function persistPopupThemeCache(source = options || defaultOptions) {
+function persistPopupThemeCache(source: OptionsState = options || defaultOptions) {
 	try {
 		localStorage.setItem(POPUP_THEME_CACHE_KEY, JSON.stringify(buildPopupThemeCacheSnapshot(source)));
 	} catch (error) {
@@ -1686,20 +1716,25 @@ function persistPopupThemeCache(source = options || defaultOptions) {
 	}
 }
 
-function normalizeColorBlindTheme(value: unknown) {
-	return ['deuteranopia', 'protanopia', 'tritanopia'].includes(String(value)) ? String(value) : 'deuteranopia';
+function normalizeColorBlindTheme(value: unknown): ColorBlindTheme {
+	const normalized = String(value || 'deuteranopia');
+	return normalized === 'protanopia' || normalized === 'tritanopia' ? normalized : 'deuteranopia';
 }
 
-function getColorBlindThemeClassName(value = options?.colorBlindTheme) {
+function getColorBlindThemeClassName(value: unknown = options?.colorBlindTheme): string {
 	return `colorblind-theme-${normalizeColorBlindTheme(value)}`;
 }
 
-const CB_DROPDOWN_LABELS = { deuteranopia: 'Deuteranopia', protanopia: 'Protanopia', tritanopia: 'Tritanopia' };
+const CB_DROPDOWN_LABELS: Record<ColorBlindTheme, string> = {
+	deuteranopia: 'Deuteranopia',
+	protanopia: 'Protanopia',
+	tritanopia: 'Tritanopia',
+};
 
-function updateCbDropdownLabel(value: string) {
-	const labelEl = document.getElementById('colorBlindThemeBtnLabel');
+function updateCbDropdownLabel(value: ColorBlindTheme): void {
+	const labelEl = getHtmlElementById('colorBlindThemeBtnLabel');
 	if (labelEl) labelEl.textContent = CB_DROPDOWN_LABELS[value] || 'Deuteranopia';
-	const panel = document.getElementById('colorBlindThemePanel');
+	const panel = getHtmlElementById('colorBlindThemePanel');
 	if (panel) {
 		queryAllOfType('.dd-item[data-value]', HTMLElement, panel).forEach(item => {
 			item.setAttribute('aria-selected', String(item.dataset.value === value));
@@ -1709,8 +1744,8 @@ function updateCbDropdownLabel(value: string) {
 
 function toggleCbDropdown(e: Event) {
 	e.stopPropagation();
-	const panel = document.getElementById('colorBlindThemePanel');
-	const btn = document.getElementById('colorBlindThemeBtn');
+	const panel = getHtmlElementById('colorBlindThemePanel');
+	const btn = getButtonById('colorBlindThemeBtn');
 	if (!panel || !btn) return;
 	const willOpen = panel.hidden;
 	panel.hidden = !willOpen;
@@ -1718,8 +1753,8 @@ function toggleCbDropdown(e: Event) {
 }
 
 function closeCbDropdown() {
-	const panel = document.getElementById('colorBlindThemePanel');
-	const btn = document.getElementById('colorBlindThemeBtn');
+	const panel = getHtmlElementById('colorBlindThemePanel');
+	const btn = getButtonById('colorBlindThemeBtn');
 	if (panel) panel.hidden = true;
 	if (btn) btn.setAttribute('aria-expanded', 'false');
 }
@@ -1727,7 +1762,7 @@ function closeCbDropdown() {
 // Apply theme mode and accent color to the Options page itself
 function applyThemeSettings() {
 	const root = document.documentElement;
-	const specialTheme = options.specialTheme || 'none';
+	const specialTheme = normalizeSpecialTheme(options.specialTheme);
 
 	// Apply theme mode
 	root.classList.remove('theme-light', 'theme-dark', 'theme-system');
@@ -1737,9 +1772,6 @@ function applyThemeSettings() {
 	root.classList.remove(...COLORBLIND_VARIANT_CLASS_NAMES);
 	if (specialTheme !== 'none') {
 		root.classList.add(`special-theme-${specialTheme}`);
-		if (specialTheme === 'colorblind') {
-			root.classList.add(getColorBlindThemeClassName(options.colorBlindTheme));
-		}
 	}
 
 	root.classList.toggle('hide-theme-icon', options.specialThemeIcon === false);
@@ -1755,19 +1787,19 @@ function applyThemeSettings() {
 }
 
 function updateSpecialThemeControlState() {
-	const specialTheme = options.specialTheme || 'none';
+	const specialTheme = normalizeSpecialTheme(options.specialTheme);
 	const specialThemeActive = specialTheme !== 'none';
-	const colorBlindThemeActive = specialTheme === 'colorblind';
+	const colorBlindThemeActive = false;
 	const themeHasIcon = specialTheme === 'atla' || specialTheme === 'ben10' || specialTheme === 'claude'
 		|| specialTheme === 'perplexity' || specialTheme === 'openai';
-	const accentGroup = document.getElementById('popupAccentGroup');
-	const editorThemeGroup = document.getElementById('editorThemeGroup');
-	const accentNote = document.getElementById('popupAccentThemeNote');
-	const editorThemeNote = document.getElementById('editorThemeLockNote');
-	const iconRow = document.getElementById('specialThemeIconRow');
-	const iconInput = document.querySelector("[name='specialThemeIcon']");
-	const colorBlindThemeRow = document.getElementById('colorBlindThemeRow');
-	const colorBlindThemeInput = document.querySelector("[name='colorBlindTheme']");
+	const accentGroup = getHtmlElementById('popupAccentGroup');
+	const editorThemeGroup = getHtmlElementById('editorThemeGroup');
+	const accentNote = getHtmlElementById('popupAccentThemeNote');
+	const editorThemeNote = getHtmlElementById('editorThemeLockNote');
+	const iconRow = getHtmlElementById('specialThemeIconRow');
+	const iconInput = queryElementOfType("[name='specialThemeIcon']", HTMLInputElement);
+	const colorBlindThemeRow = getHtmlElementById('colorBlindThemeRow');
+	const colorBlindThemeInput = queryElementOfType("[name='colorBlindTheme']", HTMLInputElement);
 
 	if (iconRow) iconRow.classList.toggle('is-disabled', !themeHasIcon);
 	if (iconInput) iconInput.disabled = !themeHasIcon;
@@ -1780,7 +1812,7 @@ function updateSpecialThemeControlState() {
 		colorBlindThemeInput.disabled = !colorBlindThemeActive;
 		colorBlindThemeInput.value = normalizeColorBlindTheme(options.colorBlindTheme);
 	}
-	const colorBlindThemeBtn = document.getElementById('colorBlindThemeBtn');
+	const colorBlindThemeBtn = getButtonById('colorBlindThemeBtn');
 	if (colorBlindThemeBtn) {
 		colorBlindThemeBtn.disabled = !colorBlindThemeActive;
 		updateCbDropdownLabel(normalizeColorBlindTheme(options.colorBlindTheme));
@@ -1800,21 +1832,21 @@ function updateSpecialThemeControlState() {
 		editorThemeNote.hidden = !specialThemeActive;
 	}
 
-	document.querySelectorAll("input[name='popupAccent']").forEach((input) => {
+	queryAllOfType("input[name='popupAccent']", HTMLInputElement).forEach((input) => {
 		input.disabled = specialThemeActive;
 	});
 
-	document.querySelectorAll("input[name='editorTheme']").forEach((input) => {
+	queryAllOfType("input[name='editorTheme']", HTMLInputElement).forEach((input) => {
 		input.disabled = specialThemeActive;
 	});
 }
 
 function configureReviewLink() {
-	const reviewLink = document.getElementById('leave-review-link');
+	const reviewLink = queryElementOfType('#leave-review-link', HTMLAnchorElement);
 	if (!reviewLink || !browser?.runtime?.getURL) return;
 
-	const chromeUrl = reviewLink.dataset.chromeUrl;
-	const firefoxUrl = reviewLink.dataset.firefoxUrl;
+	const chromeUrl = reviewLink.dataset.chromeUrl || reviewLink.href;
+	const firefoxUrl = reviewLink.dataset.firefoxUrl || reviewLink.href;
 	const extensionUrl = browser.runtime.getURL('/');
 	const isFirefox = extensionUrl.startsWith('moz-extension://');
 
