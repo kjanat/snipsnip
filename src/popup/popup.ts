@@ -5,6 +5,7 @@
 import { createEditor } from '@/popup/lib/editor';
 import defaultEditorTheme from '@/popup/lib/themes/default.ts';
 import { loadTheme } from '@/popup/lib/themes/registry.ts';
+import { getItemsBag, getItemsRecord, setItemsBag, storage } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
 
 var imageList = null;
@@ -984,7 +985,7 @@ async function handleThemeToggleClick(event) {
 	applyThemeSettings(currentOptions);
 
 	try {
-		await browser.storage.sync.set({ popupTheme: nextTheme });
+		await storage.setItem('sync:popupTheme', nextTheme);
 	} catch (error) {
 		console.error('Failed to persist popup theme toggle:', error);
 		currentOptions = normalizePopupOptions({
@@ -1749,7 +1750,7 @@ dom.charCount?.addEventListener('click', () => {
 	const idx = COUNT_MODES.indexOf(countMode);
 	countMode = COUNT_MODES[(idx + 1) % COUNT_MODES.length];
 	updateCharCount(_lastCounterText);
-	browser.storage.local.set({ countMode });
+	storage.setItem('local:countMode', countMode);
 });
 
 function getCardCountDisplay(markdown, mode) {
@@ -1884,7 +1885,7 @@ function setSelectedBatchSaveMode(mode) {
 function saveBatchSettings() {
 	const urlList = dom.urlList?.value || '';
 	const batchSaveMode = getSelectedBatchSaveMode();
-	browser.storage.local.set({
+	setItemsBag('local', {
 		batchUrlList: urlList,
 		batchSaveMode,
 	}).catch(err => {
@@ -1895,7 +1896,7 @@ function saveBatchSettings() {
 // Load batch settings from storage
 async function loadBatchSettings() {
 	try {
-		const data = await browser.storage.local.get(['batchUrlList', 'batchSaveMode']);
+		const data = await getItemsRecord('local', ['batchUrlList', 'batchSaveMode']);
 		if (data.batchUrlList && dom.urlList) {
 			dom.urlList.value = data.batchUrlList;
 		}
@@ -1942,7 +1943,7 @@ async function showBatchProcess(e) {
 
 	// Check if there are pending link picker results from storage
 	try {
-		const result = await browser.storage.local.get(['linkPickerResults', 'linkPickerTimestamp']);
+		const result = await getItemsRecord('local', ['linkPickerResults', 'linkPickerTimestamp']);
 		if (result.linkPickerResults && result.linkPickerResults.length > 0) {
 			// Check if results are recent (within last 30 seconds)
 			const age = Date.now() - (result.linkPickerTimestamp || 0);
@@ -1950,7 +1951,7 @@ async function showBatchProcess(e) {
 				console.log(`Found ${result.linkPickerResults.length} links from link picker`);
 				handleLinkPickerComplete(result.linkPickerResults);
 				// Clear the stored results after using them
-				await browser.storage.local.remove(['linkPickerResults', 'linkPickerTimestamp']);
+				await storage.removeItems(['local:linkPickerResults', 'local:linkPickerTimestamp']);
 			}
 		}
 	} catch (err) {
@@ -3309,7 +3310,7 @@ async function handleBatchConversion(e) {
 		await new Promise(resolve => setTimeout(resolve, 1000)); // Show completion briefly
 
 		// Clear saved batch URLs after successful completion
-		await browser.storage.local.remove('batchUrlList');
+		await storage.removeItem('local:batchUrlList');
 
 		await restoreOriginalTab();
 
@@ -3361,7 +3362,7 @@ const setClipSelection = (options, clipSelection) => {
 
 	options.clipSelection = clipSelection;
 	setClipSelectionState(clipSelection);
-	browser.storage.sync.set(options).then(() => clipSite()).catch((error) => {
+	setItemsBag('sync', options).then(() => clipSite()).catch((error) => {
 		console.error(error);
 	});
 };
@@ -3371,7 +3372,7 @@ const toggleIncludeTemplate = options => {
 		options.includeTemplate = dom.includeTemplate.checked;
 	}
 
-	browser.storage.sync.set(options).then(() => {
+	setItemsBag('sync', options).then(() => {
 		return getActiveTab();
 	}).then((tab) => {
 		if (tab?.id) {
@@ -3387,7 +3388,7 @@ const toggleDownloadImages = options => {
 		options.downloadImages = dom.downloadImages.checked;
 	}
 
-	browser.storage.sync.set(options).catch((error) => {
+	setItemsBag('sync', options).catch((error) => {
 		console.error('Error updating options:', error);
 	});
 };
@@ -3440,7 +3441,7 @@ const clipSite = id => {
 							...currentOptions,
 						});
 					}
-					return browser.storage.sync.get(defaultOptions).then(options => {
+					return getItemsBag('sync', defaultOptions).then(options => {
 						currentOptions = normalizePopupOptions({
 							...defaultOptions,
 							...options,
@@ -3529,8 +3530,8 @@ async function restoreBatchState() {
 async function initializePopup() {
 	try {
 		const [options, localState, activeTab] = await Promise.all([
-			browser.storage.sync.get(defaultOptions).catch(() => ({ ...defaultOptions })),
-			browser.storage.local.get('countMode').catch(() => ({})),
+			getItemsBag('sync', defaultOptions).catch(() => ({ ...defaultOptions })),
+			getItemsRecord('local', ['countMode']).catch(() => ({})),
 			getActiveTab(),
 		]);
 
@@ -4106,7 +4107,9 @@ async function sendToObsidian(e) {
 
 	try {
 		// Get current options including Obsidian settings
-		const options = await browser.storage.sync.get();
+		// Using getItemsBag with defaultOptions matches the prior behavior of
+		// `browser.storage.sync.get()` with a full defaults overlay.
+		const options = await getItemsBag('sync', defaultOptions);
 
 		// Check if Obsidian integration is enabled
 		if (!options.obsidianIntegration) {

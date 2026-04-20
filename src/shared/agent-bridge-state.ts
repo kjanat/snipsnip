@@ -4,6 +4,7 @@ import type {
 	AgentBridgeStatus,
 	ExtensionStorageArea,
 } from '@/lib/types/index.ts';
+import { createAreaAdapter } from '@/shared/storage.ts';
 
 export const STORAGE_KEYS = Object.freeze({
 	SETTINGS: 'agentBridgeSettings',
@@ -36,8 +37,11 @@ export const DEFAULT_LATEST_CLIP: Readonly<AgentBridgeLatestClip> = Object.freez
 	source: 'popup',
 });
 
-function getDefaultStorage(): ExtensionStorageArea | undefined {
-	return browser?.storage?.local;
+function getDefaultStorage(): ExtensionStorageArea {
+	// Route through the wxt/utils/storage adapter so this module no longer
+	// touches `browser.storage.local` directly. Call shape (.get/.set/.remove)
+	// is preserved so all downstream callers work unchanged.
+	return createAreaAdapter('local');
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

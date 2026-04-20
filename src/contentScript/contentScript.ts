@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import { storage } from '@/shared/storage.ts';
 function _notifyExtension() {
 	// send a message that the content should be clipped
 	browser.runtime.sendMessage({ type: 'clip', dom: content });
@@ -422,8 +423,7 @@ async function initLinkPickerMode() {
 	// Read accent color from storage
 	let accentColors = ACCENT_COLORS.sage;
 	try {
-		const data = await browser.storage.sync.get('popupAccent');
-		const accent = data.popupAccent || 'sage';
+		const accent = (await storage.getItem<string>('sync:popupAccent')) || 'sage';
 		accentColors = ACCENT_COLORS[accent] || ACCENT_COLORS.sage;
 	} catch (_e) { /* use default */ }
 
@@ -971,10 +971,10 @@ function finishLinkPicker() {
 	}
 
 	// Save links to storage so popup can retrieve them when it reopens
-	browser.storage.local.set({
-		linkPickerResults: links,
-		linkPickerTimestamp: Date.now(),
-	}).then(() => {
+	storage.setItems([
+		{ key: 'local:linkPickerResults', value: links },
+		{ key: 'local:linkPickerTimestamp', value: Date.now() },
+	]).then(() => {
 		console.log(`Saved ${links.length} links to storage`);
 
 		// Show success notification
@@ -1034,7 +1034,7 @@ function showSuccessNotification(linkCount) {
 
 function cancelLinkPicker() {
 	// Clear any stored results
-	browser.storage.local.remove(['linkPickerResults', 'linkPickerTimestamp']).then(() => {
+	storage.removeItems(['local:linkPickerResults', 'local:linkPickerTimestamp']).then(() => {
 		// Also send message in case popup is still open
 		browser.runtime.sendMessage({
 			type: 'LINK_PICKER_COMPLETE',

@@ -8,6 +8,7 @@
  *  - Keyboard navigation (/, Escape, anchor focus management)
  *  - Open Settings action
  */
+import { getItemsBag } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
 
 (() => {
@@ -57,8 +58,7 @@ import { browser } from 'wxt/browser';
 	}
 
 	function loadSettings() {
-		if (typeof browser === 'undefined' || !browser?.storage?.sync) return;
-		browser.storage.sync.get(defaultOptions).then(opts => {
+		getItemsBag('sync', defaultOptions).then(opts => {
 			applyThemeSettings(opts);
 		}).catch(() => {});
 	}

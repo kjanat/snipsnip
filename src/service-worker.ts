@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import { getItemsBag, getItemsRecord, setItemsBag, storage } from '@/shared/storage.ts';
 type BackgroundMessage = import('@/lib/background/message-contracts.ts').BackgroundMessage;
 // Log platform info. browser.runtime.getBrowserInfo is Firefox-only — on
 // Chromium we report `chromium` instead of spamming "Can't get browser info".
@@ -76,13 +77,13 @@ function runNotificationStateTask(task) {
 }
 
 async function loadNotificationState() {
-	const stored = await browser.storage.local.get(notificationHelpers.STORAGE_KEYS);
+	const stored = await getItemsRecord('local', notificationHelpers.STORAGE_KEYS);
 	return notificationHelpers.ensureNotificationState(stored);
 }
 
 async function saveNotificationState(state) {
 	const normalizedState = notificationHelpers.ensureNotificationState(state);
-	await browser.storage.local.set(normalizedState);
+	await setItemsBag('local', normalizedState);
 	return normalizedState;
 }
 
@@ -1575,7 +1576,7 @@ async function handleBatchConversionInServiceWorker(message) {
 			});
 		}
 
-		await browser.storage.local.remove('batchUrlList').catch(() => {});
+		await storage.removeItem('local:batchUrlList').catch(() => {});
 
 		await sendBatchProgressUpdate({
 			status: 'finished',
@@ -2511,7 +2512,7 @@ async function toggleSetting(setting, options = null) {
 		await toggleSetting(setting, await loadRuntimeOptions());
 	} else {
 		options[setting] = !options[setting];
-		await browser.storage.sync.set(options);
+		await setItemsBag('sync', options);
 		if (setting === 'includeTemplate') {
 			browser.contextMenus.update('toggle-includeTemplate', {
 				checked: options.includeTemplate,

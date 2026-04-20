@@ -1,3 +1,5 @@
+import { getItemsBag } from '@/shared/storage.ts';
+
 export const defaultOptions = {
 	headingStyle: 'atx',
 	hr: '___',
@@ -59,12 +61,7 @@ export async function getOptions() {
 	let options = { ...defaultOptions };
 
 	try {
-		if (browser?.storage?.sync?.get) {
-			options = {
-				...defaultOptions,
-				...(await browser.storage.sync.get(defaultOptions)),
-			};
-		}
+		options = await getItemsBag('sync', defaultOptions);
 	} catch (error) {
 		console.error(error);
 	}

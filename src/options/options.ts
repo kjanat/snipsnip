@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import { getItemsBag, setItemsBag, storage } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
 
 const createMenus = globalThis.createMenus;
@@ -1083,7 +1084,7 @@ async function saveLibrarySettingsState(nextSettings) {
 	if (libraryApi?.saveLibrarySettings) {
 		librarySettings = await libraryApi.saveLibrarySettings(librarySettings);
 	} else {
-		await browser.storage.local.set({ librarySettings });
+		await storage.setItem('local:librarySettings', librarySettings);
 	}
 
 	return librarySettings;
@@ -1094,8 +1095,8 @@ async function loadLibrarySettingsState() {
 	if (libraryApi?.loadLibrarySettings) {
 		librarySettings = await libraryApi.loadLibrarySettings();
 	} else {
-		const result = await browser.storage.local.get('librarySettings');
-		librarySettings = normalizeLibrarySettingsState(result.librarySettings);
+		const value = await storage.getItem('local:librarySettings');
+		librarySettings = normalizeLibrarySettingsState(value);
 	}
 
 	return librarySettings;
@@ -1109,7 +1110,7 @@ async function resetLibrarySettingsState() {
 	}
 
 	librarySettings = normalizeLibrarySettingsState();
-	await browser.storage.local.set({ librarySettings });
+	await storage.setItem('local:librarySettings', librarySettings);
 	return librarySettings;
 }
 
@@ -1128,7 +1129,7 @@ async function clearLibraryItemsState() {
 		return await libraryApi.clearLibraryItems();
 	}
 
-	await browser.storage.local.remove('libraryItems');
+	await storage.removeItem('local:libraryItems');
 	return [];
 }
 
@@ -1169,7 +1170,7 @@ async function saveAgentBridgeSettingsState(nextSettings) {
 	if (bridgeApi?.saveSettings) {
 		agentBridgeSettings = await bridgeApi.saveSettings(agentBridgeSettings);
 	} else {
-		await browser.storage.local.set({ agentBridgeSettings });
+		await storage.setItem('local:agentBridgeSettings', agentBridgeSettings);
 	}
 
 	return agentBridgeSettings;
@@ -1180,8 +1181,8 @@ async function loadAgentBridgeSettingsState() {
 	if (bridgeApi?.loadSettings) {
 		agentBridgeSettings = await bridgeApi.loadSettings();
 	} else {
-		const result = await browser.storage.local.get('agentBridgeSettings');
-		agentBridgeSettings = normalizeAgentBridgeSettingsState(result.agentBridgeSettings);
+		const value = await storage.getItem('local:agentBridgeSettings');
+		agentBridgeSettings = normalizeAgentBridgeSettingsState(value);
 	}
 
 	return agentBridgeSettings;
@@ -1192,8 +1193,8 @@ async function loadAgentBridgeStatusState() {
 	if (bridgeApi?.loadStatus) {
 		agentBridgeStatus = await bridgeApi.loadStatus();
 	} else {
-		const result = await browser.storage.local.get('agentBridgeStatus');
-		agentBridgeStatus = normalizeAgentBridgeStatusState(result.agentBridgeStatus);
+		const value = await storage.getItem('local:agentBridgeStatus');
+		agentBridgeStatus = normalizeAgentBridgeStatusState(value);
 	}
 
 	return agentBridgeStatus;
@@ -1727,7 +1728,7 @@ const save = (feedback = { message: 'Options Saved 💾', type: 'success' }) => 
 		});
 	};
 
-	browser.storage.sync.set(options)
+	setItemsBag('sync', options)
 		.then(() => {
 			if (!options.contextMenus) {
 				return Promise.resolve();
@@ -2034,7 +2035,7 @@ const restoreOptions = () => {
 	resolveAgentBridgeInstallCommand().catch(onError);
 
 	Promise.all([
-		browser.storage.sync.get(defaultOptions),
+		getItemsBag('sync', defaultOptions),
 		loadLibrarySettingsState(),
 		loadAgentBridgeSettingsState(),
 		loadAgentBridgeStatusState(),
