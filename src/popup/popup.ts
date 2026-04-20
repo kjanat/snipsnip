@@ -1321,22 +1321,19 @@ async function togglePreview() {
 		renderPreviewContent();
 	}
 
-	// Toggle visibility: hide editor, show preview (or vice versa)
-	const cmWrapper = document.querySelector('.editor-section .cm-editor');
-	const textarea = dom.editorTextarea;
-
-	if (previewActive) {
-		if (cmWrapper) cmWrapper.style.display = 'none';
-		else if (textarea) textarea.style.display = 'none';
-		if (dom.editorPreview) dom.editorPreview.hidden = false;
-	} else {
-		if (cmWrapper) cmWrapper.style.display = '';
-		else if (textarea) textarea.style.display = '';
-		if (dom.editorPreview) dom.editorPreview.hidden = true;
-		// Refresh CodeMirror after re-showing to fix layout
-		if (cm?.refresh) {
-			requestAnimationFrame(() => cm.refresh());
-		}
+	// Toggle the `.preview-active` class on the editor body and let CSS handle
+	// the rest. We used to poke inline `style.display` on `.cm-editor`, which
+	// fought CM6's own flex layout and our bounded-height rules — resulting in
+	// both the editor and the preview showing at the same time. Class-based
+	// toggling keeps the concerns in one place (popup.css).
+	if (dom.editorBody) {
+		dom.editorBody.classList.toggle('preview-active', previewActive);
+	}
+	if (dom.editorPreview) {
+		dom.editorPreview.hidden = !previewActive;
+	}
+	if (!previewActive && cm?.refresh) {
+		requestAnimationFrame(() => cm.refresh());
 	}
 }
 
