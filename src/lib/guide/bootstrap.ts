@@ -1,9 +1,10 @@
 import guideTemplate from '@/guide/guide.html?raw';
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
 import { installWxtPagePaths } from '@/lib/page-paths.ts';
+// Process fonts.css through Vite so woff2 files are emitted + url()s rewritten.
+import '@/shared/fonts.css';
 import searchCore from '@/shared/search-core.ts';
 
-const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const guideCssUrl = new URL('@/guide/guide.css', import.meta.url).href;
 let guideRuntimeLoadPromise: Promise<void> | null = null;
 
@@ -31,7 +32,6 @@ function installGuideGlobals(): void {
 }
 
 function installGuideStyles(): void {
-	appendStylesheet(fontsCssUrl, 'guide-fonts-stylesheet');
 	appendStylesheet(guideCssUrl, 'guide-shell-stylesheet');
 }
 

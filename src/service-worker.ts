@@ -1,10 +1,11 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
-/** @typedef {import('@/lib/background/message-contracts.ts').BackgroundMessage} BackgroundMessage */
-// Log platform info
+type BackgroundMessage = import('@/lib/background/message-contracts.ts').BackgroundMessage;
+// Log platform info. browser.runtime.getBrowserInfo is Firefox-only — on
+// Chromium we report `chromium` instead of spamming "Can't get browser info".
 browser.runtime.getPlatformInfo().then(async platformInfo => {
 	const browserInfo = browser.runtime.getBrowserInfo
 		? await browser.runtime.getBrowserInfo()
-		: "Can't get browser info";
+		: { name: 'chromium' };
 	console.info(platformInfo, browserInfo);
 });
 
@@ -217,7 +218,7 @@ async function createContextMenus() {
 
 function cloneRuntimeOptions(source = {}) {
 	const nextOptions = {
-		...(source || {}),
+		...source,
 	};
 
 	if (source?.tableFormatting && typeof source.tableFormatting === 'object') {
@@ -370,15 +371,21 @@ async function disconnectAgentBridge(options = {}) {
 
 		try {
 			port.onMessage.removeListener(handleAgentBridgeNativeMessage);
-		} catch (_error) {}
+		} catch (error) {
+			console.warn('[Agent Bridge] Error removing message listener:', error);
+		}
 
 		try {
 			port.onDisconnect.removeListener(handleAgentBridgeDisconnect);
-		} catch (_error) {}
+		} catch (error) {
+			console.warn('[Agent Bridge] Error removing disconnect listener:', error);
+		}
 
 		try {
 			port.disconnect();
-		} catch (_error) {}
+		} catch (error) {
+			console.warn('[Agent Bridge] Error disconnecting port:', error);
+		}
 	}
 
 	await saveAgentBridgeStatus({
@@ -651,7 +658,7 @@ const downloadTrackerApi = globalThis.snipSnipDownloadTracker || {
 			}),
 			trackUrl: (url, info) => {
 				if (!url) return;
-				localSnipSnipUrls.set(url, { ...(info || {}) });
+				localSnipSnipUrls.set(url, { ...info });
 				if (url.startsWith('blob:')) localSnipSnipBlobUrls.add(url);
 			},
 			setActiveDownload: (downloadId, url) => {
@@ -762,13 +769,11 @@ function handleFilenameConflict(downloadItem, suggest) {
 	return downloadTracker.handleFilenameConflict(downloadItem, suggest);
 }
 
-/** @typedef {BackgroundMessage | {type?: string}} BackgroundHuhMessage */
+type BackgroundHuhMessage = BackgroundMessage | { type?: string };
 
 /** Handle messages from content scripts and popup
- *
- * @param {BackgroundHuhMessage} message
  */
-async function handleMessages(message, sender, _sendResponse) {
+async function handleMessages(message: BackgroundHuhMessage, sender, sendResponse) {
 	switch (message.type) {
 		case 'get-pending-notification':
 			return await getPendingNotification();
@@ -944,7 +949,8 @@ async function waitForTabLoadCompleteBatch(tabId, timeoutMs = 45000, signal = nu
 				settled = true;
 				cleanup();
 				resolve();
-			} catch (_error) {
+			} catch (error) {
+				console.debug(`Tab ${tabId} not available yet:`, error.message);
 				// Tab may not be available yet or may have been closed; keep waiting until timeout.
 			}
 		}
@@ -1307,7 +1313,8 @@ async function updateBatchProgressOverlay(tabId, current, total, url, pageTitle,
 			},
 			args: [current, total, url, pageTitle, statusText],
 		});
-	} catch (_e) {
+	} catch (e) {
+		console.debug('[Batch] Could not update progress overlay:', e);
 		// Tab may have navigated or closed
 	}
 }
@@ -1321,8 +1328,9 @@ async function _removeBatchProgressOverlay(tabId) {
 				document.getElementById('snipsnip-batch-overlay-style')?.remove();
 			},
 		});
-	} catch (_e) { /* ignore */ }
-}
+  } catch (e) { /* ignore */
+    console.debug('[Batch] Could not remove progress overlay:', e);
+  }
 
 async function processBatchTab(
 	urlObj,
@@ -1594,11 +1602,11 @@ async function handleBatchConversionInServiceWorker(message) {
 
 /**
  * Get tab content for offscreen document
- * @param {number} tabId - Tab ID to get content from
- *  @param {boolean} selection - Whether to get selection or full content
- * @param {string} requestId - Request ID to track this specific request
+ * @param tabId - Tab ID to get content from
+ *  @param selection - Whether to get selection or full content
+ * @param requestId - Request ID to track this specific request
  */
-async function getTabContentForOffscreen(tabId, selection, requestId) {
+async function getTabContentForOffscreen(tabId: number, selection: boolean, requestId: string) {
 	try {
 		console.log(`Getting tab content for ${tabId}`);
 		await ensureScripts(tabId);
@@ -1647,11 +1655,11 @@ async function getTabContentForOffscreen(tabId, selection, requestId) {
 
 /**
  * Forward get article content to offscreen document
- * @param {number} tabId - Tab ID to forward content from
- * @param {boolean} selection - Whether to get selection or full content
- * @param {string} originalRequestId - Original request ID to track this specific request
+ * @param tabId - Tab ID to forward content from
+ * @param selection - Whether to get selection or full content
+ * @param originalRequestId - Original request ID to track this specific request
  */
-async function forwardGetArticleContent(tabId, selection, originalRequestId) {
+async function forwardGetArticleContent(tabId: number, selection: boolean, originalRequestId: string) {
 	try {
 		await ensureScripts(tabId);
 		const tabInfo = await browser.tabs.get(tabId).catch(() => null);
@@ -1689,11 +1697,11 @@ async function forwardGetArticleContent(tabId, selection, originalRequestId) {
 
 /**
  * Execute content download, helper function for offscreen document
- * @param {number} tabId - Tab ID to execute download in
- * @param {string} filename - Filename for download
- * @param {string} base64Content - Base64 encoded content to download
+ * @param tabId - Tab ID to execute download in
+ * @param filename - Filename for download
+ * @param base64Content - Base64 encoded content to download
  */
-async function executeContentDownload(tabId, filename, base64Content, notificationDelta = null) {
+async function executeContentDownload(tabId: number, filename: string, base64Content: string, notificationDelta = null) {
 	try {
 		await browser.scripting.executeScript({
 			target: { tabId: tabId },
@@ -1713,9 +1721,7 @@ async function executeContentDownload(tabId, filename, base64Content, notificati
 	}
 }
 
-/**
- * Handle image downloads from offscreen document (Downloads API method)
- */
+/** Handle image downloads from offscreen document (Downloads API method) */
 async function handleImageDownloads(message) {
 	const { imageList, mdClipsFolder, title, options: _options } = message;
 
@@ -1772,9 +1778,7 @@ async function handleImageDownloads(message) {
 	}
 }
 
-/**
- * Handle image downloads for content script method
- */
+/** Handle image downloads for content script method */
 async function handleImageDownloadsContentScript(message) {
 	const { imageList, tabId, options: _options } = message;
 
@@ -1883,9 +1887,7 @@ async function ensureOffscreenDocumentExists() {
 	}
 }
 
-/**
- * Handle clip request — uses offscreen document on both Chrome and Firefox.
- */
+/** Handle clip request — uses offscreen document on both Chrome and Firefox. */
 async function handleClipRequest(message, tabId) {
 	await ensureOffscreenDocumentExists();
 
@@ -1917,9 +1919,7 @@ function generateRequestId() {
 	return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-/**
- * Process markdown result from offscreen document
- */
+/** Process markdown result from offscreen document */
 async function handleMarkdownResult(message) {
 	const { result, requestId: _requestId } = message;
 

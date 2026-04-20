@@ -2,12 +2,16 @@ import { getGuidePageHref, getOptionsPageHref, installWxtPagePaths } from '@/lib
 import popupTemplate from '@/popup/popup.html?raw';
 import agentBridgeState from '@/shared/agent-bridge-state.ts';
 import countUtils from '@/shared/count-utils.ts';
+// Process fonts.css through Vite so url("./fonts/*.woff2") references are
+// rewritten and the woff2 files are emitted as hashed assets. Loading it
+// via `new URL(..., import.meta.url)` as a raw asset left the url()s intact
+// and the font files weren't copied to the output, breaking Inter/DM Sans.
+import '@/shared/fonts.css';
 import libraryState from '@/shared/library-state.ts';
 import obsidianUtils from '@/shared/obsidian-utils.ts';
 import optionsState from '@/shared/options-state.ts';
 import popupBatchUtils from '@/shared/popup-batch-utils.ts';
 
-const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const popupCssUrl = new URL('@/popup/popup.css', import.meta.url).href;
 const notificationHostScriptUrl = browser.runtime.getURL('/notifications/notification-host.js');
 
@@ -74,7 +78,6 @@ function syncPopupPageLinks(): void {
 }
 
 function installPopupStyles(): void {
-	appendStylesheet(fontsCssUrl, 'popup-fonts-stylesheet');
 	appendStylesheet(popupCssUrl, 'popup-shell-stylesheet');
 }
 

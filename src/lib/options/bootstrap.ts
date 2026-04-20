@@ -6,13 +6,14 @@ import { getGuidePageHref, installWxtPagePaths } from '@/lib/page-paths.ts';
 import '@/lib/vendors/moment.ts';
 import optionsTemplate from '@/options/options.html?raw';
 import agentBridgeState from '@/shared/agent-bridge-state.ts';
+// Process fonts.css through Vite so woff2 files are emitted + url()s rewritten.
+import '@/shared/fonts.css';
 import libraryState from '@/shared/library-state.ts';
 import optionsState from '@/shared/options-state.ts';
 import searchCore from '@/shared/search-core.ts';
 import siteRules from '@/shared/site-rules.ts';
 import templateUtils from '@/shared/template-utils.ts';
 
-const fontsCssUrl = new URL('@/shared/fonts.css', import.meta.url).href;
 const optionsCssUrl = new URL('@/options/options.css', import.meta.url).href;
 
 let optionsRuntimeLoadPromise: Promise<void> | null = null;
@@ -48,7 +49,6 @@ function installOptionsGlobals(): void {
 }
 
 function installOptionsStyles(): void {
-	appendStylesheet(fontsCssUrl, 'options-fonts-stylesheet');
 	appendStylesheet(optionsCssUrl, 'options-shell-stylesheet');
 }
 
