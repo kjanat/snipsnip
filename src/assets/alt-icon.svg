@@ -1,4 +1,12 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<svg width="1024" height="1024" viewBox="0 0 1024 1024"
+     aria-label="SnipSnip logo" lang="nl-NL" role="img"
+     xmlns="http://www.w3.org/2000/svg">
+	<title>
+		SnipSnip
+	</title>
+	<desc>
+		Zwarte afgeronde rechthoek met een witte geometrische letter S en een witte pijl naar beneden, in de stijl van de MarkDownload-extensie.
+	</desc>
 	<rect x="74" y="244" rx="62" width="877" height="537" fill="#000000" />
 	<path d="M702 -18 C1079 -18 1306 145 1306 440 C1306 666 1169 826 840 896 L718 922
 	         C577 952 518 993 518 1064 C518 1130 573 1178 698 1178 C829 1178 891 1121 898 1024 H1286
