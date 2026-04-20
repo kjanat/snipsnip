@@ -1,6 +1,13 @@
-// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
-import { onMessage, sendMessage } from '@/lib/messaging.ts';
+import { sendMessage } from '@/lib/messaging.ts';
+import type {
+	ArticleContent,
+	EffectiveMarkdownOptions,
+	SnipSnipMarkdownOptionsApi,
+	SnipSnipObsidianApi,
+	SnipSnipTemplateUtilsApi,
+	SnipSnipUrlUtilsApi,
+} from '@/lib/types/index.ts';
 import { Readability } from '@mozilla/readability';
 import hljs from 'highlight.js/lib/core';
 import moment from 'moment';
@@ -25,6 +32,237 @@ const TURNDOWN_BUILTIN_ESCAPE: (s: string) => string =
 	(TurndownService.prototype as { escape?: (s: string) => string }).escape
 		?? ((s: string) => s);
 
+type UnknownRecord = Record<string, unknown>;
+
+type SelectionUtilsApi = {
+	buildDomWithSelection(domString: string, selectionHtml: string, shouldUseSelection?: boolean): string;
+};
+
+type HashtagHandlingMode = 'remove' | 'escape' | 'keep';
+
+type HashtagUtilsApi = {
+	hashtagEscapeSentinel: string;
+	normalizeHashtagHandlingMode(mode: unknown): HashtagHandlingMode;
+	replaceHashtagTokensInText(text: string, mode: HashtagHandlingMode): string;
+	applyHashtagHandlingToHtml(content: string, mode: HashtagHandlingMode): string;
+	applyHashtagHandlingToMarkdown(markdown: string, mode: HashtagHandlingMode): string;
+};
+
+type CodeBlockUtilsApi = {
+	repeat(character: string, count: number): string;
+	convertToFencedCodeBlock(node: Element, options: UnknownRecord): string;
+};
+
+type SiteRuleResolution = {
+	options: UnknownRecord;
+	matchedRule: unknown;
+	overriddenKeys: string[];
+};
+
+type SiteRulesApi = {
+	resolveSiteRuleOptions?(pageUrl: string, options: UnknownRecord): SiteRuleResolution;
+};
+
+type RuntimeArticle = UnknownRecord & {
+	title?: string;
+	content?: string;
+	pageURL?: string;
+	tabURL?: string;
+	pageUrl?: string;
+	baseURI?: string;
+	pageTitle?: string;
+};
+
+type OffscreenOptions = UnknownRecord & {
+	tableFormatting?: UnknownRecord;
+	downloadImages?: boolean;
+	mdClipsFolder?: string | null;
+	frontmatter?: string;
+	backmatter?: string;
+	title?: string;
+	imagePrefix?: string;
+	disallowedChars?: string;
+	fence?: string;
+	preserveCodeFormatting?: boolean;
+	autoDetectCodeLanguage?: boolean;
+	hashtagHandling?: string;
+	imageStyle?: string;
+	imageRefStyle?: string;
+	includeTemplate?: boolean;
+	obsidianVault?: string;
+	obsidianFolder?: string;
+	saveAs?: boolean;
+	codeBlockStyle?: string;
+	bulletListMarker?: string;
+	hr?: string;
+	strongDelimiter?: string;
+	emDelimiter?: string;
+	linkStyle?: string;
+	linkReferenceStyle?: string;
+	defaultExportType?: string;
+	defaultSendToTarget?: string;
+	sendToMaxUrlLength?: number;
+	turndownEscape?: boolean;
+	contextMenus?: boolean;
+	batchProcessingEnabled?: boolean;
+	obsidianIntegration?: boolean;
+	siteRules?: unknown;
+};
+
+type OffscreenRuntimeOptions = EffectiveMarkdownOptions & OffscreenOptions & {
+	title: string;
+	imagePrefix: string;
+	frontmatter: string;
+	backmatter: string;
+	disallowedChars: string;
+	imageStyle: string;
+	imageRefStyle: string;
+	downloadMode?: string;
+	saveAs?: boolean;
+};
+
+type OffscreenContextMenuInfo = UnknownRecord & {
+	menuItemId?: string;
+	linkUrl?: string;
+	linkText?: string;
+	selectionText?: string;
+	srcUrl?: string;
+};
+
+type ArticleMathInfo = {
+	tex: string;
+	inline: boolean;
+};
+
+type OffscreenArticleRecord = ArticleContent & RuntimeArticle & UnknownRecord & {
+	content: string;
+	title: string;
+	pageTitle: string;
+	uriBase?: string;
+	keywords?: string[];
+	math: Record<string, ArticleMathInfo>;
+};
+
+type MarkdownConversionResult = {
+	markdown: string;
+	imageList: Record<string, string>;
+	sourceImageMap: Record<string, string>;
+};
+
+type ArticleContentPayload = {
+	dom: string;
+	selection: string;
+	pageUrl?: string | null;
+	article?: OffscreenArticleRecord | null;
+	error?: string;
+	requestId?: string;
+	type?: string;
+};
+
+type DownloadLikeApi = {
+	download(options: { url: string; filename: string; saveAs?: boolean }): Promise<number>;
+};
+
+type RecoveryPromotionResult = {
+	changed: boolean;
+	promotedIds: string[];
+};
+
+type RecoveryFragment = {
+	html: string;
+};
+
+type RecoveryApi = {
+	anchorAttribute: string;
+	annotateStructuralAnchors(document: Document): number;
+	analyzeNarrowExtraction(document: Document, articleHtml: string | null | undefined): UnknownRecord | null;
+	applyRepeatedSectionPromotion(
+		document: Document,
+		recoveryPlan: UnknownRecord | null | undefined,
+	): RecoveryPromotionResult;
+	buildRepeatedSectionFragment(
+		document: Document,
+		recoveryPlan: UnknownRecord | null | undefined,
+	): RecoveryFragment | null;
+	restoreSemanticTables?(document: Document, articleHtml: string | null | undefined): string | null;
+	restoreMissingPrimaryHeadings?(document: Document, articleHtml: string | null | undefined): string | null;
+	stripStructuralAnchorsFromHtml(articleHtml: string | null | undefined): string;
+};
+
+type BatchZipFile = {
+	filename?: string | null;
+	content?: string | null;
+};
+
+type BatchZipMessage = OffscreenMessage & {
+	files?: BatchZipFile[];
+	zipFilename?: string;
+	fallbackTabId?: number;
+	options?: OffscreenOptions | null;
+};
+
+type NotificationDelta = {
+	downloads?: number;
+	exports?: number;
+	copies?: number;
+	obsidianSends?: number;
+	batchUrls?: number;
+};
+
+type BackgroundMessageBase = {
+	type?: string;
+	target?: string;
+	[key: string]: unknown;
+};
+
+type OffscreenMessage = BackgroundMessageBase & {
+	type: string;
+	requestId?: string;
+	dom?: string;
+	selection?: string;
+	pageUrl?: string | null;
+	data?: {
+		dom: string;
+		selection: string;
+		pageUrl?: string | null;
+		clipSelection?: boolean;
+	};
+	markdown?: string;
+	title?: string;
+	tabId?: number;
+	imageList?: Record<string, string> | null;
+	mdClipsFolder?: string | null;
+	options?: OffscreenOptions | null;
+	notificationDelta?: NotificationDelta | null;
+	content?: string;
+	filename?: string;
+	mimeType?: string;
+	text?: string;
+	url?: string;
+	action?: string;
+	info?: UnknownRecord;
+	customTitle?: string | null;
+	collectOnly?: boolean;
+};
+
+declare const chrome:
+	| {
+		downloads?: DownloadLikeApi;
+	}
+	| undefined;
+
+function toErrorMessage(error: unknown): string {
+	if (error instanceof Error) {
+		return error.message;
+	}
+
+	return String(error);
+}
+
+function toErrorStack(error: unknown): string | null {
+	return error instanceof Error ? (error.stack ?? null) : null;
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);
 
@@ -38,41 +276,49 @@ browser.runtime.sendMessage({ type: 'offscreen-ready' });
 /**
  * Initialize offscreen document
  */
-function initOffscreen() {
+function initOffscreen(): void {
 	console.log('SnipSnip offscreen document initialized');
 	console.log('🔧 Browser downloads API available:', !!browser.downloads);
-	console.log('🔧 Chrome downloads API available:', !!(typeof chrome !== 'undefined' && chrome.downloads));
+	console.log('🔧 Chrome downloads API available:', !!chrome?.downloads);
 }
 
-function getSelectionUtilsApi() {
-	return globalThis.snipSnipSelectionUtils || null;
+function getSelectionUtilsApi(): SelectionUtilsApi | null {
+	return globalThis.snipSnipSelectionUtils ?? null;
 }
 
-function getTemplateUtilsApi() {
+function getTemplateUtilsApi(): SnipSnipTemplateUtilsApi | null {
 	return globalThis.snipSnipTemplateUtils || null;
 }
 
-function getUrlUtilsApi() {
+function getUrlUtilsApi(): SnipSnipUrlUtilsApi | null {
 	return globalThis.snipSnipUrlUtils || null;
 }
 
-function getHashtagUtilsApi() {
-	return globalThis.snipSnipHashtagUtils || null;
+function getHashtagUtilsApi(): HashtagUtilsApi | null {
+	return globalThis.snipSnipHashtagUtils ?? null;
 }
 
-function getMarkdownOptionsApi() {
+function getMarkdownOptionsApi(): SnipSnipMarkdownOptionsApi | null {
 	return globalThis.snipSnipMarkdownOptions || null;
 }
 
-function getSiteRulesApi() {
+function getObsidianApi(): SnipSnipObsidianApi | null {
+	return globalThis.snipSnipObsidian ?? null;
+}
+
+function getSiteRulesApi(): SiteRulesApi | null {
 	return globalThis.snipSnipSiteRules || null;
 }
 
-function getCodeBlockUtilsApi() {
-	return globalThis.snipSnipCodeBlockUtils || null;
+function getCodeBlockUtilsApi(): CodeBlockUtilsApi | null {
+	return globalThis.snipSnipCodeBlockUtils ?? null;
 }
 
-function cloneRuntimeOptions(source = {}) {
+function getMimeDb(): Record<string, string> {
+	return globalThis.mimedb ?? {};
+}
+
+function cloneRuntimeOptions(source: OffscreenOptions = defaultOptions): OffscreenOptions {
 	const nextOptions = {
 		...(source || {}),
 	};
@@ -87,7 +333,7 @@ function cloneRuntimeOptions(source = {}) {
 	return nextOptions;
 }
 
-function getArticleSiteRuleUrl(article = {}) {
+function getArticleSiteRuleUrl(article: RuntimeArticle = {}): string {
 	const candidates = [
 		article?.pageURL,
 		article?.tabURL,
@@ -105,7 +351,10 @@ function getArticleSiteRuleUrl(article = {}) {
 	return '';
 }
 
-function resolveOptionsForArticle(article = {}, providedOptions = null) {
+function resolveOptionsForArticle(
+	article: RuntimeArticle = {},
+	providedOptions: OffscreenOptions | null = null,
+): SiteRuleResolution {
 	const baseOptions = providedOptions || defaultOptions;
 	const pageUrl = getArticleSiteRuleUrl(article);
 	const siteRulesApi = getSiteRulesApi();
@@ -121,7 +370,7 @@ function resolveOptionsForArticle(article = {}, providedOptions = null) {
 	};
 }
 
-function buildDomWithSelection(domString, selectionHtml, shouldUseSelection = true) {
+function buildDomWithSelection(domString: string, selectionHtml: string, shouldUseSelection = true): string {
 	const sharedApi = getSelectionUtilsApi();
 	if (sharedApi?.buildDomWithSelection) {
 		return sharedApi.buildDomWithSelection(domString, selectionHtml, shouldUseSelection);
@@ -152,13 +401,13 @@ function buildDomWithSelection(domString, selectionHtml, shouldUseSelection = tr
 /**
  * Handle messages from service worker
  */
-function handleMessages(message, _sender) {
+function handleMessages(message: OffscreenMessage, _sender: unknown): Promise<unknown> | boolean {
 	// Handle messages that aren't specifically targeted at offscreen
 	if (!message.target || message.target !== 'offscreen') {
 		if (message.type === 'article-dom-data') {
 			return (async () => {
 				try {
-					const domForArticle = buildDomWithSelection(message.dom, message.selection, true);
+					const domForArticle = buildDomWithSelection(message.dom ?? '', message.selection ?? '', true);
 					const article = await getArticleFromDom(domForArticle, defaultOptions, message.pageUrl);
 
 					// Send the article back to service worker
@@ -172,7 +421,7 @@ function handleMessages(message, _sender) {
 					await browser.runtime.sendMessage({
 						type: 'article-result',
 						requestId: message.requestId,
-						error: error.message,
+						error: toErrorMessage(error),
 					});
 				}
 			})();
@@ -187,10 +436,10 @@ function handleMessages(message, _sender) {
 				break;
 			case 'download-markdown':
 				await downloadMarkdown(
-					message.markdown,
-					message.title,
+					message.markdown ?? '',
+					message.title ?? '',
 					message.tabId,
-					message.imageList,
+					message.imageList ?? null,
 					message.mdClipsFolder,
 					message.options,
 					message.notificationDelta,
@@ -198,18 +447,18 @@ function handleMessages(message, _sender) {
 				break;
 			case 'download-generated-file':
 				await downloadGeneratedFileExport(
-					message.content,
-					message.filename,
+					message.content ?? '',
+					message.filename ?? '',
 					message.tabId,
 					message.options,
-					message.mimeType,
+					message.mimeType ?? '',
 					message.notificationDelta,
 				);
 				break;
 			case 'process-context-menu':
 				return await processContextMenu(message);
 			case 'copy-to-clipboard':
-				return await copyToClipboard(message.text);
+				return await copyToClipboard(message.text ?? '');
 			case 'get-article-content':
 				await handleGetArticleContent(message);
 				break;
@@ -219,10 +468,12 @@ function handleMessages(message, _sender) {
 			case 'cleanup-blob-url':
 				// Clean up blob URL in offscreen document (has DOM access)
 				try {
-					URL.revokeObjectURL(message.url);
+					if (message.url) {
+						URL.revokeObjectURL(message.url);
+					}
 					console.log('🧹 [Offscreen] Cleaned up blob URL:', message.url);
 				} catch (err) {
-					console.log('⚠️ [Offscreen] Could not cleanup blob URL:', err.message);
+					console.log('⚠️ [Offscreen] Could not cleanup blob URL:', toErrorMessage(err));
 				}
 				break;
 			case 'download-batch-zip':
@@ -237,9 +488,15 @@ function handleMessages(message, _sender) {
 /**
  * Process HTML content to markdown
  */
-async function processContent(message) {
+async function processContent(message: OffscreenMessage): Promise<void> {
 	try {
 		const { data, requestId, options } = message;
+		if (!data) {
+			throw new Error('Missing article DOM payload');
+		}
+		if (!requestId) {
+			throw new Error('Missing markdown request id');
+		}
 
 		const domForArticle = buildDomWithSelection(data.dom, data.selection, !!data.clipSelection);
 		const article = await getArticleFromDom(domForArticle, options, data.pageUrl);
@@ -268,10 +525,10 @@ async function processContent(message) {
 		});
 	} catch (error) {
 		// Log stack so the throw point is visible in the offscreen console.
-		console.error('[offscreen] processContent failed:', error, error?.stack);
+		console.error('[offscreen] processContent failed:', error, toErrorStack(error));
 		await sendMessage('process-error', {
-			error: `${error?.name || 'Error'}: ${error?.message || String(error)}`,
-			stack: error?.stack || null,
+			error: `${error instanceof Error ? error.name : 'Error'}: ${toErrorMessage(error)}`,
+			stack: toErrorStack(error),
 		}).catch(() => {
 			// SW may be restarting; there's nothing actionable here.
 		});
@@ -281,14 +538,27 @@ async function processContent(message) {
 /**
  * Process context menu actions
  */
-async function processContextMenu(message) {
+async function processContextMenu(
+	message: OffscreenMessage,
+): Promise<{ ok: boolean; action: unknown; error?: string }> {
 	const { action, info, tabId, options, customTitle, collectOnly, notificationDelta } = message;
+	if (typeof tabId !== 'number') {
+		return { ok: false, action, error: 'Missing tabId' };
+	}
+	const contextInfo: OffscreenContextMenuInfo = info ?? {};
 
 	try {
 		if (action === 'download') {
-			await handleContextMenuDownload(info, tabId, options, customTitle, collectOnly, notificationDelta);
+			await handleContextMenuDownload(
+				contextInfo,
+				tabId,
+				options,
+				typeof customTitle === 'string' ? customTitle : null,
+				Boolean(collectOnly),
+				notificationDelta,
+			);
 		} else if (action === 'copy') {
-			const copied = await handleContextMenuCopy(info, tabId, options);
+			const copied = await handleContextMenuCopy(contextInfo, tabId, options);
 			return { ok: copied === true, action };
 		}
 
@@ -298,13 +568,21 @@ async function processContextMenu(message) {
 		return {
 			ok: false,
 			action,
-			error: error.message,
+			error: toErrorMessage(error),
 		};
 	}
 }
 
-async function handleBridgeCapture(message) {
+async function handleBridgeCapture(message: OffscreenMessage): Promise<void> {
 	const { requestId, tabId, options } = message || {};
+	if (typeof tabId !== 'number') {
+		await browser.runtime.sendMessage({
+			type: 'bridge-capture-result',
+			requestId,
+			error: 'Missing tabId',
+		});
+		return;
+	}
 
 	try {
 		const article = await getArticleFromContent(tabId, false, options || defaultOptions);
@@ -337,7 +615,7 @@ async function handleBridgeCapture(message) {
 		await browser.runtime.sendMessage({
 			type: 'bridge-capture-result',
 			requestId,
-			error: error.message,
+			error: toErrorMessage(error),
 		});
 	}
 }
@@ -345,14 +623,14 @@ async function handleBridgeCapture(message) {
 /**
  * Handle context menu download action
  */
-function isLikelyIncompleteMarkdown(markdown) {
+function isLikelyIncompleteMarkdown(markdown: string): boolean {
 	if (!markdown?.trim()) return true;
 
 	const normalized = markdown.replace(/\r/g, '');
-	const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
-	const headingLines = lines.filter(line => /^#{1,6}\s/.test(line)).length;
-	const listLines = lines.filter(line => /^[-*+]\s/.test(line)).length;
-	const nonStructuralLines = lines.filter(line => (
+	const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+	const headingLines = lines.filter((line) => /^#{1,6}\s/.test(line)).length;
+	const listLines = lines.filter((line) => /^[-*+]\s/.test(line)).length;
+	const nonStructuralLines = lines.filter((line) => (
 		!/^#{1,6}\s/.test(line)
 		&& !/^[-*+]\s/.test(line)
 		&& !/^\d+\.\s/.test(line)
@@ -372,13 +650,13 @@ function isLikelyIncompleteMarkdown(markdown) {
 }
 
 async function handleContextMenuDownload(
-	info,
-	tabId,
-	providedOptions = null,
-	customTitle = null,
+	info: OffscreenContextMenuInfo,
+	tabId: number,
+	providedOptions: OffscreenOptions | null = null,
+	customTitle: string | null = null,
 	collectOnly = false,
-	notificationDelta = null,
-) {
+	notificationDelta: NotificationDelta | null = null,
+): Promise<void> {
 	console.log(`Starting download for tab ${tabId}`);
 	try {
 		const options = providedOptions || defaultOptions;
@@ -430,7 +708,7 @@ async function handleContextMenuDownload(
 		await browser.runtime.sendMessage({
 			type: 'process-complete',
 			tabId: tabId,
-			error: error.message,
+			error: toErrorMessage(error),
 		});
 		throw error;
 	}
@@ -439,13 +717,20 @@ async function handleContextMenuDownload(
 /**
  * Handle context menu copy action
  */
-async function handleContextMenuCopy(info, tabId, providedOptions = null) {
+async function handleContextMenuCopy(
+	info: OffscreenContextMenuInfo,
+	tabId: number,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<boolean> {
 	const platformOS = navigator.platform;
 	const _folderSeparator = platformOS.indexOf('Win') === 0 ? '\\' : '/';
 	const options = providedOptions || defaultOptions;
 
 	if (info.menuItemId === 'copy-markdown-link') {
 		const article = await getArticleFromContent(tabId, false, options);
+		if (!article) {
+			throw new Error(`Failed to get valid article content from tab ${tabId}`);
+		}
 		const resolved = resolveOptionsForArticle(article, options);
 		const localOptions = { ...resolved.options };
 		localOptions.frontmatter = localOptions.backmatter = '';
@@ -459,11 +744,18 @@ async function handleContextMenuCopy(info, tabId, providedOptions = null) {
 		return await copyToClipboard(`![](${info.srcUrl})`);
 	} else if (info.menuItemId === 'copy-markdown-obsidian') {
 		const article = await getArticleFromContent(tabId, true, options);
+		if (!article) {
+			throw new Error(`Failed to get valid article content from tab ${tabId}`);
+		}
 		const resolved = resolveOptionsForArticle(article, options);
 		const title = article.title;
 		const obsidianVault = resolved.options.obsidianVault;
 		const obsidianFolder = await formatObsidianFolder(article, resolved.options);
-		const obsidianOptions = snipSnipObsidian.getObsidianTransportOptions(resolved.options);
+		const obsidianApi = getObsidianApi();
+		if (!obsidianApi) {
+			throw new Error('Obsidian API unavailable');
+		}
+		const obsidianOptions = obsidianApi.getObsidianTransportOptions(resolved.options);
 		const { markdown } = await convertArticleToMarkdown(article, null, obsidianOptions);
 
 		console.log('[Offscreen] Sending markdown to service worker for Obsidian integration...');
@@ -474,16 +766,26 @@ async function handleContextMenuCopy(info, tabId, providedOptions = null) {
 			tabId: tabId,
 			vault: obsidianVault,
 			folder: obsidianFolder,
-			title: generateValidFileName(title, resolved.options.disallowedChars),
+			title: generateValidFileName(
+				title,
+				typeof resolved.options.disallowedChars === 'string' ? resolved.options.disallowedChars : null,
+			),
 		});
 		return true;
 	} else if (info.menuItemId === 'copy-markdown-obsall') {
 		const article = await getArticleFromContent(tabId, false, options);
+		if (!article) {
+			throw new Error(`Failed to get valid article content from tab ${tabId}`);
+		}
 		const resolved = resolveOptionsForArticle(article, options);
 		const title = article.title;
 		const obsidianVault = resolved.options.obsidianVault;
 		const obsidianFolder = await formatObsidianFolder(article, resolved.options);
-		const obsidianOptions = snipSnipObsidian.getObsidianTransportOptions(resolved.options);
+		const obsidianApi = getObsidianApi();
+		if (!obsidianApi) {
+			throw new Error('Obsidian API unavailable');
+		}
+		const obsidianOptions = obsidianApi.getObsidianTransportOptions(resolved.options);
 		const { markdown } = await convertArticleToMarkdown(article, null, obsidianOptions);
 
 		console.log('[Offscreen] Sending markdown to service worker for Obsidian integration...');
@@ -494,11 +796,17 @@ async function handleContextMenuCopy(info, tabId, providedOptions = null) {
 			tabId: tabId,
 			vault: obsidianVault,
 			folder: obsidianFolder,
-			title: generateValidFileName(title, resolved.options.disallowedChars),
+			title: generateValidFileName(
+				title,
+				typeof resolved.options.disallowedChars === 'string' ? resolved.options.disallowedChars : null,
+			),
 		});
 		return true;
 	} else {
 		const article = await getArticleFromContent(tabId, info.menuItemId === 'copy-markdown-selection', options);
+		if (!article) {
+			throw new Error(`Failed to get valid article content from tab ${tabId}`);
+		}
 		const resolved = resolveOptionsForArticle(article, options);
 		const { markdown } = await convertArticleToMarkdown(article, false, resolved.options);
 		return await copyToClipboard(markdown);
@@ -508,7 +816,7 @@ async function handleContextMenuCopy(info, tabId, providedOptions = null) {
 /**
  * Copy text to clipboard
  */
-async function copyToClipboard(text) {
+async function copyToClipboard(text: string): Promise<boolean> {
 	// Try modern Clipboard API first (but it usually fails in offscreen documents)
 	if (navigator.clipboard?.writeText) {
 		try {
@@ -521,7 +829,7 @@ async function copyToClipboard(text) {
 		} catch (clipboardError) {
 			console.log(
 				'⚠️ [Offscreen] Clipboard API failed (document not focused), falling back to execCommand:',
-				clipboardError.message,
+				toErrorMessage(clipboardError),
 			);
 			// Fall through to execCommand method
 		}
@@ -532,6 +840,10 @@ async function copyToClipboard(text) {
 		const textArea = document.getElementById('clipboard-text');
 		if (!textArea) {
 			console.error('❌ [Offscreen] Clipboard textarea not found');
+			return false;
+		}
+		if (!(textArea instanceof HTMLTextAreaElement || textArea instanceof HTMLInputElement)) {
+			console.error('❌ [Offscreen] Clipboard element is not selectable');
 			return false;
 		}
 
@@ -555,7 +867,11 @@ async function copyToClipboard(text) {
 	}
 }
 
-function createEffectiveMarkdownOptions(article, providedOptions = null, downloadImages = null) {
+function createEffectiveMarkdownOptions(
+	article: OffscreenArticleRecord,
+	providedOptions: OffscreenOptions | null = null,
+	downloadImages: boolean | null = null,
+): OffscreenRuntimeOptions {
 	const sharedApi = getMarkdownOptionsApi();
 	if (sharedApi?.createEffectiveMarkdownOptions) {
 		return sharedApi.createEffectiveMarkdownOptions(article, providedOptions, downloadImages);
@@ -590,11 +906,16 @@ function createEffectiveMarkdownOptions(article, providedOptions = null, downloa
 /**
  * Convert article to markdown with options provided
  */
-async function convertArticleToMarkdown(article, downloadImages = null, providedOptions = null) {
+async function convertArticleToMarkdown(
+	article: OffscreenArticleRecord,
+	downloadImages: boolean | null = null,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<MarkdownConversionResult> {
 	const options = createEffectiveMarkdownOptions(article, providedOptions, downloadImages);
 
 	let result = turndown(article.content, options, article);
-	let sourceImageMap = snipSnipObsidian.createObsidianSourceImageMap(result.imageList);
+	const obsidianApi = getObsidianApi();
+	let sourceImageMap = obsidianApi?.createObsidianSourceImageMap(result.imageList) ?? {};
 	if (options.downloadImages && options.downloadMode === 'downloadsApi') {
 		// Pre-download the images
 		result = await preDownloadImages(result.imageList, result.markdown, options);
@@ -1192,7 +1513,7 @@ function turndown(content, options, article) {
 			return '';
 		}
 
-		let code;
+		let code = '';
 
 		if (options.preserveCodeFormatting) {
 			code = node.innerHTML.replaceAll('<br-keep></br-keep>', '<br>');
@@ -1210,14 +1531,15 @@ function turndown(content, options, article) {
 		let fenceSize = 3;
 		const fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
 
-		let match;
-		while ((match = fenceInCodeRegex.exec(code))) {
+		let match: RegExpExecArray | null = fenceInCodeRegex.exec(code);
+		while (match) {
 			if (match[0].length >= fenceSize) {
 				fenceSize = match[0].length + 1;
 			}
+			match = fenceInCodeRegex.exec(code);
 		}
 
-		let fence = repeat(fenceChar, fenceSize);
+		const fence = repeat(fenceChar, fenceSize);
 
 		return (
 			'\n\n' + fence + language + '\n'
@@ -1283,7 +1605,7 @@ function turndown(content, options, article) {
 /**
  * Get article from DOM string
  */
-function safeParseUrl(urlString) {
+function safeParseUrl(urlString: string): URL | null {
 	const sharedApi = getUrlUtilsApi();
 	if (sharedApi?.safeParseUrl) {
 		return sharedApi.safeParseUrl(urlString);
@@ -1296,7 +1618,7 @@ function safeParseUrl(urlString) {
 	}
 }
 
-function resolveArticleUrl(domBaseUri, pageUrl) {
+function resolveArticleUrl(domBaseUri: string, pageUrl?: string | null): URL | null {
 	const sharedApi = getUrlUtilsApi();
 	if (sharedApi?.resolveArticleUrl) {
 		return sharedApi.resolveArticleUrl(domBaseUri, pageUrl);
@@ -1310,32 +1632,32 @@ function resolveArticleUrl(domBaseUri, pageUrl) {
 	return safeParseUrl(domBaseUri);
 }
 
-function getReadabilityRecoveryApi() {
+function getReadabilityRecoveryApi(): RecoveryApi {
 	return globalThis.SnipSnipReadabilityRecovery || {
 		anchorAttribute: 'data-snipsnip-node-id',
 		annotateStructuralAnchors: () => 0,
 		analyzeNarrowExtraction: () => null,
 		applyRepeatedSectionPromotion: () => ({ changed: false, promotedIds: [] }),
 		buildRepeatedSectionFragment: () => null,
-		stripStructuralAnchorsFromHtml: html => html,
+		stripStructuralAnchorsFromHtml: html => String(html || ''),
 	};
 }
 
-function normalizeMeaningfulText(text) {
+function normalizeMeaningfulText(text: string | null | undefined): string {
 	return String(text || '').replace(/\s+/g, ' ').trim();
 }
 
-function parseArticleHtmlFragment(articleHtml) {
+function parseArticleHtmlFragment(articleHtml: string | null | undefined): Document {
 	const parser = new DOMParser();
 	return parser.parseFromString(`<!DOCTYPE html><html><body>${articleHtml || ''}</body></html>`, 'text/html');
 }
 
-function meaningfulTextLengthFromArticleHtml(articleHtml) {
+function meaningfulTextLengthFromArticleHtml(articleHtml: string | null | undefined): number {
 	const documentFragment = parseArticleHtmlFragment(articleHtml);
 	return normalizeMeaningfulText(documentFragment.body.textContent).length;
 }
 
-function linkDensityFromArticleHtml(articleHtml) {
+function linkDensityFromArticleHtml(articleHtml: string | null | undefined): number {
 	const documentFragment = parseArticleHtmlFragment(articleHtml);
 	const textLength = meaningfulTextLengthFromArticleHtml(articleHtml);
 	if (!textLength) {
@@ -1349,7 +1671,11 @@ function linkDensityFromArticleHtml(articleHtml) {
 	return linkTextLength / textLength;
 }
 
-function articleHtmlContainsAnyWitness(articleHtml, witnessIds, anchorAttribute) {
+function articleHtmlContainsAnyWitness(
+	articleHtml: string | null | undefined,
+	witnessIds: string[],
+	anchorAttribute: string,
+): boolean {
 	if (!witnessIds?.length) {
 		return false;
 	}
@@ -1360,7 +1686,10 @@ function articleHtmlContainsAnyWitness(articleHtml, witnessIds, anchorAttribute)
 	));
 }
 
-function buildRecoveredArticle(firstPassArticle, recoveredHtml) {
+function buildRecoveredArticle(
+	firstPassArticle: OffscreenArticleRecord,
+	recoveredHtml: string,
+): OffscreenArticleRecord {
 	const textContent = normalizeMeaningfulText(parseArticleHtmlFragment(recoveredHtml).body.textContent);
 	const excerpt = textContent.substring(0, 200);
 
@@ -1373,7 +1702,11 @@ function buildRecoveredArticle(firstPassArticle, recoveredHtml) {
 	};
 }
 
-function prepareDomForReadability(dom, options, recoveryApi) {
+function prepareDomForReadability(
+	dom: Document,
+	options: OffscreenRuntimeOptions,
+	recoveryApi: RecoveryApi,
+): { dom: Document; math: Record<string, ArticleMathInfo> } {
 	// Now options is defined
 	if (!options.preserveCodeFormatting) {
 		dom.querySelectorAll('pre code').forEach(codeBlock => {
@@ -1391,16 +1724,16 @@ function prepareDomForReadability(dom, options, recoveryApi) {
 		console.error('Error while parsing DOM');
 	}
 
-	const math = {};
+	const math: Record<string, ArticleMathInfo> = {};
 
-	const storeMathInfo = (el, mathInfo) => {
+	const storeMathInfo = (el: Element, mathInfo: ArticleMathInfo) => {
 		let randomId = URL.createObjectURL(new Blob([]));
 		randomId = randomId.substring(randomId.length - 36);
 		el.id = randomId;
 		math[randomId] = mathInfo;
 	};
 
-	const extractKaTeXTex = (kaTeXNode) => {
+	const extractKaTeXTex = (kaTeXNode: Element): string | null => {
 		const annotationNode = kaTeXNode.querySelector('annotation');
 		if (annotationNode?.textContent?.trim()) {
 			return annotationNode.textContent.trim();
@@ -1511,7 +1844,13 @@ function prepareDomForReadability(dom, options, recoveryApi) {
 	return { dom, math };
 }
 
-function finalizeArticleMetadata(article, dom, pageUrl, math, recoveryApi) {
+function finalizeArticleMetadata(
+	article: OffscreenArticleRecord | null,
+	dom: Document,
+	pageUrl: string | null,
+	math: Record<string, ArticleMathInfo>,
+	recoveryApi: RecoveryApi,
+): OffscreenArticleRecord {
 	if (!article) {
 		throw new Error('Readability failed to extract article');
 	}
@@ -1598,7 +1937,10 @@ function finalizeArticleMetadata(article, dom, pageUrl, math, recoveryApi) {
 	return article;
 }
 
-function extractArticleWithRecovery(domString, options) {
+function extractArticleWithRecovery(
+	domString: string,
+	options: OffscreenRuntimeOptions,
+): { article: OffscreenArticleRecord; dom: Document; math: Record<string, ArticleMathInfo> } | null {
 	const recoveryApi = getReadabilityRecoveryApi();
 
 	const firstPassParser = new DOMParser();
@@ -1678,12 +2020,24 @@ function extractArticleWithRecovery(domString, options) {
 	};
 }
 
-async function getArticleFromDom(domString, options, pageUrl = null) {
+async function getArticleFromDom(
+	domString: string,
+	options: OffscreenOptions | null = null,
+	pageUrl: string | null = null,
+): Promise<OffscreenArticleRecord> {
 	if (!domString) {
 		throw new Error('Invalid DOM string provided');
 	}
 
-	const extracted = extractArticleWithRecovery(domString, options);
+	const extracted = extractArticleWithRecovery(
+		domString,
+		createEffectiveMarkdownOptions({
+			content: '',
+			title: '',
+			pageTitle: '',
+			math: {},
+		}, options),
+	);
 	if (!extracted) {
 		throw new Error('Readability failed to extract article');
 	}
@@ -1700,13 +2054,17 @@ async function getArticleFromDom(domString, options, pageUrl = null) {
 /**
  * Get article from tab content
  */
-async function getArticleFromContent(tabId, selection = false, options = null) { // Add options parameter
+async function getArticleFromContent(
+	tabId: number,
+	selection = false,
+	options: OffscreenOptions | null = null,
+): Promise<OffscreenArticleRecord | null> {
 	try {
 		console.log(`Getting article content for tab ${tabId}`);
 		const requestId = Date.now().toString(36) + Math.random().toString(36).substring(2);
 
-		const resultPromise = new Promise((resolve, reject) => {
-			const messageListener = (message) => {
+		const resultPromise = new Promise<ArticleContentPayload>((resolve, reject) => {
+			const messageListener = (message: OffscreenMessage) => {
 				if (message.type === 'article-content-result' && message.requestId === requestId) {
 					console.log(`Received article content result for tab ${tabId}:`, message);
 					browser.runtime.onMessage.removeListener(messageListener);
@@ -1750,7 +2108,10 @@ async function getArticleFromContent(tabId, selection = false, options = null) {
 /**
  * Format title using template with provided options
  */
-async function formatTitle(article, providedOptions = null) {
+async function formatTitle(
+	article: OffscreenArticleRecord,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<string> {
 	const options = providedOptions || defaultOptions;
 
 	let title = textReplace(options.title, article, `${options.disallowedChars}/`);
@@ -1761,7 +2122,10 @@ async function formatTitle(article, providedOptions = null) {
 /**
  * Format Markdown clips folder with provided options
  */
-async function formatMdClipsFolder(article, providedOptions = null) {
+async function formatMdClipsFolder(
+	article: OffscreenArticleRecord,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<string> {
 	const options = providedOptions || defaultOptions;
 
 	let mdClipsFolder = '';
@@ -1777,7 +2141,10 @@ async function formatMdClipsFolder(article, providedOptions = null) {
 /**
  * Format Obsidian folder with provided options
  */
-async function formatObsidianFolder(article, providedOptions = null) {
+async function formatObsidianFolder(
+	article: OffscreenArticleRecord,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<string> {
 	const options = providedOptions || defaultOptions;
 
 	let obsidianFolder = '';
@@ -1793,7 +2160,7 @@ async function formatObsidianFolder(article, providedOptions = null) {
 /**
  * Replace placeholder strings with article info
  */
-function textReplace(string, article, disallowedChars = null) {
+function textReplace(string: string, article: OffscreenArticleRecord, disallowedChars: string | null = null): string {
 	if (getTemplateUtilsApi()?.textReplace) {
 		return getTemplateUtilsApi().textReplace(string, article, disallowedChars);
 	}
@@ -1854,12 +2221,12 @@ function textReplace(string, article, disallowedChars = null) {
 /**
  * Generate valid filename
  */
-function generateValidFileName(title, disallowedChars = null) {
+function generateValidFileName(title: unknown, disallowedChars: string | null = null): string {
 	if (getTemplateUtilsApi()?.generateValidFileName) {
 		return getTemplateUtilsApi().generateValidFileName(title, disallowedChars);
 	}
 
-	if (!title) return title;
+	if (!title) return '';
 	else title = `${title}`;
 	// Remove < > : " / \ | ? *
 	var illegalRe = /[/?<>\\:*|":]/g;
@@ -1879,14 +2246,14 @@ function generateValidFileName(title, disallowedChars = null) {
 /**
  * Clean attribute
  */
-function cleanAttribute(attribute) {
+function cleanAttribute(attribute: string | null): string {
 	return attribute ? attribute.replace(/(\n+\s*)+/g, '\n') : '';
 }
 
 /**
  * Validate URI
  */
-function validateUri(href, baseURI) {
+function validateUri(href: string, baseURI: string): string {
 	const sharedApi = getUrlUtilsApi();
 	if (sharedApi?.validateUri) {
 		return sharedApi.validateUri(href, baseURI);
@@ -1913,7 +2280,7 @@ function validateUri(href, baseURI) {
 /**
  * Get image filename
  */
-function getImageFilename(src, options, prependFilePath = true) {
+function getImageFilename(src: string, options: OffscreenRuntimeOptions, prependFilePath = true): string {
 	const sharedApi = getUrlUtilsApi();
 	if (sharedApi?.getImageFilename) {
 		return sharedApi.getImageFilename(src, options, prependFilePath);
@@ -1950,10 +2317,14 @@ function getImageFilename(src, options, prependFilePath = true) {
 /**
  * Pre-download images
  */
-async function preDownloadImages(imageList, markdown, providedOptions = null) {
+async function preDownloadImages(
+	imageList: Record<string, string>,
+	markdown: string,
+	providedOptions: OffscreenOptions | null = null,
+): Promise<MarkdownConversionResult> {
 	const options = providedOptions || defaultOptions;
-	const newImageList = {};
-	const sourceImageMap = {};
+	const newImageList: Record<string, string> = {};
+	const sourceImageMap: Record<string, string> = {};
 
 	// Fetch each image in parallel, then fold the result into the markdown
 	// and the filename maps. Bugs caught here (pre-existing from the
@@ -1970,30 +2341,38 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 				if (!response.ok) {
 					throw new Error(`HTTP ${response.status}`);
 				}
+
 				const blob = await response.blob();
 
 				if (options.imageStyle === 'base64') {
 					const dataUrl = await new Promise<string>((resolveReader, rejectReader) => {
 						const reader = new FileReader();
-						reader.onloadend = () => resolveReader(reader.result as string);
+						reader.onloadend = () => {
+							if (typeof reader.result === 'string') {
+								resolveReader(reader.result);
+								return;
+							}
+
+							rejectReader(new Error('FileReader did not produce a string result'));
+						};
 						reader.onerror = () => rejectReader(reader.error ?? new Error('FileReader failed'));
 						reader.readAsDataURL(blob);
 					});
+
 					markdown = markdown.replaceAll(src, dataUrl);
 					return;
 				}
 
 				let newFilename = filename;
-				// Handle unknown extensions — pre-download gives us the real MIME.
 				if (newFilename.endsWith('.idunno')) {
 					const mimeType = blob.type || 'application/octet-stream';
-					const extension = mime[mimeType] || 'bin';
+					const extension = getMimeDb()[mimeType] || 'bin';
 					newFilename = filename.replace('.idunno', `.${extension}`);
 
 					if (!options.imageStyle.startsWith('obsidian')) {
 						markdown = markdown.replaceAll(
-							filename.split('/').map(s => encodeURI(s)).join('/'),
-							newFilename.split('/').map(s => encodeURI(s)).join('/'),
+							filename.split('/').map((segment) => encodeURI(segment)).join('/'),
+							newFilename.split('/').map((segment) => encodeURI(segment)).join('/'),
 						);
 					} else {
 						markdown = markdown.replaceAll(filename, newFilename);
@@ -2002,15 +2381,9 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 
 				const blobUrl = URL.createObjectURL(blob);
 				newImageList[blobUrl] = newFilename;
-				Object.assign(
-					sourceImageMap,
-					snipSnipObsidian.createObsidianSourceImageMap({
-						[src]: newFilename,
-					}),
-				);
+				const obsidianApi = getObsidianApi();
+				Object.assign(sourceImageMap, obsidianApi?.createObsidianSourceImageMap({ [src]: newFilename }) ?? {});
 			} catch (error) {
-				// A single image failing shouldn't abort the whole clip — log
-				// and move on so the markdown still reaches the popup.
 				console.error('Error pre-downloading image:', src, error);
 			}
 		}),
@@ -2023,14 +2396,14 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
  * Download Markdown file
  */
 async function downloadMarkdown(
-	markdown,
-	title,
-	tabId,
-	imageList = {},
+	markdown: string,
+	title: string,
+	tabId: number,
+	imageList: Record<string, string> = {},
 	mdClipsFolder = '',
-	providedOptions = null,
+	providedOptions: OffscreenOptions | null = null,
 	notificationDelta = null,
-) {
+): Promise<void> {
 	const options = providedOptions || defaultOptions;
 
 	// CRITICAL: Ensure title is never empty to prevent download failures
@@ -2047,11 +2420,14 @@ async function downloadMarkdown(
 	);
 
 	// Check if Downloads API is available in offscreen context
-	const hasDownloadsAPI = !!(browser.downloads || (typeof chrome !== 'undefined' && chrome.downloads));
+	const hasDownloadsAPI = !!(browser.downloads || chrome?.downloads);
 
 	if (options.downloadMode === 'downloadsApi' && hasDownloadsAPI) {
 		// Downloads API is available in offscreen - use it directly
-		const downloadsAPI = browser.downloads || chrome.downloads;
+		const downloadsAPI = browser.downloads || chrome?.downloads;
+		if (!downloadsAPI) {
+			throw new Error('Downloads API unavailable');
+		}
 
 		try {
 			// Create blob for markdown content
@@ -2120,7 +2496,7 @@ async function downloadMarkdown(
 				imageList: imageList,
 				mdClipsFolder: mdClipsFolder,
 				options: options,
-				error: err.message,
+				error: toErrorMessage(err),
 			});
 		}
 	} else if (options.downloadMode === 'downloadsApi') {
@@ -2162,13 +2538,13 @@ async function downloadMarkdown(
 }
 
 async function downloadGeneratedFileExport(
-	content,
-	filename,
-	tabId,
-	providedOptions = null,
+	content: string,
+	filename: string,
+	tabId: number,
+	providedOptions: OffscreenOptions | null = null,
 	mimeType = 'application/octet-stream',
 	notificationDelta = null,
-) {
+): Promise<void> {
 	const options = providedOptions || defaultOptions;
 	const downloadsAPI = browser.downloads || (typeof chrome !== 'undefined' ? chrome.downloads : null);
 	const hasDownloadsAPI = !!downloadsAPI;
@@ -2235,18 +2611,18 @@ async function downloadGeneratedFileExport(
  * Download via content script method (fallback when Downloads API not available)
  */
 async function downloadViaContentScript(
-	markdown,
-	title,
-	tabId,
-	imageList,
-	mdClipsFolder,
-	options,
+	markdown: string,
+	title: string,
+	tabId: number,
+	imageList: Record<string, string>,
+	mdClipsFolder: string,
+	options: OffscreenRuntimeOptions,
 	notificationDelta = null,
-) {
+): Promise<void> {
 	try {
 		// For content script downloads, we need to handle the subfolder differently
 		// since data URI downloads don't support subfolders
-		let filename;
+		let filename = '';
 		if (mdClipsFolder) {
 			// Flatten the path by including folder in filename
 			filename = `${mdClipsFolder.replace(/\//g, '_')}${generateValidFileName(title, options.disallowedChars)}.md`;
@@ -2285,133 +2661,11 @@ async function downloadViaContentScript(
 /**
  * Base64 encode Unicode string
  */
-function base64EncodeUnicode(str) {
+function base64EncodeUnicode(str: string): string {
 	// Encode UTF-8 string to base64
 	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => String.fromCharCode(`0x${p1}`));
 
 	return btoa(utf8Bytes);
-}
-
-/**
- * Convert to fenced code block
- */
-function convertToFencedCodeBlock(node, options) {
-	const sharedApi = getCodeBlockUtilsApi();
-	if (sharedApi?.convertToFencedCodeBlock) {
-		return sharedApi.convertToFencedCodeBlock(node, options);
-	}
-
-	function normalizeCodeBlockSpacing(text, maxBlankLines = 2) {
-		const lines = text.split('\n');
-		const normalizedLines = [];
-		let blankLineCount = 0;
-
-		lines.forEach(line => {
-			if (/^[ \t]*$/.test(line)) {
-				blankLineCount += 1;
-				if (blankLineCount <= maxBlankLines) {
-					normalizedLines.push('');
-				}
-			} else {
-				blankLineCount = 0;
-				normalizedLines.push(line);
-			}
-		});
-
-		return normalizedLines.join('\n');
-	}
-
-	function detectPreLanguage(node, code) {
-		const shouldAutoDetectLanguage = options.autoDetectCodeLanguage !== false;
-		const idMatch = node.id?.match(/code-lang-(.+)/);
-		if (idMatch?.length > 1) {
-			return idMatch[1];
-		}
-
-		const classTokens = (node.className || '')
-			.toLowerCase()
-			.split(/\s+/)
-			.filter(Boolean);
-		const candidates = new Set();
-
-		classTokens.forEach(token => {
-			candidates.add(token);
-			if (token.startsWith('language-')) candidates.add(token.substring(9));
-			if (token.startsWith('lang-')) candidates.add(token.substring(5));
-			if (token.startsWith('source-')) candidates.add(token.substring(7));
-			if (token.startsWith('highlight-')) candidates.add(token.substring(10));
-		});
-
-		if (typeof hljs !== 'undefined' && typeof hljs.getLanguage === 'function') {
-			for (const candidate of candidates) {
-				if (candidate && hljs.getLanguage(candidate)) {
-					return candidate;
-				}
-			}
-		}
-
-		if (
-			shouldAutoDetectLanguage
-			&& typeof hljs !== 'undefined'
-			&& typeof hljs.highlightAuto === 'function'
-			&& code.trim()
-		) {
-			try {
-				const detected = hljs.highlightAuto(code);
-				if (
-					detected?.language
-					&& typeof detected.relevance === 'number'
-					&& detected.relevance >= 2
-				) {
-					return detected.language;
-				}
-			} catch (e) {
-				console.warn('Language detection failed for <pre> block:', e);
-			}
-		}
-
-		return '';
-	}
-
-	let code;
-
-	if (options.preserveCodeFormatting) {
-		code = node.innerHTML.replaceAll('<br-keep></br-keep>', '<br>');
-	} else {
-		const clonedNode = node.cloneNode(true);
-		clonedNode.querySelectorAll('br-keep, br').forEach(br => {
-			br.replaceWith('\n');
-		});
-		code = clonedNode.textContent || '';
-		code = normalizeCodeBlockSpacing(code, 2);
-	}
-	const language = detectPreLanguage(node, code);
-
-	var fenceChar = options.fence.charAt(0);
-	var fenceSize = 3;
-	var fenceInCodeRegex = new RegExp(`^${fenceChar}{3,}`, 'gm');
-
-	var match;
-	while ((match = fenceInCodeRegex.exec(code))) {
-		if (match[0].length >= fenceSize) {
-			fenceSize = match[0].length + 1;
-		}
-	}
-
-	var fence = repeat(fenceChar, fenceSize);
-
-	return (
-		'\n\n' + fence + language + '\n'
-		+ code.replace(/\n$/, '')
-		+ '\n' + fence + '\n\n'
-	);
-}
-
-/**
- * Repeat string
- */
-function repeat(character, count) {
-	return Array(count + 1).join(character);
 }
 
 const CRC32_TABLE = (() => {
@@ -2426,7 +2680,7 @@ const CRC32_TABLE = (() => {
 	return table;
 })();
 
-function crc32(bytes) {
+function crc32(bytes: Uint8Array): number {
 	let crc = 0xFFFFFFFF;
 	for (let i = 0; i < bytes.length; i++) {
 		crc = CRC32_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
@@ -2434,7 +2688,7 @@ function crc32(bytes) {
 	return (crc ^ 0xFFFFFFFF) >>> 0;
 }
 
-function getDosDateTime(date = new Date()) {
+function getDosDateTime(date = new Date()): { dosDate: number; dosTime: number } {
 	const year = Math.max(1980, Math.min(2107, date.getFullYear()));
 	const month = date.getMonth() + 1;
 	const day = date.getDate();
@@ -2447,10 +2701,10 @@ function getDosDateTime(date = new Date()) {
 	return { dosDate, dosTime };
 }
 
-function createStoredZipBlob(files) {
+function createStoredZipBlob(files: BatchZipFile[]): Blob {
 	const encoder = new TextEncoder();
-	const localParts = [];
-	const centralParts = [];
+	const localParts: Uint8Array[] = [];
+	const centralParts: Uint8Array[] = [];
 	let offset = 0;
 
 	const { dosDate, dosTime } = getDosDateTime();
@@ -2524,7 +2778,7 @@ function createStoredZipBlob(files) {
 	return new Blob([...localParts, ...centralParts, endRecord], { type: 'application/zip' });
 }
 
-async function downloadBatchZip(message) {
+async function downloadBatchZip(message: BatchZipMessage): Promise<void> {
 	try {
 		const files = Array.isArray(message.files) ? message.files : [];
 		if (!files.length) {
@@ -2583,7 +2837,7 @@ async function downloadBatchZip(message) {
 /**
  * Get article content from tab
  */
-async function handleGetArticleContent(message) {
+async function handleGetArticleContent(message: OffscreenMessage): Promise<void> {
 	try {
 		const { tabId, selection, requestId } = message;
 
@@ -2599,7 +2853,7 @@ async function handleGetArticleContent(message) {
 		await browser.runtime.sendMessage({
 			type: 'article-error',
 			requestId: message.requestId,
-			error: error.message,
+			error: toErrorMessage(error),
 		});
 	}
 }

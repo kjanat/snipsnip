@@ -20,6 +20,23 @@ import type {
 	TurndownServiceApi,
 } from '@/lib/types/index.ts';
 
+interface SnipSnipSelectionUtilsApi {
+	buildDomWithSelection(domString: string, selectionHtml: string, shouldUseSelection?: boolean): string;
+}
+
+interface SnipSnipHashtagUtilsApi {
+	hashtagEscapeSentinel: string;
+	normalizeHashtagHandlingMode(mode: unknown): 'remove' | 'escape' | 'keep';
+	replaceHashtagTokensInText(text: string, mode: 'remove' | 'escape' | 'keep'): string;
+	applyHashtagHandlingToHtml(content: string, mode: 'remove' | 'escape' | 'keep'): string;
+	applyHashtagHandlingToMarkdown(markdown: string, mode: 'remove' | 'escape' | 'keep'): string;
+}
+
+interface SnipSnipCodeBlockUtilsApi {
+	repeat(character: string, count: number): string;
+	convertToFencedCodeBlock(node: Element, options: Record<string, unknown>): string;
+}
+
 declare global {
 	interface globalThis {
 		browser: typeof import('wxt/browser').browser;
@@ -27,6 +44,7 @@ declare global {
 	var defaultOptions: Record<string, unknown> | undefined;
 	var hljs: HighlightApi | undefined;
 	var moment: MomentApi | undefined;
+	var mimedb: Record<string, string> | undefined;
 	var Readability: ReadabilityApi | undefined;
 	var snipSnipCountUtils: SnipSnipCountUtilsApi | undefined;
 	var snipSnipAgentBridgeState: SnipSnipAgentBridgeStateApi | undefined;
@@ -36,6 +54,8 @@ declare global {
 	var snipSnipLibraryExport: SnipSnipLibraryExportApi | undefined;
 	var snipSnipLibraryState: SnipSnipLibraryStateApi | undefined;
 	var snipSnipMarkdownOptions: SnipSnipMarkdownOptionsApi | undefined;
+	var snipSnipSelectionUtils: SnipSnipSelectionUtilsApi | undefined;
+	var snipSnipHashtagUtils: SnipSnipHashtagUtilsApi | undefined;
 	var snipSnipNotifications: Record<string, unknown> | undefined;
 	var snipSnipObsidian: SnipSnipObsidianApi | undefined;
 	var snipSnipOptionsState: SnipSnipOptionsStateApi | undefined;
@@ -58,6 +78,7 @@ declare global {
 		| undefined;
 	var snipSnipTemplateUtils: SnipSnipTemplateUtilsApi | undefined;
 	var snipSnipUrlUtils: SnipSnipUrlUtilsApi | undefined;
+	var snipSnipCodeBlockUtils: SnipSnipCodeBlockUtilsApi | undefined;
 	var snipSnipUseImportedBackground: boolean | undefined;
 	var getSelectionAndDom: (() => { selection: string; dom: string; pageUrl: string } | null) | undefined;
 	var snipsnipPrepareForCapture: (() => Promise<void>) | undefined;
