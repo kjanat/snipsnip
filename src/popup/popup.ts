@@ -2,6 +2,7 @@
 // TODO: incrementally type this file (4293 lines). Remove this pragma once
 // implicit-any diagnostics are resolved. Touch sites under migration get
 // explicit types via the imported wrapper; the rest is still untyped JS.
+import { onMessage, sendMessage } from '@/lib/messaging.ts';
 import { createEditor } from '@/popup/lib/editor';
 import defaultEditorTheme from '@/popup/lib/themes/default.ts';
 import { loadTheme } from '@/popup/lib/themes/registry.ts';
@@ -3426,34 +3427,25 @@ const clipSite = id => {
 			.then((result) => {
 				if (result?.[0]?.result) {
 					showOrHideClipOption(result[0].result.selection);
-					const message = {
-						type: 'clip',
+					const basePayload = {
 						dom: result[0].result.dom,
 						selection: result[0].result.selection,
 						pageUrl: result[0].result.pageUrl || null,
 					};
+					const sendClip = (opts) => sendMessage('clip', { ...basePayload, ...opts });
 					if (currentOptions) {
-						return browser.runtime.sendMessage({
-							...message,
-							...currentOptions,
-						});
+						return sendClip(currentOptions);
 					}
 					return getItemsBag('sync', defaultOptions).then(options => {
 						currentOptions = normalizePopupOptions({
 							...defaultOptions,
 							...options,
 						});
-						return browser.runtime.sendMessage({
-							...message,
-							...currentOptions,
-						});
+						return sendClip(currentOptions);
 					}).catch(err => {
 						console.error(err);
 						showError(err);
-						return browser.runtime.sendMessage({
-							...message,
-							...defaultOptions,
-						});
+						return sendClip(defaultOptions);
 					});
 				}
 			});
@@ -4180,52 +4172,61 @@ async function sendToObsidian(e) {
 	}
 }
 
+// Typed listeners for the clip-flow. These replace the `display.md` and
+// `clip-error` branches of the legacy `notify()` switch — `@webext-core`
+// routes named messages directly to these handlers, bypassing notify.
+function handleDisplayMarkdown(message) {
+	resolveAutoClipWatchdog();
+	setActiveSiteRuleState(
+		message.matchedSiteRule,
+		message.overriddenKeys,
+		message.effectiveOptions || message.options,
+	);
+	imageList = message.imageList;
+	sourceImageMap = message.sourceImageMap;
+	mdClipsFolder = message.mdClipsFolder;
+	updateCurrentClipState({
+		title: message.article?.title,
+		markdown: message.markdown,
+		pageUrl: resolveClipPageUrl(message.article),
+	});
+	if (dom.titleInput) {
+		dom.titleInput.value = message.article.title;
+	}
+	setEditorValue(message.markdown);
+	applyActiveSiteRuleUi(message.effectiveOptions || currentOptions);
+
+	const shouldRevealMainView = activePopupView === null;
+	if (shouldRevealMainView) {
+		setPopupView('main', { immediate: true }).catch((error) => {
+			console.error('Failed to show main popup view:', error);
+		});
+	}
+	dom.spinner.style.display = 'none';
+	maybeAutoSaveCurrentClip().catch((error) => {
+		console.error('Failed during popup library auto-save:', error);
+	});
+	scheduleDeferredLibraryWarmup();
+
+	if (!shouldRevealMainView && activePopupView === 'main') {
+		dom.downloadButton?.focus();
+	}
+	refreshEditor();
+}
+
+function handleClipErrorMessage(message) {
+	// Offscreen failed to convert the page. Surface the error instead of
+	// leaving the "Processing page..." spinner running indefinitely.
+	resolveAutoClipWatchdog();
+	showError(new Error(message.error || 'Clip failed'));
+}
+
+onMessage('display.md', (msg) => handleDisplayMarkdown(msg.data));
+onMessage('clip-error', (msg) => handleClipErrorMessage(msg.data));
+
 // function that handles messages from the injected script into the site
 function notify(message) {
-	// message for displaying markdown
-	if (message.type === 'display.md') {
-		resolveAutoClipWatchdog();
-		setActiveSiteRuleState(
-			message.matchedSiteRule,
-			message.overriddenKeys,
-			message.effectiveOptions || message.options,
-		);
-		imageList = message.imageList;
-		sourceImageMap = message.sourceImageMap;
-		mdClipsFolder = message.mdClipsFolder;
-		updateCurrentClipState({
-			title: message.article?.title,
-			markdown: message.markdown,
-			pageUrl: resolveClipPageUrl(message.article),
-		});
-		if (dom.titleInput) {
-			dom.titleInput.value = message.article.title;
-		}
-		setEditorValue(message.markdown);
-		applyActiveSiteRuleUi(message.effectiveOptions || currentOptions);
-
-		const shouldRevealMainView = activePopupView === null;
-		if (shouldRevealMainView) {
-			setPopupView('main', { immediate: true }).catch((error) => {
-				console.error('Failed to show main popup view:', error);
-			});
-		}
-		dom.spinner.style.display = 'none';
-		maybeAutoSaveCurrentClip().catch((error) => {
-			console.error('Failed during popup library auto-save:', error);
-		});
-		scheduleDeferredLibraryWarmup();
-
-		if (!shouldRevealMainView && activePopupView === 'main') {
-			dom.downloadButton?.focus();
-		}
-		refreshEditor();
-	} else if (message.type === 'clip-error') {
-		// Offscreen failed to convert the page. Surface the error instead of
-		// leaving the "Processing page..." spinner running indefinitely.
-		resolveAutoClipWatchdog();
-		showError(new Error(message.error || 'Clip failed'));
-	} else if (message.type === 'batch-progress') {
+	if (message.type === 'batch-progress') {
 		progressUI.show();
 
 		const total = message.total || 0;

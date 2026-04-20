@@ -1,5 +1,6 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { defaultOptions } from '@/lib/background/default-options-runtime.ts';
+import { onMessage, sendMessage } from '@/lib/messaging.ts';
 import { Readability } from '@mozilla/readability';
 import hljs from 'highlight.js/lib/core';
 import moment from 'moment';
@@ -27,8 +28,20 @@ const TURNDOWN_BUILTIN_ESCAPE: (s: string) => string =
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);
 
-// Listen for messages
+// Legacy raw listener — still used for non-migrated message types like
+// 'article-dom-data', downloads, clipboard, bridge capture, etc.
 browser.runtime.onMessage.addListener(handleMessages);
+
+// Typed listener for the clip pipeline. Directly handles `process-content`
+// bypassing the `target === 'offscreen'` gate in handleMessages.
+onMessage('process-content', async (msg) => {
+	await processContent({
+		requestId: msg.data.requestId,
+		data: msg.data.data,
+		tabId: msg.data.tabId,
+		options: msg.data.options,
+	});
+});
 
 // Notify service worker that offscreen document is ready
 browser.runtime.sendMessage({ type: 'offscreen-ready' });
@@ -180,9 +193,7 @@ function handleMessages(message, _sender) {
 
 	return (async () => {
 		switch (message.type) {
-			case 'process-content':
-				await processContent(message);
-				break;
+			// 'process-content' is now handled by onMessage('process-content') above.
 			case 'download-markdown':
 				await downloadMarkdown(
 					message.markdown,
@@ -250,10 +261,9 @@ async function processContent(message) {
 		article.title = await formatTitle(article, resolved.options);
 		const mdClipsFolder = await formatMdClipsFolder(article, resolved.options);
 
-		// Send results back to service worker
-		await browser.runtime.sendMessage({
-			type: 'markdown-result',
-			requestId: requestId,
+		// Send results back to service worker via typed messaging.
+		await sendMessage('markdown-result', {
+			requestId,
 			result: {
 				markdown,
 				article,
@@ -268,8 +278,7 @@ async function processContent(message) {
 	} catch (error) {
 		// Log stack so the throw point is visible in the offscreen console.
 		console.error('[offscreen] processContent failed:', error, error?.stack);
-		await browser.runtime.sendMessage({
-			type: 'process-error',
+		await sendMessage('process-error', {
 			error: `${error?.name || 'Error'}: ${error?.message || String(error)}`,
 			stack: error?.stack || null,
 		}).catch(() => {

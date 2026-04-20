@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import { onMessage, sendMessage } from '@/lib/messaging.ts';
 import { getItemsBag, getItemsRecord, setItemsBag, storage } from '@/shared/storage.ts';
 type BackgroundMessage = import('@/lib/background/message-contracts.ts').BackgroundMessage;
 // Log platform info. browser.runtime.getBrowserInfo is Firefox-only — on
@@ -12,6 +13,21 @@ browser.runtime.getPlatformInfo().then(async platformInfo => {
 
 // Initialize listeners synchronously
 browser.runtime.onMessage.addListener(handleMessages);
+
+// Typed clip-pipeline listeners via @webext-core/messaging. These intercept
+// the named messages BEFORE `handleMessages` runs — raw runtime messages for
+// other types continue to flow through the legacy dispatcher.
+onMessage('clip', async (msg) => {
+	await handleClipRequest(msg.data, msg.sender?.tab?.id);
+});
+onMessage('markdown-result', async (msg) => {
+	await handleMarkdownResult(msg.data);
+});
+onMessage('process-error', async (msg) => {
+	await sendMessage('clip-error', { error: msg.data.error || 'Unknown clip error' }).catch(() => {
+		// Popup may have been closed; nothing actionable here.
+	});
+});
 browser.runtime.onInstalled.addListener((details) => {
 	handleInstalled(details).catch((error) => {
 		console.error('[Notifications] Failed to handle install event:', error);
@@ -786,9 +802,7 @@ async function handleMessages(message: BackgroundHuhMessage, sender, sendRespons
 			return await recordNotificationMetrics(message.delta, {
 				tabId: Number.isInteger(message.tabId) ? message.tabId : null,
 			});
-		case 'clip':
-			await handleClipRequest(message, sender.tab?.id);
-			break;
+		// 'clip' is now handled by @webext-core/messaging's onMessage('clip').
 		case 'download':
 			await handleDownloadRequest(message);
 			break;
@@ -820,19 +834,8 @@ async function handleMessages(message: BackgroundHuhMessage, sender, sendRespons
 		case 'offscreen-ready':
 			// The offscreen document is ready - no action needed
 			break;
-		case 'markdown-result':
-			await handleMarkdownResult(message);
-			break;
-		case 'process-error':
-			// Offscreen threw while handling a clip. Forward to popup so the
-			// spinner surfaces an error instead of spinning forever.
-			await browser.runtime.sendMessage({
-				type: 'clip-error',
-				error: message.error || 'Unknown clip error',
-			}).catch(() => {
-				// Popup may have been closed; swallow the lack-of-receivers error.
-			});
-			break;
+		// 'markdown-result' and 'process-error' are now handled via
+		// onMessage() in @/lib/messaging.ts at module init.
 		case 'download-complete':
 			handleDownloadComplete(message);
 			break;
@@ -1916,16 +1919,12 @@ async function handleClipRequest(message, tabId) {
 		pageUrl = tabInfo?.url || null;
 	}
 
-	await browser.runtime.sendMessage({
+	await sendMessage('process-content', {
 		target: 'offscreen',
-		type: 'process-content',
-		requestId: requestId,
-		data: {
-			...message,
-			pageUrl,
-		},
-		tabId: tabId,
-		options: options,
+		requestId,
+		data: { ...message, pageUrl },
+		tabId: tabId ?? null,
+		options,
 	});
 }
 
@@ -1936,13 +1935,12 @@ function generateRequestId() {
 	return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-/** Process markdown result from offscreen document */
+/** Process markdown result from offscreen document. Forwards it to the popup
+ * as a typed 'display.md' message. */
 async function handleMarkdownResult(message) {
-	const { result, requestId: _requestId } = message;
+	const { result } = message;
 
-	// Forward the result to the popup
-	await browser.runtime.sendMessage({
-		type: 'display.md',
+	await sendMessage('display.md', {
 		markdown: result.markdown,
 		article: result.article,
 		imageList: result.imageList,
@@ -1952,6 +1950,8 @@ async function handleMarkdownResult(message) {
 		effectiveOptions: result.effectiveOptions || null,
 		matchedSiteRule: result.matchedSiteRule || null,
 		overriddenKeys: Array.isArray(result.overriddenKeys) ? result.overriddenKeys : [],
+	}).catch(() => {
+		// Popup may have closed between clip send and result.
 	});
 }
 
