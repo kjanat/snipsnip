@@ -161,7 +161,7 @@ type ArticleMathInfo = {
 	inline: boolean;
 };
 
-type OffscreenArticleRecord = ArticleContent & RuntimeArticle & UnknownRecord & {
+type OffscreenArticleRecord = Omit<ArticleContent, 'math'> & RuntimeArticle & UnknownRecord & {
 	content: string;
 	title: string;
 	pageTitle: string;
@@ -264,6 +264,7 @@ type OffscreenMessage = BackgroundMessageBase & {
 	options?: OffscreenOptions | null;
 	notificationDelta?: NotificationDelta | null;
 	content?: string;
+	article?: ArticleContentPayload;
 	filename?: string;
 	mimeType?: string;
 	text?: string;
@@ -290,6 +291,20 @@ function toErrorMessage(error: unknown): string {
 
 function toErrorStack(error: unknown): string | null {
 	return error instanceof Error ? (error.stack ?? null) : null;
+}
+
+function normalizeReadabilityArticle(article: Record<string, unknown>): OffscreenArticleRecord {
+	return {
+		...article,
+		title: typeof article.title === 'string' ? article.title : '',
+		content: typeof article.content === 'string' ? article.content : '',
+		pageTitle: typeof article.pageTitle === 'string' ? article.pageTitle : '',
+		math: {},
+	};
+}
+
+function createFallbackArticleOptions(providedOptions: OffscreenOptions | null = null): OffscreenRuntimeOptions {
+	return createEffectiveMarkdownOptions({ content: '', title: '', pageTitle: '', math: {} }, providedOptions);
 }
 
 function toTurndownHeadingStyle(value: unknown): 'atx' | 'setext' | undefined {
@@ -513,7 +528,7 @@ function handleMessages(message: OffscreenMessage, _sender: unknown): Promise<un
 	}
 
 	return (async () => {
-			switch (message.type) {
+		switch (message.type) {
 			case 'process-content':
 				await processContent(message);
 				break;
@@ -1175,7 +1190,11 @@ function applyHashtagHandlingToMarkdown(markdown: string, mode: HashtagHandlingM
 /**
  * Turndown HTML to Markdown conversion
  */
-function turndown(content: string, options: OffscreenRuntimeOptions, article: OffscreenArticleRecord): MarkdownConversionResult {
+function turndown(
+	content: string,
+	options: OffscreenRuntimeOptions,
+	article: OffscreenArticleRecord,
+): MarkdownConversionResult {
 	console.log('Starting turndown with options:', options.tableFormatting); // Debug log
 	const uriBase = article.uriBase || article.baseURI;
 
@@ -1454,7 +1473,7 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 			// don't pass the filter, just output a normal markdown link
 			return false;
 		},
-		replacement: function(_content, node, _tdopts) {
+		replacement: (_content, node, _tdopts) => {
 			// if we're stripping images, output nothing
 			if (options.imageStyle === 'noImage') return '';
 			// if this is an obsidian link, so output that
@@ -1471,14 +1490,6 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 					return `![${alt}][fig${id}]`;
 				} else return src ? `![${alt}](${src}${titlePart})` : '';
 			}
-		},
-		append() {
-			var references = '';
-			if (imageReferences.length) {
-				references = `\n\n${imageReferences.join('\n')}\n\n`;
-				imageReferences.length = 0;
-			}
-			return references;
 		},
 	});
 
@@ -1503,9 +1514,9 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 				&& Boolean(node.getAttribute('href'))
 				&& tdopts.linkStyle !== 'referenced';
 		},
-			replacement: (content, node, _tdopts) => {
-				// get the href
-				const href = validateUri(node.getAttribute('href') ?? '', uriBase ?? '');
+		replacement: (content, node, _tdopts) => {
+			// get the href
+			const href = validateUri(node.getAttribute('href') ?? '', uriBase ?? '');
 
 			// If we're in a table AND strip links is enabled, OR if linkStyle is set to stripLinks
 			// just return the text content without the link
@@ -1574,7 +1585,7 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 		function detectPreLanguage(node: Element, code: string): string {
 			const shouldAutoDetectLanguage = options.autoDetectCodeLanguage !== false;
 			const idMatch = node.id?.match(/code-lang-(.+)/);
-			if (idMatch?.length > 1) {
+			if (idMatch && idMatch.length > 1) {
 				return idMatch[1];
 			}
 
@@ -1629,10 +1640,12 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 			code = node.innerHTML.replaceAll('<br-keep></br-keep>', '<br>');
 		} else {
 			const clonedNode = node.cloneNode(true);
-			clonedNode.querySelectorAll('br-keep, br').forEach(br => {
-				br.replaceWith('\n');
-			});
-			code = clonedNode.textContent || '';
+			if (clonedNode instanceof Element) {
+				clonedNode.querySelectorAll('br-keep, br').forEach((br) => {
+					br.replaceWith('\n');
+				});
+				code = clonedNode.textContent || '';
+			}
 			code = normalizeCodeBlockSpacing(code, 2);
 		}
 		const language = detectPreLanguage(node, code);
@@ -1662,14 +1675,17 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 		filter: (node, options) => (
 			options.codeBlockStyle === 'fenced'
 			&& node.nodeName === 'PRE'
-			&& node.firstChild
+			&& node.firstChild instanceof Element
 			&& node.firstChild.nodeName === 'CODE'
 		),
-		replacement: (_content, node, options) => {
+		replacement: (_content, node, _options) => {
 			const codeNode = node.firstChild;
+			if (!(codeNode instanceof Element)) {
+				return '';
+			}
 			const processedCode = processCodeBlock(codeNode, options);
 
-			const fenceChar = options.fence.charAt(0);
+			const fenceChar = (options.fence || '```').charAt(0);
 			const fenceSize = 3;
 			const fence = repeat(fenceChar, fenceSize);
 
@@ -1688,9 +1704,10 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 
 	// handle <pre> as code blocks
 	turndownService.addRule('pre', {
-		filter: (node, _tdopts) => node.nodeName === 'PRE' && (!node.firstChild || node.firstChild.nodeName !== 'CODE'),
-		replacement: (_content, node, tdopts) => {
-			return convertToFencedCodeBlock(node, tdopts);
+		filter: (node, _tdopts) =>
+			node.nodeName === 'PRE' && (!(node.firstChild instanceof Element) || node.firstChild.nodeName !== 'CODE'),
+		replacement: (_content, node, _tdopts) => {
+			return convertToFencedCodeBlock(node, options);
 		},
 	});
 
@@ -1698,6 +1715,10 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 	const normalizedContent = applyHashtagHandlingToHtml(content, hashtagMode);
 	let bodyMarkdown = turndownService.turndown(normalizedContent);
 	bodyMarkdown = applyHashtagHandlingToMarkdown(bodyMarkdown, hashtagMode);
+	if (imageReferences.length) {
+		bodyMarkdown += `\n\n${imageReferences.join('\n')}\n\n`;
+		imageReferences.length = 0;
+	}
 
 	let markdown = options.frontmatter + bodyMarkdown + options.backmatter;
 
@@ -1709,7 +1730,7 @@ function turndown(content: string, options: OffscreenRuntimeOptions, article: Of
 		'',
 	);
 
-	return { markdown: markdown, imageList: imageList };
+	return { markdown, imageList, sourceImageMap: {} };
 }
 
 /**
@@ -1731,7 +1752,7 @@ function safeParseUrl(urlString: string): URL | null {
 function resolveArticleUrl(domBaseUri: string, pageUrl?: string | null): URL | null {
 	const sharedApi = getUrlUtilsApi();
 	if (sharedApi?.resolveArticleUrl) {
-		return sharedApi.resolveArticleUrl(domBaseUri, pageUrl);
+		return sharedApi.resolveArticleUrl(domBaseUri, pageUrl ?? undefined);
 	}
 
 	const normalizedPageUrl = typeof pageUrl === 'string' ? pageUrl.trim() : '';
@@ -1819,7 +1840,7 @@ function prepareDomForReadability(
 ): { dom: Document; math: Record<string, ArticleMathInfo> } {
 	// Now options is defined
 	if (!options.preserveCodeFormatting) {
-		dom.querySelectorAll('pre code').forEach(codeBlock => {
+		dom.querySelectorAll('pre code').forEach((codeBlock) => {
 			const processed = processCodeBlock(codeBlock, options);
 			// Replace content with clean version
 			codeBlock.textContent = processed.code;
@@ -1861,21 +1882,21 @@ function prepareDomForReadability(
 		}
 
 		// Some KaTeX variants append the original TeX as the final non-empty line.
-		const lines = fallbackText.split('\n').map(line => line.trim()).filter(Boolean);
+		const lines = fallbackText.split('\n').map((line) => line.trim()).filter(Boolean);
 		return lines.length ? lines[lines.length - 1] : fallbackText;
 	};
 
 	// Process MathJax elements (same as original)
-	dom.body.querySelectorAll('script[id^=MathJax-Element-]')?.forEach(mathSource => {
-		const type = mathSource.attributes.type.value;
+	dom.body.querySelectorAll('script[id^=MathJax-Element-]').forEach((mathSource) => {
+		const type = mathSource.getAttribute('type') || '';
 		storeMathInfo(mathSource, {
-			tex: mathSource.innerText,
+			tex: mathSource.textContent || '',
 			inline: type ? !type.includes('mode=display') : false,
 		});
 	});
 
 	// Process MathJax 3 elements
-	dom.body.querySelectorAll('[snipsnip-latex]')?.forEach(mathJax3Node => {
+	dom.body.querySelectorAll('[snipsnip-latex]').forEach((mathJax3Node) => {
 		// Same implementation as original
 		const tex = mathJax3Node.getAttribute('snipsnip-latex');
 		const display = mathJax3Node.getAttribute('display');
@@ -1883,11 +1904,15 @@ function prepareDomForReadability(
 
 		const mathNode = dom.createElement(inline ? 'i' : 'p');
 		mathNode.textContent = tex;
-		mathJax3Node.parentNode.insertBefore(mathNode, mathJax3Node.nextSibling);
-		mathJax3Node.parentNode.removeChild(mathJax3Node);
+		const parentNode = mathJax3Node.parentNode;
+		if (!parentNode) {
+			return;
+		}
+		parentNode.insertBefore(mathNode, mathJax3Node.nextSibling);
+		parentNode.removeChild(mathJax3Node);
 
 		storeMathInfo(mathNode, {
-			tex: tex,
+			tex: tex || '',
 			inline: inline,
 		});
 	});
@@ -1906,9 +1931,9 @@ function prepareDomForReadability(
 	});
 
 	// Process code highlight elements
-	dom.body.querySelectorAll('[class*=highlight-text],[class*=highlight-source]')?.forEach(codeSource => {
+	dom.body.querySelectorAll('[class*=highlight-text],[class*=highlight-source]').forEach((codeSource) => {
 		const language = codeSource.className.match(/highlight-(?:text|source)-([a-z0-9]+)/)?.[1];
-		if (codeSource.firstChild && codeSource.firstChild.nodeName === 'PRE') {
+		if (codeSource.firstChild instanceof HTMLElement) {
 			codeSource.firstChild.id = `code-lang-${language}`;
 		}
 	});
@@ -1920,7 +1945,7 @@ function prepareDomForReadability(
 	});
 
 	// Process BR tags in PRE elements
-	dom.body.querySelectorAll('pre br')?.forEach(br => {
+	dom.body.querySelectorAll('pre br').forEach((br) => {
 		// We need to keep <br> tags because they are removed by Readability.js
 		br.outerHTML = '<br-keep></br-keep>';
 	});
@@ -1935,12 +1960,16 @@ function prepareDomForReadability(
 	});
 
 	// Unwrap headers from anchor tags to prevent Readability from filtering them
-	dom.body.querySelectorAll('a')?.forEach(anchor => {
+	dom.body.querySelectorAll('a').forEach((anchor) => {
 		const heading = Array.from(anchor.children).find(child => /^H[1-6]$/.test(child.nodeName));
 		if (heading && anchor.children.length === 1) {
 			// If the anchor only contains a heading, unwrap it
-			anchor.parentNode.insertBefore(heading, anchor);
-			anchor.parentNode.removeChild(anchor);
+			const parentNode = anchor.parentNode;
+			if (!parentNode) {
+				return;
+			}
+			parentNode.insertBefore(heading, anchor);
+			parentNode.removeChild(anchor);
 		}
 	});
 
@@ -2030,7 +2059,9 @@ function finalizeArticleMetadata(
 	// Extract meta tags if head exists
 	if (dom.head) {
 		// Extract keywords
-		article.keywords = dom.head.querySelector('meta[name="keywords"]')?.content?.split(',')?.map(s => s.trim());
+		article.keywords = dom.head.querySelector<HTMLMetaElement>('meta[name="keywords"]')?.content?.split(',')?.map((s) =>
+			s.trim()
+		);
 
 		// Add all meta tags for template variables
 		dom.head.querySelectorAll('meta[name][content], meta[property][content]')?.forEach(meta => {
@@ -2056,17 +2087,21 @@ function extractArticleWithRecovery(
 	const firstPassParser = new DOMParser();
 	const firstPassDom = firstPassParser.parseFromString(domString, 'text/html');
 	const firstPassPrepared = prepareDomForReadability(firstPassDom, options, recoveryApi);
-	const firstPassReadabilityDom = firstPassPrepared.dom.cloneNode(true);
+	const firstPassReadabilityDom = new DOMParser().parseFromString(
+		firstPassPrepared.dom.documentElement.outerHTML,
+		'text/html',
+	);
 	const firstPassArticle = new Readability(firstPassReadabilityDom).parse();
 
 	if (!firstPassArticle?.content) {
 		return null;
 	}
+	const normalizedFirstPassArticle = normalizeReadabilityArticle(firstPassArticle);
 
-	const recoveryPlan = recoveryApi.analyzeNarrowExtraction(firstPassPrepared.dom, firstPassArticle.content);
+	const recoveryPlan = recoveryApi.analyzeNarrowExtraction(firstPassPrepared.dom, normalizedFirstPassArticle.content);
 	if (!recoveryPlan) {
 		return {
-			article: firstPassArticle,
+			article: normalizedFirstPassArticle,
 			dom: firstPassPrepared.dom,
 			math: firstPassPrepared.math,
 		};
@@ -2078,7 +2113,7 @@ function extractArticleWithRecovery(
 	const recoveryResult = recoveryApi.applyRepeatedSectionPromotion(secondPassPrepared.dom, recoveryPlan);
 	if (!recoveryResult.changed) {
 		return {
-			article: firstPassArticle,
+			article: normalizedFirstPassArticle,
 			dom: firstPassPrepared.dom,
 			math: firstPassPrepared.math,
 		};
@@ -2089,23 +2124,27 @@ function extractArticleWithRecovery(
 		: null;
 	if (!recoveryFragment?.html) {
 		return {
-			article: firstPassArticle,
+			article: normalizedFirstPassArticle,
 			dom: firstPassPrepared.dom,
 			math: firstPassPrepared.math,
 		};
 	}
 
-	const secondPassArticle = buildRecoveredArticle(firstPassArticle, recoveryFragment.html);
+	const secondPassArticle = buildRecoveredArticle(normalizedFirstPassArticle, recoveryFragment.html);
 
 	const secondPassTextLength = meaningfulTextLengthFromArticleHtml(secondPassArticle.content);
-	const firstPassTextLength = recoveryPlan.extractedTextLength
-		|| meaningfulTextLengthFromArticleHtml(firstPassArticle.content);
+	const firstPassTextLength = typeof recoveryPlan.extractedTextLength === 'number'
+		? recoveryPlan.extractedTextLength
+		: meaningfulTextLengthFromArticleHtml(normalizedFirstPassArticle.content);
 	const recoveredGrowth = secondPassTextLength - firstPassTextLength;
 	const growthThreshold = Math.max(400, firstPassTextLength * 0.2);
 	const recoveredLinkDensity = linkDensityFromArticleHtml(secondPassArticle.content);
+	const missingWitnessIds = Array.isArray(recoveryPlan.missingWitnessIds)
+		? recoveryPlan.missingWitnessIds.filter((value): value is string => typeof value === 'string')
+		: [];
 	const recoveredMissingContent = articleHtmlContainsAnyWitness(
 		secondPassArticle.content,
-		recoveryPlan.missingWitnessIds,
+		missingWitnessIds,
 		recoveryApi.anchorAttribute,
 	);
 	const keepsComparableLength = secondPassTextLength >= firstPassTextLength * 0.9;
@@ -2117,7 +2156,7 @@ function extractArticleWithRecovery(
 		|| !keepsComparableLength
 	) {
 		return {
-			article: firstPassArticle,
+			article: normalizedFirstPassArticle,
 			dom: firstPassPrepared.dom,
 			math: firstPassPrepared.math,
 		};
@@ -2179,8 +2218,12 @@ async function getArticleFromContent(
 					console.log(`Received article content result for tab ${tabId}:`, message);
 					browser.runtime.onMessage.removeListener(messageListener);
 					if (message.error) {
-						reject(new Error(message.error));
+						reject(new Error(String(message.error)));
 					} else {
+						if (!message.article) {
+							reject(new Error('Missing article payload'));
+							return;
+						}
 						resolve(message.article);
 					}
 				}
@@ -2224,8 +2267,8 @@ async function formatTitle(
 ): Promise<string> {
 	const options = providedOptions || defaultOptions;
 
-	let title = textReplace(options.title, article, `${options.disallowedChars}/`);
-	title = title.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
+	let title = textReplace(options.title ?? '{title}', article, `${options.disallowedChars ?? ''}/`);
+	title = title.split('/').map((s) => generateValidFileName(s, options.disallowedChars ?? null)).join('/');
 	return title;
 }
 
@@ -2240,8 +2283,10 @@ async function formatMdClipsFolder(
 
 	let mdClipsFolder = '';
 	if (options.mdClipsFolder && options.downloadMode === 'downloadsApi') {
-		mdClipsFolder = textReplace(options.mdClipsFolder, article, options.disallowedChars);
-		mdClipsFolder = mdClipsFolder.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
+		mdClipsFolder = textReplace(options.mdClipsFolder, article, options.disallowedChars ?? null);
+		mdClipsFolder = mdClipsFolder.split('/').map((s) => generateValidFileName(s, options.disallowedChars ?? null)).join(
+			'/',
+		);
 		if (!mdClipsFolder.endsWith('/')) mdClipsFolder += '/';
 	}
 
@@ -2259,8 +2304,9 @@ async function formatObsidianFolder(
 
 	let obsidianFolder = '';
 	if (options.obsidianFolder) {
-		obsidianFolder = textReplace(options.obsidianFolder, article, options.disallowedChars);
-		obsidianFolder = obsidianFolder.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
+		obsidianFolder = textReplace(options.obsidianFolder, article, options.disallowedChars ?? null);
+		obsidianFolder = obsidianFolder.split('/').map((s) => generateValidFileName(s, options.disallowedChars ?? null))
+			.join('/');
 		if (!obsidianFolder.endsWith('/')) obsidianFolder += '/';
 	}
 
@@ -2271,8 +2317,9 @@ async function formatObsidianFolder(
  * Replace placeholder strings with article info
  */
 function textReplace(string: string, article: OffscreenArticleRecord, disallowedChars: string | null = null): string {
-	if (getTemplateUtilsApi()?.textReplace) {
-		return getTemplateUtilsApi().textReplace(string, article, disallowedChars);
+	const templateUtilsApi = getTemplateUtilsApi();
+	if (templateUtilsApi?.textReplace) {
+		return templateUtilsApi.textReplace(string, article, disallowedChars);
 	}
 
 	// Same implementation as original
@@ -2332,16 +2379,17 @@ function textReplace(string: string, article: OffscreenArticleRecord, disallowed
  * Generate valid filename
  */
 function generateValidFileName(title: unknown, disallowedChars: string | null = null): string {
-	if (getTemplateUtilsApi()?.generateValidFileName) {
-		return getTemplateUtilsApi().generateValidFileName(title, disallowedChars);
+	const templateUtilsApi = getTemplateUtilsApi();
+	if (templateUtilsApi?.generateValidFileName) {
+		return templateUtilsApi.generateValidFileName(title, disallowedChars) ?? '';
 	}
 
 	if (!title) return '';
-	else title = `${title}`;
+	const titleString = `${title}`;
 	// Remove < > : " / \ | ? *
 	var illegalRe = /[/?<>\\:*|":]/g;
 	// And non-breaking spaces
-	var name = title.replace(illegalRe, '').replace(/\u00A0/g, ' ');
+	var name = titleString.replace(illegalRe, '').replace(/\u00A0/g, ' ');
 
 	if (disallowedChars) {
 		for (let c of disallowedChars) {
@@ -2391,11 +2439,6 @@ function validateUri(href: string, baseURI: string): string {
  * Get image filename
  */
 function getImageFilename(src: string, options: OffscreenRuntimeOptions, prependFilePath = true): string {
-	const sharedApi = getUrlUtilsApi();
-	if (sharedApi?.getImageFilename) {
-		return sharedApi.getImageFilename(src, options, prependFilePath);
-	}
-
 	const slashPos = src.lastIndexOf('/');
 	const queryPos = src.indexOf('?');
 	let filename = src.substring(slashPos + 1, queryPos > 0 ? queryPos : src.length);
@@ -2432,7 +2475,7 @@ async function preDownloadImages(
 	markdown: string,
 	providedOptions: OffscreenOptions | null = null,
 ): Promise<MarkdownConversionResult> {
-	const options = providedOptions || defaultOptions;
+	const options = createFallbackArticleOptions(providedOptions);
 	const newImageList: Record<string, string> = {};
 	const sourceImageMap: Record<string, string> = {};
 
@@ -2514,7 +2557,7 @@ async function downloadMarkdown(
 	providedOptions: OffscreenOptions | null = null,
 	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
-	const options = providedOptions || defaultOptions;
+	const options = createFallbackArticleOptions(providedOptions);
 
 	// CRITICAL: Ensure title is never empty to prevent download failures
 	if (!title || title.trim() === '') {
@@ -2655,7 +2698,7 @@ async function downloadGeneratedFileExport(
 	mimeType = 'application/octet-stream',
 	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
-	const options = providedOptions || defaultOptions;
+	const options = createFallbackArticleOptions(providedOptions);
 	const downloadsAPI = browser.downloads || (typeof chrome !== 'undefined' ? chrome.downloads : null);
 	const hasDownloadsAPI = !!downloadsAPI;
 	const nextFilename = String(filename || '').trim() || `Untitled-${Date.now()}.bin`;
@@ -2727,7 +2770,7 @@ async function downloadViaContentScript(
 	imageList: Record<string, string>,
 	mdClipsFolder: string,
 	options: OffscreenRuntimeOptions,
-	notificationDelta = null,
+	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
 	try {
 		// For content script downloads, we need to handle the subfolder differently
@@ -2773,7 +2816,10 @@ async function downloadViaContentScript(
  */
 function base64EncodeUnicode(str: string): string {
 	// Encode UTF-8 string to base64
-	const utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_match, p1) => String.fromCharCode(`0x${p1}`));
+	const utf8Bytes = encodeURIComponent(str).replace(
+		/%([0-9A-F]{2})/g,
+		(_match, p1) => String.fromCharCode(Number.parseInt(p1, 16)),
+	);
 
 	return btoa(utf8Bytes);
 }
@@ -2885,7 +2931,19 @@ function createStoredZipBlob(files: BatchZipFile[]): Blob {
 	endView.setUint32(16, centralDirectoryOffset, true);
 	endView.setUint16(20, 0, true);
 
-	return new Blob([...localParts, ...centralParts, endRecord], { type: 'application/zip' });
+	const allParts = [...localParts, ...centralParts, endRecord];
+	let totalLength = 0;
+	allParts.forEach((part) => {
+		totalLength += part.byteLength;
+	});
+	const zipBytes = new Uint8Array(totalLength);
+	let writeOffset = 0;
+	allParts.forEach((part) => {
+		zipBytes.set(part, writeOffset);
+		writeOffset += part.byteLength;
+	});
+
+	return new Blob([zipBytes], { type: 'application/zip' });
 }
 
 async function downloadBatchZip(message: BatchZipMessage): Promise<void> {
@@ -2896,7 +2954,7 @@ async function downloadBatchZip(message: BatchZipMessage): Promise<void> {
 			return;
 		}
 
-		const options = message.options || defaultOptions;
+		const options = createFallbackArticleOptions(message.options ?? null);
 		const zipFilename = message.zipFilename || `SnipSnip-batch-${Date.now()}.zip`;
 		const zipBlob = createStoredZipBlob(files);
 		console.log(`[Offscreen] ZIP blob created (${zipBlob.size} bytes) for ${files.length} files`);

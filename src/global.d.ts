@@ -37,6 +37,22 @@ interface SnipSnipCodeBlockUtilsApi {
 	convertToFencedCodeBlock(node: Element, options: Record<string, unknown>): string;
 }
 
+interface SnipSnipReadabilityRecoveryApi {
+	anchorAttribute: string;
+	annotateStructuralAnchors(document: Document): number;
+	analyzeNarrowExtraction(document: Document, articleHtml: string | null | undefined): Record<string, unknown> | null;
+	applyRepeatedSectionPromotion(document: Document, recoveryPlan: Record<string, unknown> | null | undefined): {
+		changed: boolean;
+		promotedIds: string[];
+	};
+	buildRepeatedSectionFragment(document: Document, recoveryPlan: Record<string, unknown> | null | undefined): {
+		html: string;
+	} | null;
+	restoreSemanticTables?(document: Document, articleHtml: string | null | undefined): string | null;
+	restoreMissingPrimaryHeadings?(document: Document, articleHtml: string | null | undefined): string | null;
+	stripStructuralAnchorsFromHtml(articleHtml: string | null | undefined): string;
+}
+
 declare global {
 	interface globalThis {
 		browser: typeof import('wxt/browser').browser;
@@ -79,6 +95,7 @@ declare global {
 	var snipSnipTemplateUtils: SnipSnipTemplateUtilsApi | undefined;
 	var snipSnipUrlUtils: SnipSnipUrlUtilsApi | undefined;
 	var snipSnipCodeBlockUtils: SnipSnipCodeBlockUtilsApi | undefined;
+	var SnipSnipReadabilityRecovery: SnipSnipReadabilityRecoveryApi | undefined;
 	var snipSnipUseImportedBackground: boolean | undefined;
 	var getSelectionAndDom: (() => { selection: string; dom: string; pageUrl: string } | null) | undefined;
 	var snipsnipPrepareForCapture: (() => Promise<void>) | undefined;

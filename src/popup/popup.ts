@@ -178,8 +178,8 @@ const EXPORT_TYPE_CONFIG = {
 	},
 };
 
-/** @param {string} assetPath */
-function resolvePopupAssetPath(assetPath) {
+/** @param assetPath */
+function resolvePopupAssetPath(assetPath: string) {
 	return globalThis.snipSnipPopupAssets?.[assetPath] || assetPath;
 }
 
