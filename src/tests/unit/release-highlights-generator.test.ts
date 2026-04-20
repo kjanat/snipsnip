@@ -2,7 +2,8 @@ import {
 	buildReleaseHighlightsAsset,
 	extractReleaseSections,
 	normalizeBulletText,
-} from '@/scripts/generate-release-highlights';
+} from '@/scripts/generate-release-highlights.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('release highlights generator', () => {
 	const sampleChangelog = `

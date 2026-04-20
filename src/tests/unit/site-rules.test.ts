@@ -1,4 +1,5 @@
-const siteRules = require('@/shared/site-rules');
+import siteRules from '@/shared/site-rules.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('site-rules helper', () => {
 	const baseOptions = {

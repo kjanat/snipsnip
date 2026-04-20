@@ -1,13 +1,8 @@
 /**
  * URL processing and normalization tests for shared url helpers.
  */
-
-const {
-	safeParseUrl,
-	resolveArticleUrl,
-	validateUri,
-	getImageFilename,
-} = require('@/shared/url-utils');
+import { getImageFilename, resolveArticleUrl, safeParseUrl, validateUri } from '@/shared/url-utils.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('URL Processing and Normalization', () => {
 	describe('safeParseUrl and resolveArticleUrl', () => {

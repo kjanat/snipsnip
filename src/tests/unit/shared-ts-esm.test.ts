@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'bun:test';
 
-import agentBridgeState from '@/shared/agent-bridge-state';
-import countUtils from '@/shared/count-utils';
-import downloadTracker from '@/shared/download-tracker';
-import libraryExport from '@/shared/library-export';
-import libraryState from '@/shared/library-state';
-import markdownOptions from '@/shared/markdown-options';
-import notifications from '@/shared/notifications';
-import obsidianUtils from '@/shared/obsidian-utils';
-import optionsState from '@/shared/options-state';
-import popupBatchUtils from '@/shared/popup-batch-utils';
-import searchCore from '@/shared/search-core';
-import siteRules from '@/shared/site-rules';
-import templateUtils from '@/shared/template-utils';
-import urlUtils from '@/shared/url-utils';
+import agentBridgeState from '@/shared/agent-bridge-state.ts';
+import countUtils from '@/shared/count-utils.ts';
+import downloadTracker from '@/shared/download-tracker.ts';
+import libraryExport from '@/shared/library-export.ts';
+import libraryState from '@/shared/library-state.ts';
+import markdownOptions from '@/shared/markdown-options.ts';
+import notifications from '@/shared/notifications.ts';
+import obsidianUtils from '@/shared/obsidian-utils.ts';
+import optionsState from '@/shared/options-state.ts';
+import popupBatchUtils from '@/shared/popup-batch-utils.ts';
+import searchCore from '@/shared/search-core.ts';
+import siteRules from '@/shared/site-rules.ts';
+import templateUtils from '@/shared/template-utils.ts';
+import urlUtils from '@/shared/url-utils.ts';
 
 describe('shared TS ESM modules', () => {
 	test('count-utils exports canonical API', () => {

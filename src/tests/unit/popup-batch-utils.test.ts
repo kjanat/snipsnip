@@ -1,4 +1,5 @@
-const popupBatchUtils = require('@/shared/popup-batch-utils');
+import popupBatchUtils from '@/shared/popup-batch-utils.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('popup-batch-utils', () => {
 	describe('parseMarkdownLink', () => {

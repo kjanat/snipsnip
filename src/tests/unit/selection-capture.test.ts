@@ -2,8 +2,8 @@
  * Selection capture behavior tests.
  * Uses the shared production helper.
  */
-
-const { buildDomWithSelection } = require('@/shared/selection-utils');
+import { buildDomWithSelection } from '@/shared/selection-utils.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('Selection Capture', () => {
 	test('replaces body with selection html when selection mode is enabled', () => {

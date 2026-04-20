@@ -1,7 +1,12 @@
-const { JSDOM } = require('@/tests/helpers/jsdom-shim');
-const { COMMAND_LABELS, COMMAND_ORDER, splitShortcut, groupCommands, buildShortcutsFragment } = require(
-	'@/shared/popup-shortcuts',
-);
+import {
+	buildShortcutsFragment,
+	COMMAND_LABELS,
+	COMMAND_ORDER,
+	groupCommands,
+	splitShortcut,
+} from '@/shared/popup-shortcuts.ts';
+import { JSDOM } from '@/tests/helpers/jsdom-shim.ts';
+import { describe, expect, test } from 'bun:test';
 
 const { document } = new JSDOM('<!DOCTYPE html>').window;
 

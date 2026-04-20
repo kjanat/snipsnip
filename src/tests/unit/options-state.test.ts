@@ -1,4 +1,5 @@
-const optionsState = require('@/shared/options-state');
+import optionsState from '@/shared/options-state.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('options-state helpers', () => {
 	const defaultOptions = {

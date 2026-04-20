@@ -1,6 +1,5 @@
+import templateUtilsModule, { textReplace } from '@/shared/template-utils.ts';
 import { afterEach, describe, expect, test } from 'bun:test';
-
-import templateUtilsModule, { textReplace } from '@/shared/template-utils';
 
 describe('Template utils helpers', () => {
 	const createMomentStub = () => (value: Date | number | string | null = new Date()) => ({

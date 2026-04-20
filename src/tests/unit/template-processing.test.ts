@@ -1,4 +1,5 @@
-import templateUtilsModule, { textReplace } from '@/shared/template-utils';
+import templateUtilsModule, { textReplace } from '@/shared/template-utils.ts';
+import { describe, expect, test } from 'bun:test';
 
 /**
  * Template Processing Tests

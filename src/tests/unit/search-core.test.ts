@@ -1,4 +1,5 @@
-const searchCore = require('@/shared/search-core');
+import searchCore from '@/shared/search-core.ts';
+import { describe, expect, test } from 'bun:test';
 
 describe('search-core — normalizeSearchText', () => {
 	const { normalizeSearchText } = searchCore;
