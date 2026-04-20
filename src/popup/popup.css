@@ -1603,6 +1603,20 @@ body {
 		color var(--theme-transition);
 }
 
+/* CM6 editor sizing — the editor must have a bounded height for `.cm-scroller`
+ * to activate its internal overflow. Without these rules CM6 grows to fit the
+ * content and scrolling simply can't happen inside the popup. */
+.editor-body .cm-editor {
+	flex: 1;
+	height: 100%;
+	min-height: 0;
+	outline: none;
+}
+
+.editor-body .cm-scroller {
+	overflow: auto;
+}
+
 /* Preview toggle button active state */
 .editor-btn.active {
 	color: var(--text-inverse);
