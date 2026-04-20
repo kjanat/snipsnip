@@ -1,5 +1,89 @@
-// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
-const api = ((global) => {
+type StructuralElement = Element;
+
+type HeadingDescriptor = {
+	heading: StructuralElement;
+	level: number;
+	wrapper: StructuralElement | null;
+};
+
+type RecoveryCandidate = {
+	container: StructuralElement;
+	descriptor: HeadingDescriptor;
+};
+
+type RowDescriptor = {
+	row: StructuralElement;
+	cells: StructuralElement[];
+};
+
+type DominantChildSummary = {
+	child: StructuralElement;
+	ratio: number;
+	totalText: number;
+	secondLength: number;
+};
+
+type FamilyMemberSummary = {
+	containerId: string | null;
+	dominantChildId: string | null;
+	witnessIds: string[];
+	textLength: number;
+	represented: boolean;
+	isContentRich: boolean;
+	linkDensity: number;
+};
+
+type FamilyPlan = {
+	familyContainerIds: string[];
+	familyMembers: FamilyMemberSummary[];
+	missingContainerIds: Array<string | null>;
+	missingWitnessIds: string[];
+	projectedGrowth: number;
+};
+
+type NarrowExtractionAnalysis = FamilyPlan & {
+	anchorId: string;
+	sectionContainerId: string | null;
+	dominantChildId: string | null;
+	extractedAnchorIds: string[];
+	extractedTextLength: number;
+};
+
+type RepeatedSectionPromotionResult = {
+	changed: boolean;
+	promotedIds: string[];
+};
+
+type RepeatedSectionFragment = {
+	html: string;
+	includedContainerIds: string[];
+};
+
+type ReadabilityRecoveryApi = {
+	anchorAttribute: string;
+	annotateStructuralAnchors: (document: Document) => number;
+	analyzeNarrowExtraction: (
+		document: Document,
+		articleHtml: string | null | undefined,
+	) => NarrowExtractionAnalysis | null;
+	applyRepeatedSectionPromotion: (
+		document: Document,
+		recoveryPlan: FamilyPlan | null | undefined,
+	) => RepeatedSectionPromotionResult;
+	buildRepeatedSectionFragment: (
+		document: Document,
+		recoveryPlan: FamilyPlan | null | undefined,
+	) => RepeatedSectionFragment | null;
+	restoreSemanticTables: (document: Document, articleHtml: string | null | undefined) => string | null;
+	restoreMissingPrimaryHeadings: (document: Document, articleHtml: string | null | undefined) => string | null;
+	stripStructuralAnchorsFromHtml: (articleHtml: string | null | undefined) => string;
+};
+
+type RecoveryGlobal = typeof globalThis & {
+	SnipSnipReadabilityRecovery?: ReadabilityRecoveryApi;
+};
+
+const api = ((global: RecoveryGlobal) => {
 	const ANCHOR_ATTRIBUTE = 'data-snipsnip-node-id';
 	const STRUCTURAL_SELECTOR = 'article, section, main, div, aside, blockquote, pre, table, ul, ol';
 	const WRAPPER_TAGS = new Set(['DIV', 'SECTION', 'ARTICLE', 'ASIDE']);
@@ -9,27 +93,27 @@ const api = ((global) => {
 	const HEADING_TAG_PATTERN = /^H[1-6]$/;
 	const MEDIA_SELECTOR = 'img, picture, figure, video, iframe, svg, canvas';
 
-	function normalizeWhitespace(text) {
+	function normalizeWhitespace(text: string | null | undefined): string {
 		return String(text || '').replace(/\s+/g, ' ').trim();
 	}
 
-	function meaningfulTextLength(node) {
+	function meaningfulTextLength(node: StructuralElement | null | undefined): number {
 		return normalizeWhitespace(node?.textContent || '').length;
 	}
 
-	function linkTextLength(node) {
+	function linkTextLength(node: ParentNode | null | undefined): number {
 		if (!node?.querySelectorAll) {
 			return 0;
 		}
 
 		let total = 0;
-		node.querySelectorAll('a').forEach(anchor => {
+		node.querySelectorAll('a').forEach((anchor) => {
 			total += normalizeWhitespace(anchor.textContent).length;
 		});
 		return total;
 	}
 
-	function linkDensity(node) {
+	function linkDensity(node: StructuralElement | null | undefined): number {
 		const textLength = meaningfulTextLength(node);
 		if (!textLength) {
 			return 0;
@@ -37,7 +121,7 @@ const api = ((global) => {
 		return linkTextLength(node) / textLength;
 	}
 
-	function normalizeClassTokens(value) {
+	function normalizeClassTokens(value: string | null | undefined): string[] {
 		return Array.from(
 			new Set(
 				String(value || '')
@@ -51,11 +135,11 @@ const api = ((global) => {
 		).sort();
 	}
 
-	function normalizedClassSignature(node) {
+	function normalizedClassSignature(node: StructuralElement | null | undefined): string {
 		return normalizeClassTokens(node?.className).join('.');
 	}
 
-	function looksExcludedContainer(node) {
+	function looksExcludedContainer(node: StructuralElement | null | undefined): boolean {
 		if (!node) {
 			return false;
 		}
@@ -71,7 +155,7 @@ const api = ((global) => {
 		return linkDensity(node) > 0.5;
 	}
 
-	function meaningfulDirectChildren(node) {
+	function meaningfulDirectChildren(node: ParentNode | null | undefined): StructuralElement[] {
 		if (!node?.children) {
 			return [];
 		}
@@ -85,11 +169,11 @@ const api = ((global) => {
 		});
 	}
 
-	function directHeadingChild(node) {
+	function directHeadingChild(node: ParentNode | null | undefined): StructuralElement | null {
 		return meaningfulDirectChildren(node).find(child => HEADING_TAG_PATTERN.test(child.tagName)) || null;
 	}
 
-	function headingWrapperDescriptor(node) {
+	function headingWrapperDescriptor(node: StructuralElement | null | undefined): HeadingDescriptor | null {
 		if (!node || !WRAPPER_TAGS.has(node.tagName) || looksExcludedContainer(node)) {
 			return null;
 		}
@@ -130,7 +214,7 @@ const api = ((global) => {
 		return null;
 	}
 
-	function primaryHeadingDescriptor(node) {
+	function primaryHeadingDescriptor(node: StructuralElement | null | undefined): HeadingDescriptor | null {
 		const heading = directHeadingChild(node);
 		if (heading) {
 			return {
@@ -150,7 +234,7 @@ const api = ((global) => {
 		return null;
 	}
 
-	function primaryHeadingLevel(node) {
+	function primaryHeadingLevel(node: StructuralElement | null | undefined): number | null {
 		const descriptor = primaryHeadingDescriptor(node);
 		if (!descriptor) {
 			return null;
@@ -159,7 +243,7 @@ const api = ((global) => {
 		return descriptor.level;
 	}
 
-	function restoreMissingPrimaryHeadings(document, articleHtml) {
+	function restoreMissingPrimaryHeadings(document: Document, articleHtml: string | null | undefined): string | null {
 		if (!articleHtml) {
 			return null;
 		}
@@ -168,7 +252,7 @@ const api = ((global) => {
 		let changed = false;
 		const restoredContainerIds = new Set();
 
-		function resolveInsertionTarget(node) {
+		function resolveInsertionTarget(node: StructuralElement | null | undefined): StructuralElement | null {
 			if (!node) {
 				return null;
 			}
@@ -180,7 +264,7 @@ const api = ((global) => {
 			return node.parentElement || null;
 		}
 
-		function findRecoveryCandidate(sourceNode) {
+		function findRecoveryCandidate(sourceNode: StructuralElement): RecoveryCandidate | null {
 			let current = sourceNode;
 
 			for (let depth = 0; depth < 3 && current; depth += 1) {
@@ -220,7 +304,7 @@ const api = ((global) => {
 			return null;
 		}
 
-		extractedDocument.body.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach(extractedNode => {
+		extractedDocument.body.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach((extractedNode) => {
 			const sourceNodeId = extractedNode.getAttribute(ANCHOR_ATTRIBUTE);
 			if (!sourceNodeId) {
 				return;
@@ -285,7 +369,7 @@ const api = ((global) => {
 		return changed ? extractedDocument.body.innerHTML : null;
 	}
 
-	function restoreSemanticTables(document, articleHtml) {
+	function restoreSemanticTables(document: Document, articleHtml: string | null | undefined): string | null {
 		if (!articleHtml) {
 			return null;
 		}
@@ -293,17 +377,17 @@ const api = ((global) => {
 		const extractedDocument = parseArticleHtml(document, articleHtml);
 		let changed = false;
 
-		function extractRowDescriptors(node) {
+		function extractRowDescriptors(node: ParentNode | null | undefined): RowDescriptor[] {
 			if (!node?.children) {
 				return [];
 			}
 
-			function isVisuallyHidden(element) {
+			function isVisuallyHidden(element: StructuralElement | null | undefined): boolean {
 				if (!element) {
 					return false;
 				}
 
-				if (element.hidden || element.getAttribute?.('aria-hidden') === 'true') {
+				if (element.hasAttribute('hidden') || element.getAttribute?.('aria-hidden') === 'true') {
 					return true;
 				}
 
@@ -311,14 +395,14 @@ const api = ((global) => {
 				return styleValue.includes('display: none') || styleValue.includes('visibility: hidden');
 			}
 
-			const rows = [];
-			Array.from(node.children).forEach(child => {
+			const rows: StructuralElement[] = [];
+			Array.from(node.children).forEach((child) => {
 				const childRole = child.getAttribute?.('role');
 				if (isVisuallyHidden(child)) {
 					return;
 				}
 
-				const childCells = Array.from(child.children || []).filter(cell => {
+				const childCells = Array.from(child.children).filter((cell): cell is StructuralElement => {
 					const role = cell.getAttribute?.('role');
 					if (isVisuallyHidden(cell)) {
 						return false;
@@ -332,13 +416,13 @@ const api = ((global) => {
 				}
 
 				if (childRole === 'rowgroup') {
-					Array.from(child.children).forEach(grandchild => {
+					Array.from(child.children).forEach((grandchild) => {
 						const grandchildRole = grandchild.getAttribute?.('role');
 						if (isVisuallyHidden(grandchild)) {
 							return;
 						}
 
-						const grandchildCells = Array.from(grandchild.children || []).filter(cell => {
+						const grandchildCells = Array.from(grandchild.children).filter((cell): cell is StructuralElement => {
 							const role = cell.getAttribute?.('role');
 							if (isVisuallyHidden(cell)) {
 								return false;
@@ -353,9 +437,9 @@ const api = ((global) => {
 				}
 			});
 
-			return rows.map(row => ({
+			return rows.map((row) => ({
 				row,
-				cells: Array.from(row.children).filter(cell => {
+				cells: Array.from(row.children).filter((cell): cell is StructuralElement => {
 					const role = cell.getAttribute?.('role');
 					const className = String(cell.className || '').toLowerCase();
 					if (isVisuallyHidden(cell)) {
@@ -366,7 +450,7 @@ const api = ((global) => {
 			})).filter(descriptor => descriptor.cells.length > 0);
 		}
 
-		function isHeaderRow(descriptor) {
+		function isHeaderRow(descriptor: RowDescriptor): boolean {
 			return descriptor.cells.some(cell => {
 				const role = cell.getAttribute?.('role');
 				return role === 'columnheader' || role === 'rowheader';
@@ -376,12 +460,15 @@ const api = ((global) => {
 			);
 		}
 
-		function sanitizeCellHtml(cell) {
+		function sanitizeCellHtml(cell: StructuralElement): string {
 			const clone = cell.cloneNode(true);
-			clone.querySelectorAll('script, style, noscript, [hidden], [aria-hidden="true"]').forEach(element => {
+			if (!(clone instanceof Element)) {
+				return '';
+			}
+			clone.querySelectorAll('script, style, noscript, [hidden], [aria-hidden="true"]').forEach((element) => {
 				element.remove();
 			});
-			clone.querySelectorAll('[style]').forEach(element => {
+			clone.querySelectorAll('[style]').forEach((element) => {
 				const styleValue = String(element.getAttribute('style') || '').toLowerCase();
 				if (styleValue.includes('display: none') || styleValue.includes('visibility: hidden')) {
 					element.remove();
@@ -399,9 +486,13 @@ const api = ((global) => {
 			return clone.innerHTML;
 		}
 
-		function buildSemanticTable(sourceNode, extractedTable) {
+		function buildSemanticTable(
+			sourceNode: StructuralElement,
+			extractedTable: StructuralElement,
+		): StructuralElement | null {
 			if (sourceNode?.tagName === 'TABLE') {
-				return sourceNode.cloneNode(true);
+				const clonedSourceNode = sourceNode.cloneNode(true);
+				return clonedSourceNode instanceof Element ? clonedSourceNode : null;
 			}
 
 			const sourceRows = extractRowDescriptors(sourceNode);
@@ -422,7 +513,7 @@ const api = ((global) => {
 			if (headerRow?.cells?.length) {
 				const thead = extractedDocument.createElement('thead');
 				const tr = extractedDocument.createElement('tr');
-				headerRow.cells.forEach(cell => {
+				headerRow.cells.forEach((cell) => {
 					const th = extractedDocument.createElement('th');
 					th.textContent = normalizeWhitespace(cell.textContent);
 					tr.appendChild(th);
@@ -433,9 +524,9 @@ const api = ((global) => {
 
 			if (dataRows.length) {
 				const tbody = extractedDocument.createElement('tbody');
-				dataRows.forEach(descriptor => {
+				dataRows.forEach((descriptor) => {
 					const tr = extractedDocument.createElement('tr');
-					descriptor.cells.forEach(cell => {
+					descriptor.cells.forEach((cell) => {
 						const td = extractedDocument.createElement('td');
 						td.innerHTML = sanitizeCellHtml(cell);
 						tr.appendChild(td);
@@ -448,7 +539,7 @@ const api = ((global) => {
 			return semanticTable.children.length ? semanticTable : null;
 		}
 
-		extractedDocument.body.querySelectorAll(`[role="table"][${ANCHOR_ATTRIBUTE}]`).forEach(extractedTable => {
+		extractedDocument.body.querySelectorAll(`[role="table"][${ANCHOR_ATTRIBUTE}]`).forEach((extractedTable) => {
 			const sourceNodeId = extractedTable.getAttribute(ANCHOR_ATTRIBUTE);
 			if (!sourceNodeId) {
 				return;
@@ -471,7 +562,9 @@ const api = ((global) => {
 		return changed ? extractedDocument.body.innerHTML : null;
 	}
 
-	function childRole(child) {
+	function childRole(
+		child: StructuralElement | null | undefined,
+	): 'heading' | 'code' | 'list' | 'table' | 'quote' | 'media' | 'content' | 'other' {
 		if (!child) {
 			return 'other';
 		}
@@ -507,7 +600,7 @@ const api = ((global) => {
 		return 'other';
 	}
 
-	function shallowChildRoleSignature(node) {
+	function shallowChildRoleSignature(node: ParentNode | null | undefined): string {
 		if (!node?.children?.length) {
 			return '';
 		}
@@ -515,7 +608,7 @@ const api = ((global) => {
 		return Array.from(node.children).slice(0, 6).map(childRole).join('|');
 	}
 
-	function hasRichStructure(node) {
+	function hasRichStructure(node: ParentNode | null | undefined): boolean {
 		if (!node?.querySelector) {
 			return false;
 		}
@@ -528,7 +621,7 @@ const api = ((global) => {
 		return listCount >= 2;
 	}
 
-	function isContentRich(node) {
+	function isContentRich(node: StructuralElement | null | undefined): boolean {
 		const textLength = meaningfulTextLength(node);
 		if (textLength >= 180) {
 			return true;
@@ -537,7 +630,7 @@ const api = ((global) => {
 		return textLength >= 120 && hasRichStructure(node);
 	}
 
-	function directNonHeadingChildren(container) {
+	function directNonHeadingChildren(container: StructuralElement): StructuralElement[] {
 		const descriptor = primaryHeadingDescriptor(container);
 		return meaningfulDirectChildren(container).filter(child => {
 			if (HEADING_TAG_PATTERN.test(child.tagName)) {
@@ -548,7 +641,7 @@ const api = ((global) => {
 		});
 	}
 
-	function dominantNonHeadingChild(container) {
+	function dominantNonHeadingChild(container: StructuralElement): DominantChildSummary | null {
 		const candidates = directNonHeadingChildren(container).map(child => ({
 			child,
 			textLength: meaningfulTextLength(child),
@@ -571,7 +664,7 @@ const api = ((global) => {
 		};
 	}
 
-	function familySignatureMatches(reference, candidate) {
+	function familySignatureMatches(reference: StructuralElement, candidate: StructuralElement): boolean {
 		const referenceHeading = primaryHeadingLevel(reference);
 		const candidateHeading = primaryHeadingLevel(candidate);
 		if (referenceHeading && candidateHeading && referenceHeading !== candidateHeading) {
@@ -583,45 +676,55 @@ const api = ((global) => {
 
 		const referenceClassSignature = normalizedClassSignature(reference);
 		const candidateClassSignature = normalizedClassSignature(candidate);
-		const classMatch = referenceClassSignature && referenceClassSignature === candidateClassSignature;
+		const classMatch = Boolean(referenceClassSignature) && referenceClassSignature === candidateClassSignature;
 
 		const referenceRoleSignature = shallowChildRoleSignature(reference);
 		const candidateRoleSignature = shallowChildRoleSignature(candidate);
-		const roleMatch = referenceRoleSignature && referenceRoleSignature === candidateRoleSignature;
+		const roleMatch = Boolean(referenceRoleSignature) && referenceRoleSignature === candidateRoleSignature;
 
 		return classMatch || roleMatch;
 	}
 
-	function parseArticleHtml(document, articleHtml) {
+	function parseArticleHtml(document: Document, articleHtml: string | null | undefined): Document {
 		const parsedDocument = document.implementation.createHTMLDocument('');
 		parsedDocument.body.innerHTML = articleHtml || '';
 		return parsedDocument;
 	}
 
-	function collectAnchorIds(node) {
+	function collectAnchorIds(node: StructuralElement | null | undefined): string[] {
 		if (!node?.querySelectorAll) {
 			return [];
 		}
 
-		const ids = [];
+		const ids: string[] = [];
 		if (node.getAttribute?.(ANCHOR_ATTRIBUTE)) {
-			ids.push(node.getAttribute(ANCHOR_ATTRIBUTE));
+			const ownId = node.getAttribute(ANCHOR_ATTRIBUTE);
+			if (ownId) {
+				ids.push(ownId);
+			}
 		}
 
-		node.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach(element => {
-			ids.push(element.getAttribute(ANCHOR_ATTRIBUTE));
+		node.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach((element) => {
+			const anchorId = element.getAttribute(ANCHOR_ATTRIBUTE);
+			if (anchorId) {
+				ids.push(anchorId);
+			}
 		});
 
-		return ids.filter(Boolean);
+		return ids;
 	}
 
-	function buildFamilyPlan(sectionContainer, extractedAnchorIds, extractedTextLength) {
+	function buildFamilyPlan(
+		sectionContainer: StructuralElement,
+		extractedAnchorIds: Set<string>,
+		extractedTextLength: number,
+	): FamilyPlan | null {
 		const parent = sectionContainer?.parentElement;
 		if (!parent) {
 			return null;
 		}
 
-		const family = Array.from(parent.children).filter(sibling => {
+		const family = Array.from(parent.children).filter((sibling) => {
 			if (sibling === sectionContainer) {
 				return true;
 			}
@@ -641,20 +744,21 @@ const api = ((global) => {
 			return null;
 		}
 
-		const familySummaries = family.map(container => {
+		const familySummaries: FamilyMemberSummary[] = family.map((container) => {
 			const dominant = dominantNonHeadingChild(container);
 			const anchorIds = collectAnchorIds(container);
-			const represented = anchorIds.some(id => extractedAnchorIds.has(id));
+			const represented = anchorIds.some((id) => extractedAnchorIds.has(id));
 			const textLength = meaningfulTextLength(container);
+			const witnessIds = Array.from(
+				new Set([
+					container.getAttribute(ANCHOR_ATTRIBUTE),
+					dominant?.child?.getAttribute(ANCHOR_ATTRIBUTE) ?? null,
+				].filter((value): value is string => typeof value === 'string' && value.length > 0)),
+			);
 			return {
 				containerId: container.getAttribute(ANCHOR_ATTRIBUTE),
 				dominantChildId: dominant?.child?.getAttribute(ANCHOR_ATTRIBUTE) || null,
-				witnessIds: Array.from(
-					new Set([
-						container.getAttribute(ANCHOR_ATTRIBUTE),
-						dominant?.child?.getAttribute(ANCHOR_ATTRIBUTE),
-					].filter(Boolean)),
-				),
+				witnessIds,
 				textLength,
 				represented,
 				isContentRich: isContentRich(container),
@@ -662,7 +766,7 @@ const api = ((global) => {
 			};
 		});
 
-		const missingFamilyMembers = familySummaries.filter(summary => (
+		const missingFamilyMembers = familySummaries.filter((summary) => (
 			!summary.represented
 			&& summary.isContentRich
 			&& summary.linkDensity <= 0.35
@@ -678,28 +782,33 @@ const api = ((global) => {
 		}
 
 		return {
-			familyContainerIds: familySummaries.map(summary => summary.containerId).filter(Boolean),
+			familyContainerIds: familySummaries.map((summary) => summary.containerId).filter((value): value is string =>
+				typeof value === 'string' && value.length > 0
+			),
 			familyMembers: familySummaries,
-			missingContainerIds: missingFamilyMembers.map(summary => summary.containerId),
-			missingWitnessIds: missingFamilyMembers.flatMap(summary => summary.witnessIds),
+			missingContainerIds: missingFamilyMembers.map((summary) => summary.containerId),
+			missingWitnessIds: missingFamilyMembers.flatMap((summary) => summary.witnessIds),
 			projectedGrowth,
 		};
 	}
 
-	function annotateStructuralAnchors(document) {
+	function annotateStructuralAnchors(document: Document): number {
 		let index = 0;
-		document.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach(element => {
+		document.querySelectorAll(`[${ANCHOR_ATTRIBUTE}]`).forEach((element) => {
 			element.removeAttribute(ANCHOR_ATTRIBUTE);
 		});
 
-		document.querySelectorAll(STRUCTURAL_SELECTOR).forEach(element => {
+		document.querySelectorAll(STRUCTURAL_SELECTOR).forEach((element) => {
 			element.setAttribute(ANCHOR_ATTRIBUTE, `ms-${index++}`);
 		});
 
 		return index;
 	}
 
-	function analyzeNarrowExtraction(document, articleHtml) {
+	function analyzeNarrowExtraction(
+		document: Document,
+		articleHtml: string | null | undefined,
+	): NarrowExtractionAnalysis | null {
 		if (!articleHtml) {
 			return null;
 		}
@@ -712,6 +821,9 @@ const api = ((global) => {
 		}
 
 		const sourceNodeId = firstAnchor.getAttribute(ANCHOR_ATTRIBUTE);
+		if (!sourceNodeId) {
+			return null;
+		}
 		const sourceNode = document.querySelector(`[${ANCHOR_ATTRIBUTE}="${sourceNodeId}"]`);
 		if (!sourceNode) {
 			return null;
@@ -719,8 +831,8 @@ const api = ((global) => {
 
 		const extractedAnchorIds = new Set(
 			extractedAnchors
-				.map(element => element.getAttribute(ANCHOR_ATTRIBUTE))
-				.filter(Boolean),
+				.map((element) => element.getAttribute(ANCHOR_ATTRIBUTE))
+				.filter((value): value is string => typeof value === 'string' && value.length > 0),
 		);
 		const extractedTextLength = meaningfulTextLength(extractedDocument.body);
 
@@ -766,13 +878,16 @@ const api = ((global) => {
 		return null;
 	}
 
-	function applyRepeatedSectionPromotion(document, recoveryPlan) {
+	function applyRepeatedSectionPromotion(
+		document: Document,
+		recoveryPlan: FamilyPlan | null | undefined,
+	): RepeatedSectionPromotionResult {
 		if (!recoveryPlan?.familyContainerIds?.length) {
 			return { changed: false, promotedIds: [] };
 		}
 
-		const promotedIds = [];
-		recoveryPlan.familyContainerIds.forEach(containerId => {
+		const promotedIds: string[] = [];
+		recoveryPlan.familyContainerIds.forEach((containerId) => {
 			const container = document.querySelector(`[${ANCHOR_ATTRIBUTE}="${containerId}"]`);
 			if (!container || looksExcludedContainer(container) || !primaryHeadingLevel(container)) {
 				return;
@@ -801,7 +916,7 @@ const api = ((global) => {
 		};
 	}
 
-	function isIntroLikeContextNode(node) {
+	function isIntroLikeContextNode(node: StructuralElement | null | undefined): boolean {
 		if (!node || looksExcludedContainer(node)) {
 			return false;
 		}
@@ -826,14 +941,17 @@ const api = ((global) => {
 		return isContentRich(node);
 	}
 
-	function buildRepeatedSectionFragment(document, recoveryPlan) {
+	function buildRepeatedSectionFragment(
+		document: Document,
+		recoveryPlan: FamilyPlan | null | undefined,
+	): RepeatedSectionFragment | null {
 		if (!recoveryPlan?.familyContainerIds?.length) {
 			return null;
 		}
 
 		const familyContainers = recoveryPlan.familyContainerIds
-			.map(containerId => document.querySelector(`[${ANCHOR_ATTRIBUTE}="${containerId}"]`))
-			.filter(Boolean);
+			.map((containerId) => document.querySelector(`[${ANCHOR_ATTRIBUTE}="${containerId}"]`))
+			.filter((container): container is StructuralElement => container instanceof Element);
 		if (!familyContainers.length) {
 			return null;
 		}
@@ -842,7 +960,7 @@ const api = ((global) => {
 		const firstFamilyContainer = familyContainers[0];
 		const familyIds = new Set(recoveryPlan.familyContainerIds);
 
-		const leadingContext = [];
+		const leadingContext: Node[] = [];
 		let current = firstFamilyContainer.previousElementSibling;
 		let inspected = 0;
 
@@ -867,23 +985,23 @@ const api = ((global) => {
 			current = current.previousElementSibling;
 		}
 
-		leadingContext.reverse().forEach(node => {
+		leadingContext.reverse().forEach((node) => {
 			wrapper.appendChild(node);
 		});
 
-		familyContainers.forEach(container => {
+		familyContainers.forEach((container) => {
 			wrapper.appendChild(container.cloneNode(true));
 		});
 
 		return {
 			html: wrapper.innerHTML,
 			includedContainerIds: familyContainers
-				.map(container => container.getAttribute(ANCHOR_ATTRIBUTE))
-				.filter(Boolean),
+				.map((container) => container.getAttribute(ANCHOR_ATTRIBUTE))
+				.filter((value): value is string => typeof value === 'string' && value.length > 0),
 		};
 	}
 
-	function stripStructuralAnchorsFromHtml(articleHtml) {
+	function stripStructuralAnchorsFromHtml(articleHtml: string | null | undefined): string {
 		return String(articleHtml || '').replace(/\sdata-snipsnip-node-id=(?:"[^"]*"|'[^']*'|[^\s>]+)/g, '');
 	}
 
