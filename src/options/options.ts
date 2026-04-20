@@ -5,11 +5,11 @@ import type {
 	DownloadMode,
 	ExtensionOptions,
 	SendToCustomTarget,
-	SpecialTheme,
 	SnipSnipAgentBridgeStateApi,
 	SnipSnipLibraryStateApi,
 	SnipSnipOptionsStateApi,
 	SnipSnipTemplateUtilsApi,
+	SpecialTheme,
 } from '@/lib/types/index.ts';
 import { getItemsBag, setItemsBag, storage } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
@@ -1172,7 +1172,9 @@ function initSiteRuleControls(): void {
 	});
 
 	document.getElementById('siteRulesList')?.addEventListener('click', (event) => {
-		const button = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-site-rule-action]') : null;
+		const button = event.target instanceof HTMLElement
+			? event.target.closest<HTMLElement>('[data-site-rule-action]')
+			: null;
 		if (!button) {
 			return;
 		}
@@ -1201,7 +1203,9 @@ function initSiteRuleControls(): void {
 	});
 
 	document.getElementById('siteRulesList')?.addEventListener('change', (event) => {
-		const toggle = event.target instanceof HTMLInputElement ? event.target.closest<HTMLInputElement>('[data-site-rule-toggle]') : null;
+		const toggle = event.target instanceof HTMLInputElement
+			? event.target.closest<HTMLInputElement>('[data-site-rule-toggle]')
+			: null;
 		if (!(toggle instanceof HTMLInputElement)) {
 			return;
 		}
@@ -1306,7 +1310,7 @@ async function loadLibrarySettingsState(): Promise<LibrarySettings> {
 		librarySettings = await libraryApi.loadLibrarySettings();
 	} else {
 		const value = await storage.getItem('local:librarySettings');
-		librarySettings = normalizeLibrarySettingsState(value);
+		librarySettings = normalizeLibrarySettingsState(isRecord(value) ? value : undefined);
 	}
 
 	return librarySettings;
@@ -1343,7 +1347,9 @@ async function clearLibraryItemsState() {
 	return [];
 }
 
-function normalizeAgentBridgeSettingsState(settings: Partial<AgentBridgeSettings> | null | undefined): AgentBridgeSettings {
+function normalizeAgentBridgeSettingsState(
+	settings: Partial<AgentBridgeSettings> | null | undefined,
+): AgentBridgeSettings {
 	const bridgeApi = getAgentBridgeStateApi();
 	if (bridgeApi?.normalizeSettings) {
 		return bridgeApi.normalizeSettings(settings ?? undefined);
@@ -1392,7 +1398,7 @@ async function loadAgentBridgeSettingsState() {
 		agentBridgeSettings = await bridgeApi.loadSettings();
 	} else {
 		const value = await storage.getItem('local:agentBridgeSettings');
-		agentBridgeSettings = normalizeAgentBridgeSettingsState(value);
+		agentBridgeSettings = normalizeAgentBridgeSettingsState(isRecord(value) ? value : undefined);
 	}
 
 	return agentBridgeSettings;
@@ -1404,7 +1410,7 @@ async function loadAgentBridgeStatusState() {
 		agentBridgeStatus = await bridgeApi.loadStatus();
 	} else {
 		const value = await storage.getItem('local:agentBridgeStatus');
-		agentBridgeStatus = normalizeAgentBridgeStatusState(value);
+		agentBridgeStatus = normalizeAgentBridgeStatusState(isRecord(value) ? value : undefined);
 	}
 
 	return agentBridgeStatus;
@@ -1511,7 +1517,7 @@ function hidePermissionPanel() {
 }
 
 async function handlePermissionContinue() {
-	const continueBtn = document.getElementById('agentBridgePermContinue');
+	const continueBtn = getButtonById('agentBridgePermContinue');
 	if (continueBtn) {
 		continueBtn.disabled = true;
 		continueBtn.textContent = 'Requesting...';
@@ -1536,7 +1542,7 @@ async function handlePermissionContinue() {
 			return;
 		}
 
-		const toggle = document.querySelector("[name='agentBridgeEnabled']");
+		const toggle = queryElementOfType("[name='agentBridgeEnabled']", HTMLInputElement);
 		if (toggle) toggle.checked = true;
 
 		const refreshedStatus = await refreshAgentBridgeStatusState();
@@ -1599,7 +1605,7 @@ function normalizeImportedOptionsState(importedOptions: unknown): OptionsState {
 		defaultOptions?.sendToMaxUrlLength,
 	);
 
-	const validPrimaryActions = new Set(['markdown', 'text', 'html', 'pdf', 'copy', 'sendTo']);
+	const validPrimaryActions = new Set<DefaultExportType>(['markdown', 'text', 'html', 'pdf', 'copy', 'sendTo']);
 	normalizedOptions.defaultExportType = validPrimaryActions.has(normalizedOptions.defaultExportType)
 		? normalizedOptions.defaultExportType
 		: defaultOptions.defaultExportType;
@@ -1627,22 +1633,23 @@ function resetOptionKeysState(keys: string[] | string) {
 		return optionsStateApi.resetOptionKeys(options, defaultOptions, keys);
 	}
 
-	const nextOptions = JSON.parse(JSON.stringify(options));
+	const nextOptions: OptionsState = normalizeImportedOptionsState(JSON.parse(JSON.stringify(options)));
 	const keyList = Array.isArray(keys) ? keys : String(keys || '').split(',');
 	keyList.forEach((rawKey) => {
 		const key = String(rawKey || '').trim();
 		if (!key) return;
 
 		if (key === 'tableFormatting') {
-			nextOptions.tableFormatting = JSON.parse(JSON.stringify(defaultOptions.tableFormatting || {}));
+			nextOptions.tableFormatting = getTableFormattingState(defaultOptions.tableFormatting);
 			return;
 		}
 
 		if (key.startsWith('tableFormatting.')) {
-			const optionName = key.split('.')[1];
+			const optionName = key.split('.')[1] as SiteRuleTableKey | undefined;
 			if (!optionName) return;
-			nextOptions.tableFormatting = nextOptions.tableFormatting || {};
-			nextOptions.tableFormatting[optionName] = defaultOptions.tableFormatting?.[optionName];
+			const nextTableFormatting = nextOptions.tableFormatting || {};
+			nextTableFormatting[optionName] = getTableFormattingState(defaultOptions.tableFormatting)[optionName];
+			nextOptions.tableFormatting = nextTableFormatting;
 			return;
 		}
 
@@ -1676,7 +1683,7 @@ function buildExportFilenameState(date: Date | string | undefined) {
 		return optionsStateApi.buildExportFilename(date);
 	}
 
-	const d = date instanceof Date ? date : new Date(date);
+	const d = date instanceof Date ? date : new Date(date ?? Date.now());
 	const datestring = `${d.getFullYear()}-${(`0${d.getMonth() + 1}`).slice(-2)}-${(`0${d.getDate()}`).slice(-2)}`;
 	return `SnipSnip-export-${datestring}.json`;
 }
@@ -1936,7 +1943,7 @@ const save = (
 			return Promise.resolve();
 		}
 		return browser.contextMenus.update(id, update).catch((err: unknown) => {
-			const message = String(err?.message || err || '');
+			const message = err instanceof Error ? err.message : String(err || '');
 			if (!message.includes('Cannot find menu item')) {
 				console.warn(`Failed to update context menu '${id}':`, err);
 			}
@@ -1950,18 +1957,18 @@ const save = (
 			}
 			return Promise.allSettled([
 				safeUpdateMenu('toggle-includeTemplate', {
-					checked: options.includeTemplate,
+					checked: options.includeTemplate === true,
 				}),
 				safeUpdateMenu('tabtoggle-includeTemplate', {
-					checked: options.includeTemplate,
+					checked: options.includeTemplate === true,
 				}),
 				safeUpdateMenu('toggle-downloadImages', {
-					checked: options.downloadImages,
+					checked: options.downloadImages === true,
 				}),
 				safeUpdateMenu('tabtoggle-downloadImages', {
-					checked: options.downloadImages,
+					checked: options.downloadImages === true,
 				}),
-			]);
+			]).then(() => undefined);
 		})
 		.then(() => {
 			if (feedback !== false) {
@@ -1990,7 +1997,8 @@ function showToast(message: string, type: string) {
 }
 
 function hideToast() {
-	this.classList.remove('visible');
+	const status = getHtmlElementById('status');
+	status?.classList.remove('visible');
 }
 
 function buildTemplatePreviewSampleArticle() {
@@ -2090,7 +2098,7 @@ const setCurrentChoice = (result: Record<string, unknown>) => {
 		}
 	}
 
-	const downloadImages = options.downloadImages && options.downloadMode === 'downloadsApi';
+	const downloadImages = options.downloadImages === true && options.downloadMode === 'downloadsApi';
 
 	const imageStyle = String(options.imageStyle || 'originalSource');
 	if (!downloadImages && (imageStyle === 'markdown' || imageStyle.startsWith('obsidian'))) {
@@ -2193,19 +2201,25 @@ const setCurrentChoice = (result: Record<string, unknown>) => {
 	renderTemplatePreviews();
 };
 
-const setCurrentLibraryChoice = (result) => {
+const setCurrentLibraryChoice = (result: Partial<LibrarySettings> | null | undefined) => {
 	librarySettings = normalizeLibrarySettingsState(result);
-	document.querySelector("[name='libraryEnabled']").checked = librarySettings.enabled;
-	document.querySelector("[name='libraryAutoSaveOnPopupOpen']").checked = librarySettings.autoSaveOnPopupOpen;
-	document.querySelector("[name='libraryItemsToKeep']").value = librarySettings.itemsToKeep;
+	const libraryEnabled = queryElementOfType("[name='libraryEnabled']", HTMLInputElement);
+	const autoSave = queryElementOfType("[name='libraryAutoSaveOnPopupOpen']", HTMLInputElement);
+	const itemsToKeep = queryElementOfType("[name='libraryItemsToKeep']", HTMLInputElement);
+	if (libraryEnabled) libraryEnabled.checked = librarySettings.enabled;
+	if (autoSave) autoSave.checked = librarySettings.autoSaveOnPopupOpen;
+	if (itemsToKeep) itemsToKeep.value = String(librarySettings.itemsToKeep);
 	refreshElements();
 };
 
-const setCurrentAgentBridgeChoice = (settingsResult, statusResult = agentBridgeStatus) => {
+const setCurrentAgentBridgeChoice = (
+	settingsResult: Partial<AgentBridgeSettings> | null | undefined,
+	statusResult: Partial<AgentBridgeStatus> | null | undefined = agentBridgeStatus,
+) => {
 	agentBridgeSettings = normalizeAgentBridgeSettingsState(settingsResult);
 	agentBridgeStatus = normalizeAgentBridgeStatusState(statusResult);
 
-	const toggle = document.querySelector("[name='agentBridgeEnabled']");
+	const toggle = queryElementOfType("[name='agentBridgeEnabled']", HTMLInputElement);
 	if (toggle) {
 		toggle.checked = agentBridgeSettings.enabled;
 	}
@@ -2279,13 +2293,13 @@ const setCurrentAgentBridgeChoice = (settingsResult, statusResult = agentBridgeS
 };
 
 const restoreOptions = () => {
-	const onError = error => {
+	const onError = (error: unknown) => {
 		console.error(error);
 	};
 
 	resolveAgentBridgeInstallCommand().catch(onError);
 
-	Promise.all([
+	void Promise.all([
 		getItemsBag('sync', defaultOptions),
 		loadLibrarySettingsState(),
 		loadAgentBridgeSettingsState(),
@@ -2294,13 +2308,13 @@ const restoreOptions = () => {
 		setCurrentChoice(syncOptions);
 		setCurrentLibraryChoice(localLibrarySettings);
 		setCurrentAgentBridgeChoice(localAgentBridgeSettings, localAgentBridgeStatus);
-		refreshAgentBridgeStatusState().then((status) => {
+		void refreshAgentBridgeStatusState().then((status) => {
 			setCurrentAgentBridgeChoice(agentBridgeSettings, status);
 		}).catch(onError);
 	}, onError);
 };
 
-const show = (el, visible) => {
+const show = (el: HTMLElement | null, visible: boolean) => {
 	if (!el) return;
 	el.style.display = visible ? '' : 'none';
 	el.style.opacity = visible ? '1' : '0';
@@ -2311,7 +2325,8 @@ const refreshElements = () => {
 	applyThemeSettings();
 	updateSpecialThemeControlState();
 
-	document.getElementById('downloadModeGroup').querySelectorAll('.setting-card').forEach(container => {
+	const downloadModeGroup = getHtmlElementById('downloadModeGroup');
+	queryAllOfType('.setting-card', HTMLElement, downloadModeGroup ?? document).forEach((container) => {
 		show(container, options.downloadMode === 'downloadsApi');
 	});
 
@@ -2330,10 +2345,14 @@ const refreshElements = () => {
 
 	show(document.getElementById('imagePrefix'), downloadImages);
 
-	document.getElementById('markdown').disabled = !downloadImages;
-	document.getElementById('base64').disabled = !downloadImages;
-	document.getElementById('obsidian').disabled = !downloadImages;
-	document.getElementById('obsidian-nofolder').disabled = !downloadImages;
+	const markdownInput = getInputById('markdown');
+	const base64Input = getInputById('base64');
+	const obsidianInput = getInputById('obsidian');
+	const obsidianNoFolderInput = getInputById('obsidian-nofolder');
+	if (markdownInput) markdownInput.disabled = !downloadImages;
+	if (base64Input) base64Input.disabled = !downloadImages;
+	if (obsidianInput) obsidianInput.disabled = !downloadImages;
+	if (obsidianNoFolderInput) obsidianNoFolderInput.disabled = !downloadImages;
 
 	show(document.getElementById('defaultSendToTargetCard'), options.defaultExportType === 'sendTo');
 
@@ -2341,14 +2360,22 @@ const refreshElements = () => {
 	show(document.getElementById('libraryItemsToKeep-container'), librarySettings.enabled);
 };
 
-const inputChange = async (e) => {
-	if (e) {
-		const key = e.target.name;
-		let value = e.target.value;
+const inputChange = async (e: Event | undefined) => {
+	if (
+		e
+		&& (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+			|| e.target instanceof HTMLSelectElement)
+	) {
+		const target = e.target;
+		const key = target.name;
+		let value: string | boolean = target.value;
 		if (key === 'import-file') {
-			fr = new FileReader();
-			fr.onload = async (ev) => {
-				const lines = ev.target.result;
+			const fileReader = new FileReader();
+			fileReader.onload = async (ev) => {
+				const lines = ev.target instanceof FileReader ? ev.target.result : null;
+				if (typeof lines !== 'string') {
+					return;
+				}
 				const importedPayload = JSON.parse(lines);
 				const importedLibrarySettings = importedPayload?.librarySettings;
 				const importedOptions = { ...importedPayload };
@@ -2365,9 +2392,12 @@ const inputChange = async (e) => {
 				save();
 				refreshElements();
 			};
-			fr.readAsText(e.target.files[0]);
+			const file = target instanceof HTMLInputElement ? target.files?.[0] : undefined;
+			if (file) {
+				fileReader.readAsText(file);
+			}
 		} else if (key === 'libraryEnabled' || key === 'libraryAutoSaveOnPopupOpen' || key === 'libraryItemsToKeep') {
-			if (e.target.type === 'checkbox') value = e.target.checked;
+			if (target instanceof HTMLInputElement && target.type === 'checkbox') value = target.checked;
 
 			if (key === 'libraryEnabled') {
 				librarySettings.enabled = Boolean(value);
@@ -2376,9 +2406,10 @@ const inputChange = async (e) => {
 			} else if (key === 'libraryItemsToKeep') {
 				librarySettings.itemsToKeep = normalizeLibrarySettingsState({
 					...librarySettings,
-					itemsToKeep: value,
+					itemsToKeep: typeof value === 'string' ? Number.parseInt(value, 10) : value,
 				}).itemsToKeep;
-				document.querySelector("[name='libraryItemsToKeep']").value = librarySettings.itemsToKeep;
+				const itemsToKeepInput = queryElementOfType("[name='libraryItemsToKeep']", HTMLInputElement);
+				if (itemsToKeepInput) itemsToKeepInput.value = String(librarySettings.itemsToKeep);
 				await trimLibraryItemsState(librarySettings.itemsToKeep);
 			}
 
@@ -2386,12 +2417,14 @@ const inputChange = async (e) => {
 			setCurrentLibraryChoice(librarySettings);
 			showToast('Library settings saved', 'success');
 		} else if (key === 'agentBridgeEnabled') {
-			const nextEnabled = Boolean(e.target.checked);
+			const nextEnabled = target instanceof HTMLInputElement ? target.checked : Boolean(value);
 			const reloadRequired = false;
 
 			if (nextEnabled && usesOptionalNativeMessagingPermission() && !agentBridgeStatus.permissionGranted) {
 				// Don't immediately request permission — show the preflight panel
-				e.target.checked = false;
+				if (target instanceof HTMLInputElement) {
+					target.checked = false;
+				}
 				showPermissionPanel('preflight');
 				return;
 			}
@@ -2407,17 +2440,20 @@ const inputChange = async (e) => {
 			setCurrentAgentBridgeChoice(agentBridgeSettings, refreshedStatus);
 			showToast(nextEnabled ? 'Agent Bridge enabled' : 'Agent Bridge disabled', 'success');
 		} else {
-			if (e.target.type === 'checkbox') value = e.target.checked;
+			if (target instanceof HTMLInputElement && target.type === 'checkbox') value = target.checked;
 			if (key === 'sendToMaxUrlLength') {
 				value = normalizeSendToMaxUrlLengthState(value, defaultOptions?.sendToMaxUrlLength);
-				e.target.value = value;
+				target.value = String(value);
 			}
 
 			// Handle nested table formatting options
 			if (key.startsWith('tableFormatting.')) {
-				const optionName = key.split('.')[1];
+				const optionName = key.split('.')[1] as SiteRuleTableKey | undefined;
+				if (!optionName) {
+					return;
+				}
 				options.tableFormatting = options.tableFormatting || {};
-				options.tableFormatting[optionName] = value;
+				options.tableFormatting[optionName] = value === true;
 			} else {
 				options[key] = value;
 			}
@@ -2433,15 +2469,19 @@ const inputChange = async (e) => {
 	}
 };
 
-const inputKeyup = (e) => {
+const inputKeyup = (e: Event) => {
 	if (keyupTimeout) clearTimeout(keyupTimeout);
 	keyupTimeout = setTimeout(inputChange, 500, e);
 };
 
-const buttonClick = async (e) => {
-	if (e.target.id === 'import' || e.target.closest('#import')) {
-		document.getElementById('import-file').click();
-	} else if (e.target.id === 'export' || e.target.closest('#export')) {
+const buttonClick = async (e: Event) => {
+	const target = e.target instanceof HTMLElement ? e.target : null;
+	if (!target) {
+		return;
+	}
+	if (target.id === 'import' || target.closest('#import')) {
+		getInputById('import-file')?.click();
+	} else if (target.id === 'export' || target.closest('#export')) {
 		console.log('export');
 		const json = JSON.stringify(buildExportPayload(), null, 2);
 		const blob = new Blob([json], { type: 'text/json' });
@@ -2451,10 +2491,10 @@ const buttonClick = async (e) => {
 			saveAs: true,
 			filename: buildExportFilenameState(new Date()),
 		});
-	} else if (e.target.id === 'clear-library' || e.target.closest('#clear-library')) {
+	} else if (target.id === 'clear-library' || target.closest('#clear-library')) {
 		clearLibraryItems();
-	} else if (e.target.id === 'refreshAgentBridgeStatus' || e.target.closest('#refreshAgentBridgeStatus')) {
-		const refreshBtn = document.getElementById('refreshAgentBridgeStatus');
+	} else if (target.id === 'refreshAgentBridgeStatus' || target.closest('#refreshAgentBridgeStatus')) {
+		const refreshBtn = getButtonById('refreshAgentBridgeStatus');
 		const needsPermission = usesOptionalNativeMessagingPermission() && agentBridgeSettings.enabled
 			&& !agentBridgeStatus.permissionGranted;
 
@@ -2523,8 +2563,8 @@ const buttonClick = async (e) => {
 					document.getElementById('agent-bridge-container')?.dataset.bridgeState || 'disabled',
 				);
 			});
-	} else if (e.target.id === 'copyAgentBridgeCommand' || e.target.closest('#copyAgentBridgeCommand')) {
-		const command = document.getElementById('agentBridgeInstallCommand')?.textContent?.trim()
+	} else if (target.id === 'copyAgentBridgeCommand' || target.closest('#copyAgentBridgeCommand')) {
+		const command = getHtmlElementById('agentBridgeInstallCommand')?.textContent?.trim()
 			|| agentBridgeInstallCommand;
 		navigator.clipboard.writeText(command)
 			.then(() => {
@@ -2553,29 +2593,29 @@ async function clearLibraryItems() {
 }
 
 function initSidebar() {
-	const sidebarItems = Array.from(document.querySelectorAll('.sidebar-item'));
-	const sections = Array.from(document.querySelectorAll('.section'));
+	const sidebarItems = queryAllOfType('.sidebar-item', HTMLElement);
+	const sections = queryAllOfType('.section', HTMLElement);
 
 	// Restore last active tab from sessionStorage
 	const lastActive = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
 
-	function switchSection(sectionId) {
+	function switchSection(sectionId: string) {
 		// Update sidebar
-		sidebarItems.forEach(item => {
+		sidebarItems.forEach((item) => {
 			const isActive = item.dataset.section === sectionId;
 			item.classList.toggle('active', isActive);
 			item.setAttribute('aria-selected', String(isActive));
 			item.tabIndex = isActive ? 0 : -1;
 		});
-		const activeItem = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
+		const activeItem = queryElementOfType(`.sidebar-item[data-section="${sectionId}"]`, HTMLElement);
 
 		// Update sections
-		sections.forEach(section => {
+		sections.forEach((section) => {
 			const isActive = section.id === `section-${sectionId}`;
 			section.classList.toggle('active', isActive);
 			section.setAttribute('aria-hidden', String(!isActive));
 		});
-		const activeSection = document.getElementById(`section-${sectionId}`);
+		const activeSection = getHtmlElementById(`section-${sectionId}`);
 
 		// Persist
 		sessionStorage.setItem('snipsnip-options-tab', sectionId);
@@ -2583,12 +2623,12 @@ function initSidebar() {
 		return { activeItem, activeSection };
 	}
 
-	function activateSidebarItem(item, shouldFocus = false) {
+	function activateSidebarItem(item: HTMLElement | undefined, shouldFocus = false) {
 		if (!item) {
 			return;
 		}
 
-		const searchInput = document.getElementById('settings-search');
+		const searchInput = getInputById('settings-search');
 		if (searchInput?.value) {
 			searchInput.value = '';
 			searchInput.dispatchEvent(new Event('input'));
@@ -2600,7 +2640,7 @@ function initSidebar() {
 		}
 	}
 
-	sidebarItems.forEach(item => {
+	sidebarItems.forEach((item) => {
 		item.addEventListener('click', () => {
 			activateSidebarItem(item);
 		});
@@ -2795,18 +2835,18 @@ const loaded = () => {
 	});
 
 	// Wire up permission panel buttons
-	const permContinue = document.getElementById('agentBridgePermContinue');
-	const permCancel = document.getElementById('agentBridgePermCancel');
-	const permRetry = document.getElementById('agentBridgePermRetry');
-	const permDismiss = document.getElementById('agentBridgePermDismiss');
-	const permGuideLink = document.getElementById('agentBridgePermGuideLink');
+	const permContinue = getButtonById('agentBridgePermContinue');
+	const permCancel = getButtonById('agentBridgePermCancel');
+	const permRetry = getButtonById('agentBridgePermRetry');
+	const permDismiss = getButtonById('agentBridgePermDismiss');
+	const permGuideLink = queryElementOfType('#agentBridgePermGuideLink', HTMLAnchorElement);
 
 	if (permContinue) permContinue.addEventListener('click', handlePermissionContinue);
 	if (permCancel) permCancel.addEventListener('click', handlePermissionCancel);
 	if (permRetry) permRetry.addEventListener('click', handlePermissionRetry);
 	if (permDismiss) permDismiss.addEventListener('click', handlePermissionDismiss);
 	if (permGuideLink) {
-		permGuideLink.addEventListener('click', (e) => {
+		permGuideLink.addEventListener('click', (e: MouseEvent) => {
 			e.preventDefault();
 			const setupGuide = document.getElementById('agentBridgeSetupGuide');
 			if (setupGuide) {
@@ -2819,23 +2859,23 @@ const loaded = () => {
 
 // ── Settings Search ──
 function initSearch() {
-	const searchInput = document.getElementById('settings-search');
-	const searchStatus = document.getElementById('settings-search-status');
-	const contentPanel = document.querySelector('.content-panel');
-	const noResults = document.getElementById('search-no-results');
-	const noResultsQuery = document.getElementById('search-no-results-query');
+	const searchInput = getInputById('settings-search');
+	const searchStatus = getHtmlElementById('settings-search-status');
+	const contentPanel = queryElementOfType('.content-panel', HTMLElement);
+	const noResults = getHtmlElementById('search-no-results');
+	const noResultsQuery = getHtmlElementById('search-no-results-query');
 	const searchApi = globalThis.snipSnipOptionsSearch;
 
 	if (!searchInput || !contentPanel || !noResults || !noResultsQuery || !searchApi) {
 		return;
 	}
 
-	const sections = document.querySelectorAll('.section');
+	const sections = queryAllOfType('.section', HTMLElement);
 	const searchIndex = searchApi.buildSearchIndex(document);
 	const totalSettings = searchIndex.length;
-	let searchTimeout = null;
+	let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	function updateSearchStatus(message) {
+	function updateSearchStatus(message: unknown) {
 		if (!searchStatus) {
 			return;
 		}
@@ -2857,7 +2897,7 @@ function initSearch() {
 			delete card.dataset.searchAlias;
 		});
 
-		document.querySelectorAll('[data-search-force-shown]').forEach(el => {
+		queryAllOfType('[data-search-force-shown]', HTMLElement).forEach((el) => {
 			el.style.removeProperty('display');
 			el.style.removeProperty('opacity');
 			el.removeAttribute('data-search-force-shown');
@@ -3037,12 +3077,12 @@ function _initSearchLegacy() {
 			});
 			// Re-trigger sidebar to show correct section
 			const activeTab = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
-			const sidebarItems = document.querySelectorAll('.sidebar-item');
-			const allSections = document.querySelectorAll('.section');
-			sidebarItems.forEach((item) => {
+			const currentSidebarItems = queryAllOfType('.sidebar-item', HTMLElement);
+			const allSections = queryAllOfType('.section', HTMLElement);
+			currentSidebarItems.forEach((item) => {
 				item.classList.remove('active');
 			});
-			const activeItem = document.querySelector(`.sidebar-item[data-section="${activeTab}"]`);
+			const activeItem = queryElementOfType(`.sidebar-item[data-section="${activeTab}"]`, HTMLElement);
 			if (activeItem) activeItem.classList.add('active');
 			allSections.forEach((section) => {
 				section.classList.remove('active');
@@ -3070,7 +3110,7 @@ function _initSearchLegacy() {
 				card.style.display = '';
 				card.style.opacity = '1';
 				// Force-show any conditionally hidden children so they are interactable in search results
-				card.querySelectorAll('[data-search-reveal]').forEach(child => {
+				queryAllOfType('[data-search-reveal]', HTMLElement, card).forEach((child) => {
 					if (child.style.display === 'none') {
 						child.style.display = '';
 						child.style.opacity = '1';
@@ -3091,7 +3131,7 @@ function _initSearchLegacy() {
 		});
 
 		// Mark sections that have zero visible cards
-		sections.forEach(section => {
+		sections.forEach((section) => {
 			const hasVisible = section.querySelector('.setting-card.search-match');
 			section.classList.toggle('search-section-empty', !hasVisible);
 		});
