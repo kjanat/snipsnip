@@ -931,7 +931,7 @@ function finishThemeTransition() {
 	});
 }
 
-function beginThemeTransition(waitForStylesheet = false) {
+function beginThemeTransition(_waitForStylesheet = false) {
 	if (prefersReducedMotion.matches) {
 		return;
 	}
@@ -940,16 +940,14 @@ function beginThemeTransition(waitForStylesheet = false) {
 	clearPendingThemeTransitionListeners();
 	dom.root.classList.add('theme-transition-active');
 
-	const finish = () => finishThemeTransition();
-	if (waitForStylesheet) {
-		const link = getEditorThemeStylesheetLink();
-		themeTransitionPendingLink = link;
-		themeTransitionPendingHandler = finish;
-		link.addEventListener('load', finish, { once: true });
-		link.addEventListener('error', finish, { once: true });
-	}
-
-	themeTransitionCleanupTimer = window.setTimeout(finish, THEME_TRANSITION_FALLBACK_MS);
+	// The CM5-era path used to block the transition on a <link rel=stylesheet>
+	// load event; CM6 themes apply synchronously via reconfigureTheme() so
+	// there is nothing to wait for. We keep the fallback timer only — it
+	// doubles as the single canonical end-of-transition signal.
+	themeTransitionCleanupTimer = window.setTimeout(
+		() => finishThemeTransition(),
+		THEME_TRANSITION_FALLBACK_MS,
+	);
 }
 
 function updateThemeToggleButton(options = currentOptions) {
