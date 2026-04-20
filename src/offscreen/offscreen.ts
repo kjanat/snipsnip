@@ -64,7 +64,6 @@ function getCodeBlockUtilsApi() {
 function cloneRuntimeOptions(source = {}) {
 	const nextOptions = {
 		...(source || {}),
-		s,
 	};
 
 	if (source?.tableFormatting && typeof source.tableFormatting === 'object') {

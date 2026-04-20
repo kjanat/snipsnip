@@ -3430,6 +3430,10 @@ const clipSite = id => {
 	});
 };
 
+// Expose popup-scope helpers on window so e2e tests (which evaluate page code
+// in the module's realm but not its lexical scope) can drive the clip flow.
+Reflect.set(globalThis, 'clipSite', clipSite);
+
 function ensureContentScriptInjected(tabId) {
 	return browser.scripting.executeScript({
 		target: { tabId },
