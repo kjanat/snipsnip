@@ -1955,66 +1955,68 @@ async function preDownloadImages(imageList, markdown, providedOptions = null) {
 	const newImageList = {};
 	const sourceImageMap = {};
 
-	// Process all images in parallel
+	// Fetch each image in parallel, then fold the result into the markdown
+	// and the filename maps. Bugs caught here (pre-existing from the
+	// XMLHttpRequest → fetch port):
+	//   * `fetch(src)` returns a Promise — callers used to treat it as a
+	//     Response directly, so `response.ok` was undefined and threw
+	//     "HTTP undefined" on every image. Now we await it.
+	//   * `.blob()` is also async.
+	//   * base64 readAsDataURL is async — use the promise-friendly helper.
 	await Promise.all(
-		Object.entries(imageList).map(([src, filename]) =>
-			new Promise((resolve) => {
-				try {
-					// Fetch the image using fetch instead of XMLHttpRequest
-					const response = fetch(src);
-					if (!response.ok) {
-						throw new Error(`HTTP ${response.status}`);
-					}
-					const blob = response.blob();
-
-					if (options.imageStyle === 'base64') {
-						// Convert to base64
-						const reader = new FileReader();
-						reader.onloadend = () => {
-							markdown = markdown.replaceAll(src, reader.result);
-							resolve();
-						};
-						reader.readAsDataURL(blob);
-					} else {
-						let newFilename = filename;
-
-						// Handle unknown extensions
-						if (newFilename.endsWith('.idunno')) {
-							const mimeType = blob.type || 'application/octet-stream';
-							const extension = mime[mimeType] || 'bin';
-							newFilename = filename.replace('.idunno', `.${extension}`);
-
-							// Update filename in markdown
-							if (!options.imageStyle.startsWith('obsidian')) {
-								markdown = markdown.replaceAll(
-									filename.split('/').map(s => encodeURI(s)).join('/'),
-									newFilename.split('/').map(s => encodeURI(s)).join('/'),
-								);
-							} else {
-								markdown = markdown.replaceAll(filename, newFilename);
-							}
-						}
-
-						// Create object URL for the blob
-						const blobUrl = URL.createObjectURL(blob);
-						newImageList[blobUrl] = newFilename;
-						Object.assign(
-							sourceImageMap,
-							snipSnipObsidian.createObsidianSourceImageMap({
-								[src]: newFilename,
-							}),
-						);
-						resolve();
-					}
-				} catch (error) {
-					console.error('Error pre-downloading image:', error);
-					resolve();
+		Object.entries(imageList).map(async ([src, filename]) => {
+			try {
+				const response = await fetch(src);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
 				}
-			})
-		),
+				const blob = await response.blob();
+
+				if (options.imageStyle === 'base64') {
+					const dataUrl = await new Promise<string>((resolveReader, rejectReader) => {
+						const reader = new FileReader();
+						reader.onloadend = () => resolveReader(reader.result as string);
+						reader.onerror = () => rejectReader(reader.error ?? new Error('FileReader failed'));
+						reader.readAsDataURL(blob);
+					});
+					markdown = markdown.replaceAll(src, dataUrl);
+					return;
+				}
+
+				let newFilename = filename;
+				// Handle unknown extensions — pre-download gives us the real MIME.
+				if (newFilename.endsWith('.idunno')) {
+					const mimeType = blob.type || 'application/octet-stream';
+					const extension = mime[mimeType] || 'bin';
+					newFilename = filename.replace('.idunno', `.${extension}`);
+
+					if (!options.imageStyle.startsWith('obsidian')) {
+						markdown = markdown.replaceAll(
+							filename.split('/').map(s => encodeURI(s)).join('/'),
+							newFilename.split('/').map(s => encodeURI(s)).join('/'),
+						);
+					} else {
+						markdown = markdown.replaceAll(filename, newFilename);
+					}
+				}
+
+				const blobUrl = URL.createObjectURL(blob);
+				newImageList[blobUrl] = newFilename;
+				Object.assign(
+					sourceImageMap,
+					snipSnipObsidian.createObsidianSourceImageMap({
+						[src]: newFilename,
+					}),
+				);
+			} catch (error) {
+				// A single image failing shouldn't abort the whole clip — log
+				// and move on so the markdown still reaches the popup.
+				console.error('Error pre-downloading image:', src, error);
+			}
+		}),
 	);
 
-	return { imageList: newImageList, markdown: markdown, sourceImageMap: sourceImageMap };
+	return { imageList: newImageList, markdown, sourceImageMap };
 }
 
 /**
