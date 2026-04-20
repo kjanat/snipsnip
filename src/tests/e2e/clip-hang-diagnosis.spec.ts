@@ -9,7 +9,7 @@ const fixtureFile = path.join(
 	'../fixtures/e2e-pages/extension/deterministic-article.html',
 );
 
-test.describe('Clip spinner resolves (regression: offscreen cloneRuntimeOptions `s,` bug)', () => {
+test.describe('Clip flow: spinner + error pipeline end-to-end', () => {
 	let context: BrowserContext;
 	let extensionId: string;
 
@@ -38,7 +38,7 @@ test.describe('Clip spinner resolves (regression: offscreen cloneRuntimeOptions 
 		await context?.close();
 	});
 
-	test('popup opens, clips fixture, spinner hides, CM6 shows markdown', async () => {
+	test('happy path: clip produces real markdown in CM6 (not an error message)', async () => {
 		const fixturePage = await context.newPage();
 		await fixturePage.goto(`${fixtureHost}/extension/deterministic-article.html`);
 		await fixturePage.waitForLoadState('networkidle');
@@ -53,39 +53,91 @@ test.describe('Clip spinner resolves (regression: offscreen cloneRuntimeOptions 
 
 		const popupPage = await context.newPage();
 		const pageErrors: string[] = [];
-		popupPage.on('pageerror', (err) => pageErrors.push(`PAGE ERROR: ${err.message}`));
+		popupPage.on('pageerror', (err) => pageErrors.push(err.message));
 
 		try {
 			await popupPage.goto(getExtensionPageUrl(extensionId));
 			await expect(popupPage.locator('.cm-editor')).toBeVisible({ timeout: 10000 });
 
-			// Drive the clip against the *fixture* tab, not the popup page itself.
 			await popupPage.evaluate(async (tabId) => {
-				// @ts-expect-error — clipSite is a popup-scope global
+				// @ts-expect-error — clipSite exposed on window in popup.ts
 				await clipSite(tabId);
 			}, fixtureTabId);
 
-			// The hang bug: offscreen threw `ReferenceError: s is not defined` on every
-			// process-content message, so `markdown-result` was never sent and the popup
-			// never received `display.md` → spinner stuck on "Processing page..." forever.
-			//
-			// Regression check: the clip flow must *terminate* within a short window —
-			// either with the markdown displayed, or a visible error. Anything other
-			// than a perpetual spinner means the offscreen message handler isn't throwing.
+			// Pass condition: CM6 contains the fixture's article text. Critically, we
+			// do *not* accept "spinner hides" as a pass, because showError also hides
+			// the spinner — that was the false-positive in the previous version of
+			// this test.
 			await expect.poll(
 				async () => {
 					return await popupPage.evaluate(() => {
-						const spinner = document.getElementById('spinner');
-						return spinner ? getComputedStyle(spinner).display : 'no-element';
+						const cm = (window as unknown as { cm?: { getValue?: () => string } }).cm;
+						return cm?.getValue?.() || '';
 					});
 				},
-				{ timeout: 20000, intervals: [500, 500, 1000] },
-			).toBe('none');
+				{ timeout: 30000 },
+			).toContain('This page is routed by Playwright');
 
+			const spinnerDisplay = await popupPage.evaluate(() => {
+				const el = document.getElementById('spinner');
+				return el ? getComputedStyle(el).display : 'no-element';
+			});
+			expect(spinnerDisplay).toBe('none');
 			expect(pageErrors).toEqual([]);
 		} finally {
 			await popupPage.close().catch(() => {});
 			await fixturePage.close().catch(() => {});
+		}
+	});
+
+	test('error pipeline: simulated process-error reaches popup as clip-error and hides spinner', async () => {
+		// Regression: when offscreen throws, it sends `process-error`. Previously
+		// the SW had no handler and the popup spun forever. Now the SW forwards
+		// as `clip-error` and the popup's notify() → showError renders the
+		// message. This test simulates the offscreen throw directly from the SW.
+		const popupPage = await context.newPage();
+		try {
+			await popupPage.goto(getExtensionPageUrl(extensionId));
+			await expect(popupPage.locator('.cm-editor')).toBeVisible({ timeout: 10000 });
+
+			// Force the popup into the "processing" state so we can verify the
+			// error actually hides it.
+			await popupPage.evaluate(() => {
+				const el = document.getElementById('spinner');
+				if (el) el.style.display = 'flex';
+			});
+
+			const [serviceWorker] = context.serviceWorkers();
+			await serviceWorker.evaluate(() => {
+				chrome.runtime.sendMessage({
+					type: 'process-error',
+					error: 'Synthetic failure from e2e test — offscreen throw simulation',
+				}).catch(() => {
+					// No popup listener is an expected state in other contexts.
+				});
+			});
+
+			// Spinner must end up hidden because showError ran.
+			await expect.poll(
+				async () => {
+					return await popupPage.evaluate(() => {
+						const el = document.getElementById('spinner');
+						return el ? getComputedStyle(el).display : 'no-element';
+					});
+				},
+				{ timeout: 5000 },
+			).toBe('none');
+
+			// CM6 should contain the error text that showError rendered, not real
+			// markdown. The exact wording comes from `new Error(message.error || ...)`
+			// in the clip-error branch of notify().
+			const editorText = await popupPage.evaluate(() => {
+				const cm = (window as unknown as { cm?: { getValue?: () => string } }).cm;
+				return cm?.getValue?.() || '';
+			});
+			expect(editorText).toContain('Synthetic failure');
+		} finally {
+			await popupPage.close().catch(() => {});
 		}
 	});
 });

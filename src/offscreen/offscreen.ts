@@ -30,7 +30,6 @@ function initOffscreen() {
 	console.log('SnipSnip offscreen document initialized');
 	console.log('🔧 Browser downloads API available:', !!browser.downloads);
 	console.log('🔧 Chrome downloads API available:', !!(typeof chrome !== 'undefined' && chrome.downloads));
-	TurndownService.prototype.defaultEscape = TurndownService.prototype.escape;
 }
 
 function getSelectionUtilsApi() {
@@ -257,11 +256,14 @@ async function processContent(message) {
 			},
 		});
 	} catch (error) {
-		console.error('Error processing content:', error);
-		// Notify service worker of error
+		// Log stack so the throw point is visible in the offscreen console.
+		console.error('[offscreen] processContent failed:', error, error?.stack);
 		await browser.runtime.sendMessage({
 			type: 'process-error',
-			error: error.message,
+			error: `${error?.name || 'Error'}: ${error?.message || String(error)}`,
+			stack: error?.stack || null,
+		}).catch(() => {
+			// SW may be restarting; there's nothing actionable here.
 		});
 	}
 }
@@ -725,10 +727,16 @@ function turndown(content, options, article) {
 	console.log('Starting turndown with options:', options.tableFormatting); // Debug log
 	const uriBase = article.uriBase || article.baseURI;
 
-	if (options.turndownEscape) TurndownService.prototype.escape = TurndownService.prototype.defaultEscape;
-	else TurndownService.prototype.escape = s => s;
-
+	// Per-instance escape override. We used to mutate TurndownService.prototype
+	// here, which raced with `initOffscreen` (which set `defaultEscape` only on
+	// DOMContentLoaded). If a clip message arrived before DOMContentLoaded,
+	// `prototype.escape = prototype.defaultEscape` (undefined) permanently
+	// broke every subsequent clip with "self.escape is not a function". Scope
+	// the override to this one instance — no timing, no cross-instance leakage.
 	var turndownService = new TurndownService(options);
+	if (!options.turndownEscape) {
+		turndownService.escape = (s) => s;
+	}
 
 	// Add only non-table GFM features
 	turndownService.use([

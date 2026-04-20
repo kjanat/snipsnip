@@ -407,6 +407,41 @@ const dom = {
 
 globalThis.cm = null;
 
+// Watchdog state for the auto-clip on popup open. The popup's notify() relies
+// on an async `display.md` (success) or `clip-error` (failure). If neither
+// arrives — e.g. offscreen throws and the error routing regresses — the
+// watchdog surfaces a visible timeout error instead of a perpetual spinner.
+let autoClipResolved = false;
+let autoClipWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleAutoClipWatchdog(timeoutMs: number): void {
+	if (autoClipWatchdogTimer != null) {
+		clearTimeout(autoClipWatchdogTimer);
+	}
+	autoClipResolved = false;
+	autoClipWatchdogTimer = setTimeout(() => {
+		autoClipWatchdogTimer = null;
+		if (autoClipResolved) {
+			return;
+		}
+		showError(
+			new Error(
+				`Clip timed out after ${
+					Math.round(timeoutMs / 1000)
+				}s. The offscreen document may have thrown silently — open chrome://extensions → SnipSnip → Inspect views → offscreen.html for the stack.`,
+			),
+		);
+	}, timeoutMs);
+}
+
+function resolveAutoClipWatchdog(): void {
+	autoClipResolved = true;
+	if (autoClipWatchdogTimer != null) {
+		clearTimeout(autoClipWatchdogTimer);
+		autoClipWatchdogTimer = null;
+	}
+}
+
 const libraryUI = {
 	toggle: document.getElementById('libraryViewToggle'),
 	container: document.getElementById('libraryContainer'),
@@ -3545,6 +3580,11 @@ async function initializePopup() {
 			return clipSite(activeTab.id);
 		});
 
+		// Watchdog: if neither display.md nor clip-error arrives within the timeout,
+		// surface a visible error instead of hanging on "Processing page..." forever.
+		// The batch flow uses 45s for the same purpose (see displayMdPromise above).
+		scheduleAutoClipWatchdog(45000);
+
 		await Promise.all([editorPromise, clipPromise]);
 	} catch (error) {
 		console.error(error);
@@ -4144,6 +4184,7 @@ async function sendToObsidian(e) {
 function notify(message) {
 	// message for displaying markdown
 	if (message.type === 'display.md') {
+		resolveAutoClipWatchdog();
 		setActiveSiteRuleState(
 			message.matchedSiteRule,
 			message.overriddenKeys,
@@ -4179,6 +4220,11 @@ function notify(message) {
 			dom.downloadButton?.focus();
 		}
 		refreshEditor();
+	} else if (message.type === 'clip-error') {
+		// Offscreen failed to convert the page. Surface the error instead of
+		// leaving the "Processing page..." spinner running indefinitely.
+		resolveAutoClipWatchdog();
+		showError(new Error(message.error || 'Clip failed'));
 	} else if (message.type === 'batch-progress') {
 		progressUI.show();
 

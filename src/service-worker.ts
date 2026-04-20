@@ -822,6 +822,16 @@ async function handleMessages(message: BackgroundHuhMessage, sender, sendRespons
 		case 'markdown-result':
 			await handleMarkdownResult(message);
 			break;
+		case 'process-error':
+			// Offscreen threw while handling a clip. Forward to popup so the
+			// spinner surfaces an error instead of spinning forever.
+			await browser.runtime.sendMessage({
+				type: 'clip-error',
+				error: message.error || 'Unknown clip error',
+			}).catch(() => {
+				// Popup may have been closed; swallow the lack-of-receivers error.
+			});
+			break;
 		case 'download-complete':
 			handleDownloadComplete(message);
 			break;
@@ -1328,9 +1338,10 @@ async function _removeBatchProgressOverlay(tabId) {
 				document.getElementById('snipsnip-batch-overlay-style')?.remove();
 			},
 		});
-  } catch (e) { /* ignore */
-    console.debug('[Batch] Could not remove progress overlay:', e);
-  }
+	} catch (e) {
+		console.debug('[Batch] Could not remove progress overlay:', e);
+	}
+}
 
 async function processBatchTab(
 	urlObj,
@@ -1701,7 +1712,12 @@ async function forwardGetArticleContent(tabId: number, selection: boolean, origi
  * @param filename - Filename for download
  * @param base64Content - Base64 encoded content to download
  */
-async function executeContentDownload(tabId: number, filename: string, base64Content: string, notificationDelta = null) {
+async function executeContentDownload(
+	tabId: number,
+	filename: string,
+	base64Content: string,
+	notificationDelta = null,
+) {
 	try {
 		await browser.scripting.executeScript({
 			target: { tabId: tabId },
