@@ -1,11 +1,153 @@
-// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { storage } from '@/shared/storage.ts';
-function _notifyExtension() {
-	// send a message that the content should be clipped
-	browser.runtime.sendMessage({ type: 'clip', dom: content });
+
+type SelectionAndDom = {
+	selection: string;
+	dom: string;
+	pageUrl: string;
+};
+
+type CaptureState = {
+	pageContextLoadPromise: Promise<boolean> | null;
+	pageContextScriptLoaded: boolean;
+	pageContextScriptFailed: boolean;
+	lastPageContextFailureAt: number;
+	pageContextRetryCooldownMs: number;
+	latexAttrName: string;
+	mathJaxSyncEventName: string;
+	mathJaxSyncRequestEventName: string;
+};
+
+type AccentColors = {
+	dark: string;
+	darker: string;
+	base: string;
+};
+
+type LinkPickerHandlers = {
+	mousemove?: (event: MouseEvent) => void;
+	click?: (event: MouseEvent) => void;
+	keydown?: (event: KeyboardEvent) => void;
+};
+
+type LinkPickerState = {
+	active: boolean;
+	selectedLinks: Set<string>;
+	selectedElements: Set<Element>;
+	hoveredElement: Element | null;
+	controlPanel: HTMLDivElement | null;
+	styleElement: HTMLStyleElement | null;
+	handlers: LinkPickerHandlers;
+	lastSelectedElement: Element | null;
+	accentColors: AccentColors | null;
+};
+
+type LinkPickerActivationMessage = {
+	type: 'ACTIVATE_LINK_PICKER';
+};
+
+type LinkPickerCompleteMessage = {
+	type: 'LINK_PICKER_COMPLETE';
+	links: string[];
+};
+
+type ClipMessage = {
+	type: 'clip';
+	dom: string;
+	selection: string;
+	pageUrl: string;
+};
+
+type MessageWithType = {
+	type: string;
+};
+
+type AccentKey = 'sage' | 'ocean' | 'slate' | 'rose' | 'amber';
+
+declare global {
+	interface Window {
+		snipsnipCaptureState?: CaptureState;
+		linkPickerState?: LinkPickerState;
+		linkPickerMessageListenerAdded?: boolean;
+	}
 }
 
-function getHTMLOfDocument() {
+function createCaptureState(): CaptureState {
+	return {
+		pageContextLoadPromise: null,
+		pageContextScriptLoaded: false,
+		pageContextScriptFailed: false,
+		lastPageContextFailureAt: 0,
+		pageContextRetryCooldownMs: 5000,
+		latexAttrName: 'snipsnip-latex',
+		mathJaxSyncEventName: 'snipsnip:mathjax-sync',
+		mathJaxSyncRequestEventName: 'snipsnip:mathjax-sync-request',
+	};
+}
+
+function createLinkPickerState(): LinkPickerState {
+	return {
+		active: false,
+		selectedLinks: new Set<string>(),
+		selectedElements: new Set<Element>(),
+		hoveredElement: null,
+		controlPanel: null,
+		styleElement: null,
+		handlers: {},
+		lastSelectedElement: null,
+		accentColors: null,
+	};
+}
+
+function getCaptureState(): CaptureState {
+	if (typeof window.snipsnipCaptureState === 'undefined') {
+		window.snipsnipCaptureState = createCaptureState();
+	}
+
+	return window.snipsnipCaptureState;
+}
+
+function getLinkPickerState(): LinkPickerState {
+	if (typeof window.linkPickerState === 'undefined') {
+		window.linkPickerState = createLinkPickerState();
+	}
+
+	return window.linkPickerState;
+}
+
+function getDocumentRoot(): HTMLElement {
+	return document.body ?? document.documentElement;
+}
+
+function isMessageWithType(message: unknown): message is MessageWithType {
+	return typeof message === 'object' && message !== null && 'type' in message;
+}
+
+function isLinkPickerActivationMessage(message: unknown): message is LinkPickerActivationMessage {
+	return isMessageWithType(message) && message.type === 'ACTIVATE_LINK_PICKER';
+}
+
+function isAccentKey(value: string): value is AccentKey {
+	return value in ACCENT_COLORS;
+}
+
+function _notifyExtension(): void {
+	const content = getSelectionAndDom();
+	if (!content) {
+		return;
+	}
+
+	const message: ClipMessage = {
+		type: 'clip',
+		dom: content.dom,
+		selection: content.selection,
+		pageUrl: content.pageUrl,
+	};
+	browser.runtime.sendMessage(message).catch((error: unknown) => {
+		console.debug('Failed to notify extension:', error);
+	});
+}
+
+function getHTMLOfDocument(): string {
 	const clonedDocument = new DOMParser().parseFromString(document.documentElement.outerHTML, 'text/html');
 
 	// make sure a title tag exists so that pageTitle is not empty and
@@ -20,7 +162,7 @@ function getHTMLOfDocument() {
 	// if the document doesn't have a "base" element make one
 	// this allows the DOM parser in future steps to fix relative uris
 	const baseEls = clonedDocument.head.getElementsByTagName('base');
-	let baseEl;
+	let baseEl: HTMLBaseElement;
 
 	if (baseEls.length > 0) {
 		baseEl = baseEls[0];
@@ -49,7 +191,7 @@ function getHTMLOfDocument() {
 }
 
 // code taken from here: https://www.reddit.com/r/javascript/comments/27bcao/anyone_have_a_method_for_finding_all_the_hidden/
-function removeHiddenNodes(sourceRoot, clonedRoot) {
+function removeHiddenNodes(sourceRoot: Element, clonedRoot: Element): Element {
 	const sourceChildren = Array.from(sourceRoot.children || []);
 	const clonedChildren = Array.from(clonedRoot.children || []);
 
@@ -80,99 +222,83 @@ function removeHiddenNodes(sourceRoot, clonedRoot) {
 }
 
 // code taken from here: https://stackoverflow.com/a/5084044/304786
-function getHTMLOfSelection() {
-	var range;
-	if (document.selection?.createRange) {
-		range = document.selection.createRange();
-		return range.htmlText;
-	} else if (window.getSelection) {
-		var selection = window.getSelection();
-		if (selection.rangeCount > 0) {
-			let content = '';
-			for (let i = 0; i < selection.rangeCount; i++) {
-				range = selection.getRangeAt(i);
-				var clonedSelection = range.cloneContents();
-				var div = document.createElement('div');
-				div.appendChild(clonedSelection);
-				content += div.innerHTML;
-			}
-			return content;
-		} else {
-			return '';
-		}
-	} else {
+
+function getHTMLOfSelection(): string {
+	const selection = window.getSelection();
+	if (!selection || selection.rangeCount === 0) {
 		return '';
 	}
+
+	let content = '';
+	for (let i = 0; i < selection.rangeCount; i++) {
+		const range = selection.getRangeAt(i);
+		const clonedSelection = range.cloneContents();
+		const div = document.createElement('div');
+		div.appendChild(clonedSelection);
+		content += div.innerHTML;
+	}
+
+	return content;
 }
 
-if (typeof window.snipsnipCaptureState === 'undefined') {
-	window.snipsnipCaptureState = {
-		pageContextLoadPromise: null,
-		pageContextScriptLoaded: false,
-		pageContextScriptFailed: false,
-		lastPageContextFailureAt: 0,
-		pageContextRetryCooldownMs: 5000,
-		latexAttrName: 'snipsnip-latex',
-		mathJaxSyncEventName: 'snipsnip:mathjax-sync',
-		mathJaxSyncRequestEventName: 'snipsnip:mathjax-sync-request',
-	};
-}
+getCaptureState();
 
 function hasRenderedMathJaxNodes() {
 	return !!document.querySelector('mjx-container, .MathJax, script[id^="MathJax-Element-"]');
 }
 
 function hasLatexTaggedMath() {
-	return !!document.querySelector(`[${window.snipsnipCaptureState.latexAttrName}]`);
+	return !!document.querySelector(`[${getCaptureState().latexAttrName}]`);
 }
 
 function requestMathJaxSyncFromPageContext() {
 	try {
-		window.dispatchEvent(new CustomEvent(window.snipsnipCaptureState.mathJaxSyncRequestEventName));
+		window.dispatchEvent(new CustomEvent(getCaptureState().mathJaxSyncRequestEventName));
 	} catch (_error) {
 		// Ignore event dispatch failures across contexts.
 	}
 }
 
-function loadPageContextScript() {
-	if (window.snipsnipCaptureState.pageContextScriptLoaded) {
+function loadPageContextScript(): Promise<boolean> {
+	const captureState = getCaptureState();
+	if (captureState.pageContextScriptLoaded) {
 		return Promise.resolve(true);
 	}
 
-	if (window.snipsnipCaptureState.pageContextScriptFailed) {
-		const elapsedSinceFailure = Date.now() - window.snipsnipCaptureState.lastPageContextFailureAt;
-		if (elapsedSinceFailure < window.snipsnipCaptureState.pageContextRetryCooldownMs) {
+	if (captureState.pageContextScriptFailed) {
+		const elapsedSinceFailure = Date.now() - captureState.lastPageContextFailureAt;
+		if (elapsedSinceFailure < captureState.pageContextRetryCooldownMs) {
 			return Promise.resolve(false);
 		}
-		window.snipsnipCaptureState.pageContextScriptFailed = false;
+		captureState.pageContextScriptFailed = false;
 	}
 
-	if (window.snipsnipCaptureState.pageContextLoadPromise) {
-		return window.snipsnipCaptureState.pageContextLoadPromise;
+	if (captureState.pageContextLoadPromise) {
+		return captureState.pageContextLoadPromise;
 	}
 
 	if (typeof browser === 'undefined' || !browser.runtime?.getURL) {
 		return Promise.resolve(false);
 	}
 
-	window.snipsnipCaptureState.pageContextLoadPromise = new Promise((resolve) => {
+	captureState.pageContextLoadPromise = new Promise((resolve: (value: boolean) => void) => {
 		let settled = false;
-		const settle = (value) => {
+		const settle = (value: boolean) => {
 			if (settled) {
 				return;
 			}
 			settled = true;
 			if (!value) {
 				// Allow retries on later captures.
-				window.snipsnipCaptureState.pageContextLoadPromise = null;
+				captureState.pageContextLoadPromise = null;
 			}
 			resolve(value);
 		};
 
-		const existingScript = document.querySelector('script[data-snipsnip-page-context="true"]');
+		const existingScript = document.querySelector<HTMLScriptElement>('script[data-snipsnip-page-context="true"]');
 		if (existingScript) {
 			if (existingScript.getAttribute('data-snipsnip-page-context-loaded') === 'true') {
-				window.snipsnipCaptureState.pageContextScriptLoaded = true;
+				captureState.pageContextScriptLoaded = true;
 				settle(true);
 				return;
 			}
@@ -183,12 +309,12 @@ function loadPageContextScript() {
 			}
 
 			existingScript.addEventListener('load', () => {
-				window.snipsnipCaptureState.pageContextScriptLoaded = true;
+				captureState.pageContextScriptLoaded = true;
 				settle(true);
 			}, { once: true });
 			existingScript.addEventListener('error', () => {
-				window.snipsnipCaptureState.pageContextScriptFailed = true;
-				window.snipsnipCaptureState.lastPageContextFailureAt = Date.now();
+				captureState.pageContextScriptFailed = true;
+				captureState.lastPageContextFailureAt = Date.now();
 				settle(false);
 			}, { once: true });
 
@@ -196,24 +322,24 @@ function loadPageContextScript() {
 			return;
 		}
 
-		var script = document.createElement('script');
+		const script = document.createElement('script');
 		script.src = browser.runtime.getURL('/page-context.js');
 		script.setAttribute('data-snipsnip-page-context', 'true');
 		script.onload = () => {
-			window.snipsnipCaptureState.pageContextScriptLoaded = true;
-			window.snipsnipCaptureState.pageContextScriptFailed = false;
+			captureState.pageContextScriptLoaded = true;
+			captureState.pageContextScriptFailed = false;
 			script.setAttribute('data-snipsnip-page-context-loaded', 'true');
 			settle(true);
 		};
 		script.onerror = () => {
-			window.snipsnipCaptureState.pageContextScriptFailed = true;
-			window.snipsnipCaptureState.lastPageContextFailureAt = Date.now();
+			captureState.pageContextScriptFailed = true;
+			captureState.lastPageContextFailureAt = Date.now();
 			script.setAttribute('data-snipsnip-page-context-failed', 'true');
 			settle(false);
 		};
 
 		setTimeout(() => {
-			if (!window.snipsnipCaptureState.pageContextScriptLoaded) {
+			if (!captureState.pageContextScriptLoaded) {
 				settle(false);
 			}
 		}, 1000);
@@ -221,14 +347,14 @@ function loadPageContextScript() {
 		(document.head || document.documentElement).appendChild(script);
 	});
 
-	return window.snipsnipCaptureState.pageContextLoadPromise;
+	return captureState.pageContextLoadPromise;
 }
 
-function delay(milliseconds) {
-	return new Promise(resolve => setTimeout(resolve, milliseconds));
+function delay(milliseconds: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function waitForMathJaxLatexTagging(timeoutMs = 1400, pollIntervalMs = 70) {
+async function waitForMathJaxLatexTagging(timeoutMs = 1400, pollIntervalMs = 70): Promise<boolean> {
 	if (hasLatexTaggedMath()) {
 		return true;
 	}
@@ -242,7 +368,7 @@ async function waitForMathJaxLatexTagging(timeoutMs = 1400, pollIntervalMs = 70)
 		syncedAtLeastOnce = true;
 	};
 
-	window.addEventListener(window.snipsnipCaptureState.mathJaxSyncEventName, syncListener);
+	window.addEventListener(getCaptureState().mathJaxSyncEventName, syncListener);
 
 	try {
 		const startedAt = Date.now();
@@ -261,13 +387,13 @@ async function waitForMathJaxLatexTagging(timeoutMs = 1400, pollIntervalMs = 70)
 			}
 		}
 	} finally {
-		window.removeEventListener(window.snipsnipCaptureState.mathJaxSyncEventName, syncListener);
+		window.removeEventListener(getCaptureState().mathJaxSyncEventName, syncListener);
 	}
 
 	return hasLatexTaggedMath();
 }
 
-async function snipsnipPrepareForCapture() {
+async function snipsnipPrepareForCapture(): Promise<void> {
 	try {
 		if (!hasRenderedMathJaxNodes() && !hasLatexTaggedMath()) {
 			return;
@@ -280,7 +406,7 @@ async function snipsnipPrepareForCapture() {
 	}
 }
 
-function getSelectionAndDom() {
+function getSelectionAndDom(): SelectionAndDom | null {
 	try {
 		const dom = getHTMLOfDocument();
 		const selection = getHTMLOfSelection();
@@ -291,8 +417,8 @@ function getSelectionAndDom() {
 		}
 
 		return {
-			selection: selection,
-			dom: dom,
+			selection,
+			dom,
 			pageUrl: window.location.href,
 		};
 	} catch (error) {
@@ -303,31 +429,31 @@ function getSelectionAndDom() {
 
 // This function must be called in a visible page, such as a browserAction popup
 // or a content script. Calling it in a background page has no effect!
-function _copyToClipboard(text) {
+function _copyToClipboard(text: string): void {
 	if (navigator.clipboard?.writeText) {
-		navigator.clipboard.writeText(text);
+		void navigator.clipboard.writeText(text);
 	} else {
 		// Fallback
 		const textarea = document.createElement('textarea');
 		textarea.value = text;
 		textarea.style.position = 'fixed';
 		textarea.style.left = '-999999px';
-		document.body.appendChild(textarea);
+		getDocumentRoot().appendChild(textarea);
 		textarea.select();
 		document.execCommand('copy');
-		document.body.removeChild(textarea);
+		textarea.remove();
 	}
 }
 
-function _downloadMarkdown(filename, text) {
+function _downloadMarkdown(filename: string, text: string): void {
 	const datauri = `data:text/markdown;base64,${text}`;
-	var link = document.createElement('a');
+	const link = document.createElement('a');
 	link.download = filename;
 	link.href = datauri;
 	link.click();
 }
 
-function _downloadImage(_filename, _url) {
+function _downloadImage(_filename: string, _url: string): void {
 	/* Link with a download attribute? CORS says no.
     var link = document.createElement('a');
     link.download = filename.substring(0, filename.lastIndexOf('.'));
@@ -376,23 +502,12 @@ loadPageContextScript();
 
 // ===== Link Picker Feature =====
 
-// Use var to allow redeclaration if script is injected multiple times
-if (typeof window.linkPickerState === 'undefined') {
-	window.linkPickerState = {
-		active: false,
-		selectedLinks: new Set(),
-		selectedElements: new Set(),
-		hoveredElement: null,
-		controlPanel: null,
-		styleElement: null,
-		handlers: {},
-	};
-}
+getLinkPickerState();
 
 // Listen for link picker activation message
 if (!window.linkPickerMessageListenerAdded) {
-	browser.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
-		if (message.type === 'ACTIVATE_LINK_PICKER') {
+	browser.runtime.onMessage.addListener((message: unknown) => {
+		if (isLinkPickerActivationMessage(message)) {
 			initLinkPickerMode();
 			return Promise.resolve({ success: true });
 		}
@@ -400,8 +515,7 @@ if (!window.linkPickerMessageListenerAdded) {
 	window.linkPickerMessageListenerAdded = true;
 }
 
-// Use var to allow redeclaration if the content script is injected multiple times.
-var ACCENT_COLORS = {
+const ACCENT_COLORS: Record<AccentKey, AccentColors> = {
 	sage: { dark: '#56735A', darker: '#3F5441', base: '#6B8E6F' },
 	ocean: { dark: '#4A7A92', darker: '#385D6F', base: '#5B8FA8' },
 	slate: { dark: '#56657A', darker: '#414D5C', base: '#6B7B8E' },
@@ -409,31 +523,36 @@ var ACCENT_COLORS = {
 	amber: { dark: '#967840', darker: '#7A6030', base: '#B08E50' },
 };
 
-async function initLinkPickerMode() {
-	if (window.linkPickerState.active) {
+async function initLinkPickerMode(): Promise<void> {
+	const linkPickerState = getLinkPickerState();
+	if (linkPickerState.active) {
 		console.log('Link picker already active');
 		return;
 	}
 
-	window.linkPickerState.active = true;
-	window.linkPickerState.selectedLinks = new Set();
-	window.linkPickerState.selectedElements = new Set();
-	window.linkPickerState.lastSelectedElement = null;
+	linkPickerState.active = true;
+	linkPickerState.selectedLinks = new Set<string>();
+	linkPickerState.selectedElements = new Set<Element>();
+	linkPickerState.lastSelectedElement = null;
 
 	// Read accent color from storage
 	let accentColors = ACCENT_COLORS.sage;
 	try {
-		const accent = (await storage.getItem<string>('sync:popupAccent')) || 'sage';
-		accentColors = ACCENT_COLORS[accent] || ACCENT_COLORS.sage;
-	} catch (_e) { /* use default */ }
+		const accent = (await storage.getItem<string>('sync:popupAccent')) ?? 'sage';
+		if (isAccentKey(accent)) {
+			accentColors = ACCENT_COLORS[accent];
+		}
+	} catch (_e) {
+		// Default accent already set.
+	}
 
-	window.linkPickerState.accentColors = accentColors;
+	linkPickerState.accentColors = accentColors;
 
 	// Inject CSS styles
 	injectLinkPickerStyles(accentColors);
 
 	// Create control panel
-	createControlPanel(accentColors);
+	createControlPanel();
 
 	// Add event listeners
 	setupLinkPickerEventListeners();
@@ -441,12 +560,13 @@ async function initLinkPickerMode() {
 	console.log('Link picker mode activated');
 }
 
-function injectLinkPickerStyles(colors) {
+function injectLinkPickerStyles(colors: AccentColors): void {
+	const linkPickerState = getLinkPickerState();
 	const base = colors.base;
 	const dark = colors.dark;
 	const darker = colors.darker;
 	// Extract RGB from hex for rgba usage
-	const hexToRgb = (hex) => {
+	const hexToRgb = (hex: string): string => {
 		const r = parseInt(hex.slice(1, 3), 16);
 		const g = parseInt(hex.slice(3, 5), 16);
 		const b = parseInt(hex.slice(5, 7), 16);
@@ -676,18 +796,19 @@ function injectLinkPickerStyles(colors) {
         }
     `;
 
-	window.linkPickerState.styleElement = document.createElement('style');
-	window.linkPickerState.styleElement.textContent = styles;
-	document.head.appendChild(window.linkPickerState.styleElement);
+	linkPickerState.styleElement = document.createElement('style');
+	linkPickerState.styleElement.textContent = styles;
+	(document.head ?? document.documentElement).appendChild(linkPickerState.styleElement);
 
 	// Create overlay
 	const overlay = document.createElement('div');
 	overlay.className = 'snipsnip-link-picker-overlay';
 	overlay.id = 'snipsnip-link-picker-overlay';
-	document.body.appendChild(overlay);
+	getDocumentRoot().appendChild(overlay);
 }
 
-function createControlPanel(_colors) {
+function createControlPanel(): void {
+	const linkPickerState = getLinkPickerState();
 	const panel = document.createElement('div');
 	panel.className = 'snipsnip-link-picker-panel';
 	panel.id = 'snipsnip-link-picker-panel';
@@ -716,83 +837,94 @@ function createControlPanel(_colors) {
             Press ESC to cancel
         </div>
     `;
-	document.body.appendChild(panel);
-	window.linkPickerState.controlPanel = panel;
+	getDocumentRoot().appendChild(panel);
+	linkPickerState.controlPanel = panel;
 
 	// Add button event listeners
-	document.getElementById('snipsnip-link-picker-done').addEventListener('click', finishLinkPicker);
-	document.getElementById('snipsnip-link-picker-cancel').addEventListener('click', cancelLinkPicker);
-	document.getElementById('snipsnip-link-picker-undo').addEventListener('click', undoLastSelection);
-	document.getElementById('snipsnip-link-picker-clear').addEventListener('click', clearAllSelections);
+	panel.querySelector<HTMLButtonElement>('#snipsnip-link-picker-done')?.addEventListener('click', finishLinkPicker);
+	panel.querySelector<HTMLButtonElement>('#snipsnip-link-picker-cancel')?.addEventListener('click', cancelLinkPicker);
+	panel.querySelector<HTMLButtonElement>('#snipsnip-link-picker-undo')?.addEventListener('click', undoLastSelection);
+	panel.querySelector<HTMLButtonElement>('#snipsnip-link-picker-clear')?.addEventListener('click', clearAllSelections);
 }
 
-function setupLinkPickerEventListeners() {
+function setupLinkPickerEventListeners(): void {
+	const linkPickerState = getLinkPickerState();
 	// Mouse move handler
-	window.linkPickerState.handlers.mousemove = (e) => {
+	linkPickerState.handlers.mousemove = (event: MouseEvent) => {
+		const target = event.target;
+		if (!(target instanceof Element)) {
+			return;
+		}
+
 		// Ignore if hovering over control panel or its children
-		if (e.target.closest('#snipsnip-link-picker-panel')) {
+		if (target.closest('#snipsnip-link-picker-panel')) {
 			removeHighlight();
 			return;
 		}
 
-		const element = e.target;
-
 		// Don't highlight if it's our overlay or already selected
-		if (
-			element.id === 'snipsnip-link-picker-overlay'
-			|| window.linkPickerState.selectedElements.has(element)
-		) {
+		if (target.id === 'snipsnip-link-picker-overlay' || linkPickerState.selectedElements.has(target)) {
 			return;
 		}
 
-		highlightElement(element, e.clientX, e.clientY);
+		highlightElement(target, event.clientX, event.clientY);
 	};
 
 	// Click handler
-	window.linkPickerState.handlers.click = (e) => {
-		// Ignore clicks on control panel
-		if (e.target.closest('#snipsnip-link-picker-panel')) {
+	linkPickerState.handlers.click = (event: MouseEvent) => {
+		const target = event.target;
+		if (!(target instanceof Element)) {
 			return;
 		}
 
-		e.preventDefault();
-		e.stopPropagation();
+		// Ignore clicks on control panel
+		if (target.closest('#snipsnip-link-picker-panel')) {
+			return;
+		}
 
-		const element = e.target;
+		event.preventDefault();
+		event.stopPropagation();
 
 		// Toggle selection — pass coords for the ripple
-		if (window.linkPickerState.selectedElements.has(element)) {
-			deselectElement(element, e.clientX, e.clientY);
+		if (linkPickerState.selectedElements.has(target)) {
+			deselectElement(target, event.clientX, event.clientY);
 		} else {
-			selectElement(element, e.clientX, e.clientY);
+			selectElement(target, event.clientX, event.clientY);
 		}
 	};
 
 	// Keyboard handler
-	window.linkPickerState.handlers.keydown = (e) => {
-		if (e.key === 'Escape') {
-			e.preventDefault();
+	linkPickerState.handlers.keydown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
 			cancelLinkPicker();
 		}
 	};
 
 	// Add listeners
-	document.addEventListener('mousemove', window.linkPickerState.handlers.mousemove, true);
-	document.addEventListener('click', window.linkPickerState.handlers.click, true);
-	document.addEventListener('keydown', window.linkPickerState.handlers.keydown, true);
+	if (linkPickerState.handlers.mousemove) {
+		document.addEventListener('mousemove', linkPickerState.handlers.mousemove, true);
+	}
+	if (linkPickerState.handlers.click) {
+		document.addEventListener('click', linkPickerState.handlers.click, true);
+	}
+	if (linkPickerState.handlers.keydown) {
+		document.addEventListener('keydown', linkPickerState.handlers.keydown, true);
+	}
 }
 
-function highlightElement(element, mouseX, mouseY) {
+function highlightElement(element: Element, mouseX: number, mouseY: number): void {
+	const linkPickerState = getLinkPickerState();
 	// Remove previous highlight
 	removeHighlight();
 
 	// Don't highlight selected elements
-	if (window.linkPickerState.selectedElements.has(element)) {
+	if (linkPickerState.selectedElements.has(element)) {
 		return;
 	}
 
 	element.classList.add('snipsnip-link-picker-highlight');
-	window.linkPickerState.hoveredElement = element;
+	linkPickerState.hoveredElement = element;
 
 	// Count links in this element
 	const linkCount = extractLinksFromElement(element).length;
@@ -804,15 +936,16 @@ function highlightElement(element, mouseX, mouseY) {
 	}
 }
 
-function removeHighlight() {
-	if (window.linkPickerState.hoveredElement) {
-		window.linkPickerState.hoveredElement.classList.remove('snipsnip-link-picker-highlight');
-		window.linkPickerState.hoveredElement = null;
+function removeHighlight(): void {
+	const linkPickerState = getLinkPickerState();
+	if (linkPickerState.hoveredElement) {
+		linkPickerState.hoveredElement.classList.remove('snipsnip-link-picker-highlight');
+		linkPickerState.hoveredElement = null;
 	}
 	removeTooltip();
 }
 
-function showTooltip(text, x, y) {
+function showTooltip(text: string, x: number, y: number): void {
 	removeTooltip();
 
 	const tooltip = document.createElement('div');
@@ -821,17 +954,17 @@ function showTooltip(text, x, y) {
 	tooltip.textContent = text;
 	tooltip.style.left = `${x + 10}px`;
 	tooltip.style.top = `${y + 10}px`;
-	document.body.appendChild(tooltip);
+	getDocumentRoot().appendChild(tooltip);
 }
 
-function removeTooltip() {
+function removeTooltip(): void {
 	const tooltip = document.getElementById('snipsnip-link-picker-tooltip');
 	if (tooltip) {
 		tooltip.remove();
 	}
 }
 
-function spawnClickRipple(x, y, color) {
+function spawnClickRipple(x: number, y: number, color: string): void {
 	const size = 56;
 	const ripple = document.createElement('div');
 	ripple.className = 'snipsnip-click-ripple';
@@ -842,11 +975,12 @@ function spawnClickRipple(x, y, color) {
 		`top: ${y - size / 2}px`,
 		`background: ${color}`,
 	].join(';');
-	document.body.appendChild(ripple);
+	getDocumentRoot().appendChild(ripple);
 	ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
 }
 
-function selectElement(element, clientX = 0, clientY = 0) {
+function selectElement(element: Element, clientX = 0, clientY = 0): void {
+	const linkPickerState = getLinkPickerState();
 	const links = extractLinksFromElement(element);
 
 	if (links.length === 0) {
@@ -856,31 +990,36 @@ function selectElement(element, clientX = 0, clientY = 0) {
 	}
 
 	// Add links to set
-	links.forEach(link => window.linkPickerState.selectedLinks.add(link));
+	links.forEach((link) => {
+		linkPickerState.selectedLinks.add(link);
+	});
 
 	// Mark element as selected
-	window.linkPickerState.selectedElements.add(element);
-	window.linkPickerState.lastSelectedElement = element;
+	linkPickerState.selectedElements.add(element);
+	linkPickerState.lastSelectedElement = element;
 	element.classList.remove('snipsnip-link-picker-highlight');
 	element.classList.add('snipsnip-link-picker-selected');
 
 	// Accent-colored ripple at cursor
-	const ac = window.linkPickerState.accentColors || ACCENT_COLORS.sage;
-	const hexToRgbInline = (hex) =>
+	const ac = linkPickerState.accentColors ?? ACCENT_COLORS.sage;
+	const hexToRgbInline = (hex: string): string =>
 		`${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}`;
 	spawnClickRipple(clientX, clientY, `rgba(${hexToRgbInline(ac.base)}, 0.4)`);
 
 	updateLinkCount();
 }
 
-function deselectElement(element, clientX = 0, clientY = 0) {
+function deselectElement(element: Element, clientX = 0, clientY = 0): void {
+	const linkPickerState = getLinkPickerState();
 	const links = extractLinksFromElement(element);
 
 	// Remove links from set
-	links.forEach(link => window.linkPickerState.selectedLinks.delete(link));
+	links.forEach((link) => {
+		linkPickerState.selectedLinks.delete(link);
+	});
 
 	// Unmark element
-	window.linkPickerState.selectedElements.delete(element);
+	linkPickerState.selectedElements.delete(element);
 	element.classList.remove('snipsnip-link-picker-selected');
 
 	// Stone ripple (deselect)
@@ -889,35 +1028,39 @@ function deselectElement(element, clientX = 0, clientY = 0) {
 	updateLinkCount();
 }
 
-function undoLastSelection() {
-	const last = window.linkPickerState.lastSelectedElement;
-	if (last && window.linkPickerState.selectedElements.has(last)) {
+function undoLastSelection(): void {
+	const linkPickerState = getLinkPickerState();
+	const last = linkPickerState.lastSelectedElement;
+	if (last && linkPickerState.selectedElements.has(last)) {
 		deselectElement(last);
-		window.linkPickerState.lastSelectedElement = null;
+		linkPickerState.lastSelectedElement = null;
 	}
 }
 
-function clearAllSelections() {
-	const elements = Array.from(window.linkPickerState.selectedElements);
+function clearAllSelections(): void {
+	const linkPickerState = getLinkPickerState();
+	const elements = Array.from(linkPickerState.selectedElements);
 	for (const el of elements) {
 		deselectElement(el);
 	}
-	window.linkPickerState.lastSelectedElement = null;
+	linkPickerState.lastSelectedElement = null;
 }
 
-function extractLinksFromElement(element) {
-	const links = new Set();
-	const anchors = Array.from(element.querySelectorAll('a[href]'));
+function extractLinksFromElement(element: Element): string[] {
+	const links = new Set<string>();
+	const anchors = Array.from(element.querySelectorAll<HTMLAnchorElement>('a[href]'));
 
 	// Also check if the element itself is a link
-	if (element.tagName === 'A' && element.href) {
+	if (element instanceof HTMLAnchorElement && element.href) {
 		anchors.push(element);
 	}
 
-	anchors.forEach(a => {
+	anchors.forEach((anchor) => {
 		try {
-			const href = a.getAttribute('href');
-			if (!href) return;
+			const href = anchor.getAttribute('href');
+			if (!href) {
+				return;
+			}
 
 			// Convert to absolute URL
 			const absolute = new URL(href, window.location.href);
@@ -926,17 +1069,17 @@ function extractLinksFromElement(element) {
 			if (absolute.protocol === 'http:' || absolute.protocol === 'https:') {
 				links.add(absolute.href);
 			}
-		} catch (e) {
+		} catch (error) {
 			// Invalid URL, skip
-			console.debug('Invalid URL:', e);
+			console.debug('Invalid URL:', error);
 		}
 	});
 
 	return Array.from(links);
 }
 
-function updateLinkCount() {
-	const count = window.linkPickerState.selectedLinks.size;
+function updateLinkCount(): void {
+	const count = getLinkPickerState().selectedLinks.size;
 	const countElement = document.getElementById('snipsnip-link-count');
 	const doneBtn = document.getElementById('snipsnip-link-picker-done');
 
@@ -962,8 +1105,8 @@ function updateLinkCount() {
 	}
 }
 
-function finishLinkPicker() {
-	const links = Array.from(window.linkPickerState.selectedLinks);
+function finishLinkPicker(): void {
+	const links = Array.from(getLinkPickerState().selectedLinks);
 
 	if (links.length === 0) {
 		alert('No links selected. Please select elements containing links before clicking Done.');
@@ -971,7 +1114,7 @@ function finishLinkPicker() {
 	}
 
 	// Save links to storage so popup can retrieve them when it reopens
-	storage.setItems([
+	void storage.setItems([
 		{ key: 'local:linkPickerResults', value: links },
 		{ key: 'local:linkPickerTimestamp', value: Date.now() },
 	]).then(() => {
@@ -981,10 +1124,11 @@ function finishLinkPicker() {
 		showSuccessNotification(links.length);
 
 		// Also send message in case popup is still open
-		browser.runtime.sendMessage({
+		const message: LinkPickerCompleteMessage = {
 			type: 'LINK_PICKER_COMPLETE',
-			links: links,
-		}).catch(_err => {
+			links,
+		};
+		browser.runtime.sendMessage(message).catch((_err: unknown) => {
 			// Popup might be closed, that's okay - we saved to storage
 			console.log('Popup closed, links saved to storage');
 		});
@@ -996,8 +1140,8 @@ function finishLinkPicker() {
 	});
 }
 
-function showSuccessNotification(linkCount) {
-	const ac = window.linkPickerState.accentColors || ACCENT_COLORS.sage;
+function showSuccessNotification(linkCount: number): void {
+	const ac = getLinkPickerState().accentColors ?? ACCENT_COLORS.sage;
 	const notification = document.createElement('div');
 	notification.style.cssText = `
         position: fixed;
@@ -1023,7 +1167,7 @@ function showSuccessNotification(linkCount) {
             Reopen the extension to add them to the batch processor
         </div>
     `;
-	document.body.appendChild(notification);
+	getDocumentRoot().appendChild(notification);
 
 	// Remove after 2 seconds
 	setTimeout(() => {
@@ -1032,14 +1176,15 @@ function showSuccessNotification(linkCount) {
 	}, 1700);
 }
 
-function cancelLinkPicker() {
+function cancelLinkPicker(): void {
 	// Clear any stored results
-	storage.removeItems(['local:linkPickerResults', 'local:linkPickerTimestamp']).then(() => {
+	void storage.removeItems(['local:linkPickerResults', 'local:linkPickerTimestamp']).then(() => {
 		// Also send message in case popup is still open
-		browser.runtime.sendMessage({
+		const message: LinkPickerCompleteMessage = {
 			type: 'LINK_PICKER_COMPLETE',
 			links: [],
-		}).catch(_err => {
+		};
+		browser.runtime.sendMessage(message).catch((_err: unknown) => {
 			// Popup might be closed, that's okay
 			console.log('Popup closed');
 		});
@@ -1048,20 +1193,21 @@ function cancelLinkPicker() {
 	});
 }
 
-function cleanupLinkPicker() {
+function cleanupLinkPicker(): void {
+	const linkPickerState = getLinkPickerState();
 	// Remove event listeners
-	if (window.linkPickerState.handlers.mousemove) {
-		document.removeEventListener('mousemove', window.linkPickerState.handlers.mousemove, true);
+	if (linkPickerState.handlers.mousemove) {
+		document.removeEventListener('mousemove', linkPickerState.handlers.mousemove, true);
 	}
-	if (window.linkPickerState.handlers.click) {
-		document.removeEventListener('click', window.linkPickerState.handlers.click, true);
+	if (linkPickerState.handlers.click) {
+		document.removeEventListener('click', linkPickerState.handlers.click, true);
 	}
-	if (window.linkPickerState.handlers.keydown) {
-		document.removeEventListener('keydown', window.linkPickerState.handlers.keydown, true);
+	if (linkPickerState.handlers.keydown) {
+		document.removeEventListener('keydown', linkPickerState.handlers.keydown, true);
 	}
 
 	// Remove highlights from selected elements
-	window.linkPickerState.selectedElements.forEach(element => {
+	linkPickerState.selectedElements.forEach((element) => {
 		element.classList.remove('snipsnip-link-picker-selected');
 	});
 
@@ -1069,8 +1215,8 @@ function cleanupLinkPicker() {
 	removeHighlight();
 
 	// Remove control panel
-	if (window.linkPickerState.controlPanel) {
-		window.linkPickerState.controlPanel.remove();
+	if (linkPickerState.controlPanel) {
+		linkPickerState.controlPanel.remove();
 	}
 
 	// Remove overlay
@@ -1080,22 +1226,12 @@ function cleanupLinkPicker() {
 	}
 
 	// Remove styles
-	if (window.linkPickerState.styleElement) {
-		window.linkPickerState.styleElement.remove();
+	if (linkPickerState.styleElement) {
+		linkPickerState.styleElement.remove();
 	}
 
 	// Reset state
-	window.linkPickerState = {
-		active: false,
-		selectedLinks: new Set(),
-		selectedElements: new Set(),
-		hoveredElement: null,
-		controlPanel: null,
-		styleElement: null,
-		handlers: {},
-		lastSelectedElement: null,
-		accentColors: null,
-	};
+	window.linkPickerState = createLinkPickerState();
 
 	console.log('Link picker mode deactivated');
 }
