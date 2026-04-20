@@ -14,6 +14,16 @@ import '@/lib/vendors/highlight.ts';
 
 const turndownPluginGfm = { highlightedCodeBlock, strikethrough, tables, taskListItems };
 
+// Snapshot turndown's built-in `escape` at module load. Earlier builds mutated
+// `TurndownService.prototype.escape` during a clip and could leave it as
+// `undefined` if options changed mid-flight or the DOMContentLoaded-dependent
+// defaultEscape assignment raced the first clip. Capturing it here, once,
+// means per-instance assignment can always fall back to a real function
+// regardless of what downstream code did to the prototype.
+const TURNDOWN_BUILTIN_ESCAPE: (s: string) => string =
+	(TurndownService.prototype as { escape?: (s: string) => string }).escape
+		?? ((s: string) => s);
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initOffscreen);
 
@@ -727,16 +737,13 @@ function turndown(content, options, article) {
 	console.log('Starting turndown with options:', options.tableFormatting); // Debug log
 	const uriBase = article.uriBase || article.baseURI;
 
-	// Per-instance escape override. We used to mutate TurndownService.prototype
-	// here, which raced with `initOffscreen` (which set `defaultEscape` only on
-	// DOMContentLoaded). If a clip message arrived before DOMContentLoaded,
-	// `prototype.escape = prototype.defaultEscape` (undefined) permanently
-	// broke every subsequent clip with "self.escape is not a function". Scope
-	// the override to this one instance — no timing, no cross-instance leakage.
+	// Always assign `escape` per-instance so turndown's `process()` never has
+	// to fall back to the prototype. We've been bitten by "self.escape is not
+	// a function" when a prior session / HMR / stale offscreen left
+	// TurndownService.prototype.escape as undefined. Per-instance + snapshot
+	// of the original escape from module-init is the belt-and-suspenders fix.
 	var turndownService = new TurndownService(options);
-	if (!options.turndownEscape) {
-		turndownService.escape = (s) => s;
-	}
+	turndownService.escape = options.turndownEscape ? TURNDOWN_BUILTIN_ESCAPE : (s) => s;
 
 	// Add only non-table GFM features
 	turndownService.use([
