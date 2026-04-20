@@ -1919,11 +1919,20 @@ async function handleClipRequest(message, tabId) {
 		pageUrl = tabInfo?.url || null;
 	}
 
-	await sendMessage('process-content', {
+	// Sending process-content uses the raw runtime message API (fire-and-forget)
+	// rather than @webext-core's request/response sendMessage. Reason: chrome's
+	// offscreen document may not have its @webext-core listener fully registered
+	// at the moment SW issues its first process-content after createDocument
+	// resolves — that races the module's `onMessage('process-content', ...)`
+	// call and causes @webext-core to throw "No response". The response we care
+	// about is `markdown-result` / `process-error` (sent as separate messages
+	// from offscreen), not the ack of the dispatch itself.
+	await browser.runtime.sendMessage({
 		target: 'offscreen',
+		type: 'process-content',
 		requestId,
 		data: { ...message, pageUrl },
-		tabId: tabId ?? null,
+		tabId,
 		options,
 	});
 }

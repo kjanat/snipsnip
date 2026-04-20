@@ -26,15 +26,6 @@ export interface ClipRequest {
 	[extraOption: string]: unknown;
 }
 
-/** Payload the SW forwards to the offscreen document for conversion. */
-export interface ProcessContentRequest {
-	target: 'offscreen';
-	data: ClipRequest;
-	tabId: number | null | undefined;
-	options: Record<string, unknown>;
-	requestId: string;
-}
-
 /** What the offscreen document sends back on success. */
 export interface MarkdownResult {
 	requestId: string;
@@ -81,7 +72,10 @@ export interface ClipError {
  */
 export interface ExtensionMessages {
 	clip(data: ClipRequest): void;
-	'process-content'(data: ProcessContentRequest): void;
+	// SW → offscreen uses raw browser.runtime.sendMessage (fire-and-forget)
+	// because chrome.offscreen.createDocument + @webext-core listener
+	// registration race each other; the response isn't needed anyway since
+	// offscreen sends markdown-result / process-error as separate messages.
 	'markdown-result'(data: MarkdownResult): void;
 	'process-error'(data: ProcessError): void;
 	'display.md'(data: DisplayMarkdown): void;

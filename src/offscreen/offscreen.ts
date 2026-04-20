@@ -32,17 +32,6 @@ document.addEventListener('DOMContentLoaded', initOffscreen);
 // 'article-dom-data', downloads, clipboard, bridge capture, etc.
 browser.runtime.onMessage.addListener(handleMessages);
 
-// Typed listener for the clip pipeline. Directly handles `process-content`
-// bypassing the `target === 'offscreen'` gate in handleMessages.
-onMessage('process-content', async (msg) => {
-	await processContent({
-		requestId: msg.data.requestId,
-		data: msg.data.data,
-		tabId: msg.data.tabId,
-		options: msg.data.options,
-	});
-});
-
 // Notify service worker that offscreen document is ready
 browser.runtime.sendMessage({ type: 'offscreen-ready' });
 
@@ -193,7 +182,9 @@ function handleMessages(message, _sender) {
 
 	return (async () => {
 		switch (message.type) {
-			// 'process-content' is now handled by onMessage('process-content') above.
+			case 'process-content':
+				await processContent(message);
+				break;
 			case 'download-markdown':
 				await downloadMarkdown(
 					message.markdown,
