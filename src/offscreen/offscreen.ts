@@ -74,7 +74,12 @@ type RuntimeArticle = UnknownRecord & {
 };
 
 type OffscreenOptions = UnknownRecord & {
-	tableFormatting?: UnknownRecord;
+	tableFormatting?: {
+		stripLinks?: boolean;
+		stripFormatting?: boolean;
+		prettyPrint?: boolean;
+		centerText?: boolean;
+	};
 	downloadImages?: boolean;
 	mdClipsFolder?: string | null;
 	frontmatter?: string;
@@ -117,7 +122,29 @@ type OffscreenRuntimeOptions = EffectiveMarkdownOptions & OffscreenOptions & {
 	disallowedChars: string;
 	imageStyle: string;
 	imageRefStyle: string;
+	includeTemplate: boolean;
+	downloadImages: boolean;
+	fence: string;
+	preserveCodeFormatting: boolean;
+	autoDetectCodeLanguage: boolean;
+	hashtagHandling: string;
 	downloadMode?: string;
+	obsidianVault?: string;
+	obsidianFolder?: string;
+	linkStyle?: string;
+	linkReferenceStyle?: string;
+	codeBlockStyle?: string;
+	bulletListMarker?: string;
+	hr?: string;
+	strongDelimiter?: string;
+	emDelimiter?: string;
+	turndownEscape?: boolean;
+	tableFormatting?: {
+		stripLinks?: boolean;
+		stripFormatting?: boolean;
+		prettyPrint?: boolean;
+		centerText?: boolean;
+	};
 	saveAs?: boolean;
 };
 
@@ -162,6 +189,8 @@ type ArticleContentPayload = {
 type DownloadLikeApi = {
 	download(options: { url: string; filename: string; saveAs?: boolean }): Promise<number>;
 };
+
+type TurndownOptionsInput = ConstructorParameters<typeof TurndownService>[0];
 
 type RecoveryPromotionResult = {
 	changed: boolean;
@@ -261,6 +290,60 @@ function toErrorMessage(error: unknown): string {
 
 function toErrorStack(error: unknown): string | null {
 	return error instanceof Error ? (error.stack ?? null) : null;
+}
+
+function toTurndownHeadingStyle(value: unknown): 'atx' | 'setext' | undefined {
+	return value === 'setext' ? 'setext' : 'atx';
+}
+
+function toTurndownBulletListMarker(value: unknown): '-' | '+' | '*' | undefined {
+	if (value === '+' || value === '*') {
+		return value;
+	}
+
+	return '-';
+}
+
+function toTurndownCodeBlockStyle(value: unknown): 'fenced' | 'indented' | undefined {
+	return value === 'indented' ? 'indented' : 'fenced';
+}
+
+function toTurndownFence(value: unknown): '```' | '~~~' | undefined {
+	return value === '~~~' ? '~~~' : '```';
+}
+
+function toTurndownEmDelimiter(value: unknown): '_' | '*' | undefined {
+	return value === '_' ? '_' : '*';
+}
+
+function toTurndownStrongDelimiter(value: unknown): '**' | '__' | undefined {
+	return value === '__' ? '__' : '**';
+}
+
+function toTurndownLinkStyle(value: unknown): 'inlined' | 'referenced' | undefined {
+	return value === 'referenced' ? 'referenced' : 'inlined';
+}
+
+function toTurndownLinkReferenceStyle(value: unknown): 'full' | 'collapsed' | 'shortcut' | undefined {
+	if (value === 'collapsed' || value === 'shortcut') {
+		return value;
+	}
+
+	return 'full';
+}
+
+function createTurndownOptions(options: OffscreenRuntimeOptions): TurndownOptionsInput {
+	return {
+		headingStyle: toTurndownHeadingStyle(options.headingStyle),
+		hr: typeof options.hr === 'string' ? options.hr : '---',
+		bulletListMarker: toTurndownBulletListMarker(options.bulletListMarker),
+		codeBlockStyle: toTurndownCodeBlockStyle(options.codeBlockStyle),
+		fence: toTurndownFence(options.fence),
+		emDelimiter: toTurndownEmDelimiter(options.emDelimiter),
+		strongDelimiter: toTurndownStrongDelimiter(options.strongDelimiter),
+		linkStyle: toTurndownLinkStyle(options.linkStyle),
+		linkReferenceStyle: toTurndownLinkReferenceStyle(options.linkReferenceStyle),
+	};
 }
 
 // Initialize when DOM is loaded
@@ -430,29 +513,35 @@ function handleMessages(message: OffscreenMessage, _sender: unknown): Promise<un
 	}
 
 	return (async () => {
-		switch (message.type) {
+			switch (message.type) {
 			case 'process-content':
 				await processContent(message);
 				break;
 			case 'download-markdown':
+				if (typeof message.tabId !== 'number') {
+					throw new Error('Missing tabId for download-markdown');
+				}
 				await downloadMarkdown(
 					message.markdown ?? '',
 					message.title ?? '',
 					message.tabId,
-					message.imageList ?? null,
-					message.mdClipsFolder,
+					message.imageList ?? {},
+					message.mdClipsFolder ?? '',
 					message.options,
 					message.notificationDelta,
 				);
 				break;
 			case 'download-generated-file':
+				if (typeof message.tabId !== 'number') {
+					throw new Error('Missing tabId for download-generated-file');
+				}
 				await downloadGeneratedFileExport(
 					message.content ?? '',
 					message.filename ?? '',
 					message.tabId,
 					message.options,
 					message.mimeType ?? '',
-					message.notificationDelta,
+					message.notificationDelta ?? null,
 				);
 				break;
 			case 'process-context-menu':
@@ -477,7 +566,10 @@ function handleMessages(message: OffscreenMessage, _sender: unknown): Promise<un
 				}
 				break;
 			case 'download-batch-zip':
-				await downloadBatchZip(message);
+				await downloadBatchZip({
+					...message,
+					options: message.options ?? null,
+				});
 				break;
 		}
 
@@ -655,7 +747,7 @@ async function handleContextMenuDownload(
 	providedOptions: OffscreenOptions | null = null,
 	customTitle: string | null = null,
 	collectOnly = false,
-	notificationDelta: NotificationDelta | null = null,
+	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
 	console.log(`Starting download for tab ${tabId}`);
 	try {
@@ -736,7 +828,7 @@ async function handleContextMenuCopy(
 		localOptions.frontmatter = localOptions.backmatter = '';
 		const { markdown } = turndown(
 			`<a href="${info.linkUrl}">${info.linkText || info.selectionText}</a>`,
-			{ ...localOptions, downloadImages: false },
+			{ ...createEffectiveMarkdownOptions(article, localOptions), downloadImages: false },
 			article,
 		);
 		return await copyToClipboard(markdown);
@@ -874,15 +966,44 @@ function createEffectiveMarkdownOptions(
 ): OffscreenRuntimeOptions {
 	const sharedApi = getMarkdownOptionsApi();
 	if (sharedApi?.createEffectiveMarkdownOptions) {
-		return sharedApi.createEffectiveMarkdownOptions(article, providedOptions, downloadImages);
+		const effective = sharedApi.createEffectiveMarkdownOptions(article, providedOptions, downloadImages);
+		return {
+			...effective,
+			title: typeof effective.title === 'string' ? effective.title : '{title}',
+			imagePrefix: typeof effective.imagePrefix === 'string' ? effective.imagePrefix : '',
+			frontmatter: typeof effective.frontmatter === 'string' ? effective.frontmatter : '',
+			backmatter: typeof effective.backmatter === 'string' ? effective.backmatter : '',
+			disallowedChars: typeof effective.disallowedChars === 'string' ? effective.disallowedChars : '',
+			includeTemplate: effective.includeTemplate ?? false,
+			downloadImages: effective.downloadImages ?? false,
+			fence: typeof effective.fence === 'string' ? effective.fence : '```',
+			preserveCodeFormatting: false,
+			autoDetectCodeLanguage: false,
+			hashtagHandling: typeof effective.hashtagHandling === 'string' ? effective.hashtagHandling : 'keep',
+			imageStyle: typeof effective.imageStyle === 'string' ? effective.imageStyle : 'markdown',
+			imageRefStyle: typeof effective.imageRefStyle === 'string' ? effective.imageRefStyle : 'markdown',
+		};
 	}
 
 	const baseOptions = providedOptions || defaultOptions;
-	const options = {
+	const options: OffscreenRuntimeOptions = {
 		...baseOptions,
 		tableFormatting: baseOptions.tableFormatting
 			? { ...baseOptions.tableFormatting }
 			: baseOptions.tableFormatting,
+		frontmatter: typeof baseOptions.frontmatter === 'string' ? baseOptions.frontmatter : '',
+		backmatter: typeof baseOptions.backmatter === 'string' ? baseOptions.backmatter : '',
+		title: typeof baseOptions.title === 'string' ? baseOptions.title : '{title}',
+		imagePrefix: typeof baseOptions.imagePrefix === 'string' ? baseOptions.imagePrefix : '',
+		disallowedChars: typeof baseOptions.disallowedChars === 'string' ? baseOptions.disallowedChars : '',
+		imageStyle: typeof baseOptions.imageStyle === 'string' ? baseOptions.imageStyle : 'markdown',
+		imageRefStyle: typeof baseOptions.imageRefStyle === 'string' ? baseOptions.imageRefStyle : 'markdown',
+		includeTemplate: Boolean(baseOptions.includeTemplate),
+		downloadImages: Boolean(baseOptions.downloadImages),
+		fence: typeof baseOptions.fence === 'string' ? baseOptions.fence : '```',
+		preserveCodeFormatting: Boolean(baseOptions.preserveCodeFormatting),
+		autoDetectCodeLanguage: Boolean(baseOptions.autoDetectCodeLanguage),
+		hashtagHandling: typeof baseOptions.hashtagHandling === 'string' ? baseOptions.hashtagHandling : 'keep',
 	};
 
 	if (downloadImages != null) {
@@ -898,7 +1019,7 @@ function createEffectiveMarkdownOptions(
 	}
 
 	options.imagePrefix = textReplace(options.imagePrefix, article, options.disallowedChars)
-		.split('/').map(s => generateValidFileName(s, options.disallowedChars)).join('/');
+		.split('/').map((segment) => generateValidFileName(segment, options.disallowedChars)).join('/');
 
 	return options;
 }
@@ -915,7 +1036,7 @@ async function convertArticleToMarkdown(
 
 	let result = turndown(article.content, options, article);
 	const obsidianApi = getObsidianApi();
-	let sourceImageMap = obsidianApi?.createObsidianSourceImageMap(result.imageList) ?? {};
+	let sourceImageMap: Record<string, string> = obsidianApi?.createObsidianSourceImageMap(result.imageList) ?? {};
 	if (options.downloadImages && options.downloadMode === 'downloadsApi') {
 		// Pre-download the images
 		result = await preDownloadImages(result.imageList, result.markdown, options);
@@ -927,7 +1048,7 @@ async function convertArticleToMarkdown(
 	};
 }
 
-function processCodeBlock(node, options) {
+function processCodeBlock(node: Element, options: OffscreenRuntimeOptions): { code: string; language: string } {
 	const shouldAutoDetectLanguage = options.autoDetectCodeLanguage !== false;
 
 	// If preserveCodeFormatting is enabled, return original HTML content
@@ -939,7 +1060,7 @@ function processCodeBlock(node, options) {
 	}
 
 	// Get the raw text content
-	const code = node.textContent.trim();
+	const code = node.textContent?.trim() ?? '';
 
 	// Detect language
 	let language = getCodeLanguage(node);
@@ -965,7 +1086,7 @@ function processCodeBlock(node, options) {
 	};
 }
 
-function getCodeLanguage(node) {
+function getCodeLanguage(node: Element): string {
 	// Check for explicit language class
 	const languageMatch = node.className.match(/language-(\w+)/);
 	if (languageMatch) {
@@ -983,7 +1104,7 @@ function getCodeLanguage(node) {
 
 const hashtagEscapeSentinel = '\uE000';
 
-function normalizeHashtagHandlingMode(mode) {
+function normalizeHashtagHandlingMode(mode: unknown): HashtagHandlingMode {
 	const sharedApi = getHashtagUtilsApi();
 	if (sharedApi?.normalizeHashtagHandlingMode) {
 		return sharedApi.normalizeHashtagHandlingMode(mode);
@@ -995,12 +1116,12 @@ function normalizeHashtagHandlingMode(mode) {
 	return 'keep';
 }
 
-function replaceHashtagTokensInText(text, mode) {
+function replaceHashtagTokensInText(text: string, mode: HashtagHandlingMode): string {
 	if (!text) return text;
 
 	// Matches hashtag-like tokens in prose while skipping markdown escapes and URL fragments.
 	const hashtagTokenRegex = /(^|[^\p{L}\p{N}_\\/])#([\p{L}\p{N}_][\p{L}\p{N}_-]*)/gu;
-	return text.replace(hashtagTokenRegex, (match, prefix, tag) => {
+	return text.replace(hashtagTokenRegex, (match: string, prefix: string, tag: string) => {
 		if (mode === 'remove') {
 			return `${prefix}${tag}`;
 		}
@@ -1011,7 +1132,7 @@ function replaceHashtagTokensInText(text, mode) {
 	});
 }
 
-function applyHashtagHandlingToHtml(content, mode) {
+function applyHashtagHandlingToHtml(content: string, mode: HashtagHandlingMode): string {
 	const sharedApi = getHashtagUtilsApi();
 	if (sharedApi?.applyHashtagHandlingToHtml) {
 		return sharedApi.applyHashtagHandlingToHtml(content, mode);
@@ -1030,7 +1151,7 @@ function applyHashtagHandlingToHtml(content, mode) {
 	let node = walker.nextNode();
 	while (node) {
 		const parentTag = node.parentElement?.tagName;
-		if (!excludedParents.has(parentTag)) {
+		if ((!parentTag || !excludedParents.has(parentTag)) && typeof node.nodeValue === 'string') {
 			node.nodeValue = replaceHashtagTokensInText(node.nodeValue, normalizedMode);
 		}
 		node = walker.nextNode();
@@ -1039,7 +1160,7 @@ function applyHashtagHandlingToHtml(content, mode) {
 	return container.innerHTML;
 }
 
-function applyHashtagHandlingToMarkdown(markdown, mode) {
+function applyHashtagHandlingToMarkdown(markdown: string, mode: HashtagHandlingMode): string {
 	const sharedApi = getHashtagUtilsApi();
 	if (sharedApi?.applyHashtagHandlingToMarkdown) {
 		return sharedApi.applyHashtagHandlingToMarkdown(markdown, mode);
@@ -1054,7 +1175,7 @@ function applyHashtagHandlingToMarkdown(markdown, mode) {
 /**
  * Turndown HTML to Markdown conversion
  */
-function turndown(content, options, article) {
+function turndown(content: string, options: OffscreenRuntimeOptions, article: OffscreenArticleRecord): MarkdownConversionResult {
 	console.log('Starting turndown with options:', options.tableFormatting); // Debug log
 	const uriBase = article.uriBase || article.baseURI;
 
@@ -1063,7 +1184,7 @@ function turndown(content, options, article) {
 	// a function" when a prior session / HMR / stale offscreen left
 	// TurndownService.prototype.escape as undefined. Per-instance + snapshot
 	// of the original escape from module-init is the belt-and-suspenders fix.
-	var turndownService = new TurndownService(options);
+	const turndownService = new TurndownService(createTurndownOptions(options));
 	turndownService.escape = options.turndownEscape ? TURNDOWN_BUILTIN_ESCAPE : (s) => s;
 
 	// Add only non-table GFM features
@@ -1102,19 +1223,8 @@ function turndown(content, options, article) {
 			try {
 				// Create a mini-turndown instance for cell content processing
 				const cellTurndownService = new TurndownService({
-					...options,
-					headingStyle: options.headingStyle,
-					hr: options.hr,
-					bulletListMarker: options.bulletListMarker,
-					codeBlockStyle: options.codeBlockStyle,
-					fence: options.fence,
-					emDelimiter: options.emDelimiter,
-					strongDelimiter: options.strongDelimiter,
-					linkStyle: options.tableFormatting?.stripLinks ? 'stripLinks' : options.linkStyle,
-					linkReferenceStyle: options.linkReferenceStyle,
-					// Reset frontmatter/backmatter to avoid duplication
-					frontmatter: '',
-					backmatter: '',
+					...createTurndownOptions(options),
+					linkStyle: options.tableFormatting?.stripLinks ? 'inlined' : toTurndownLinkStyle(options.linkStyle),
 				});
 
 				// Disable escaping in table cells to prevent underscore escaping
@@ -1143,7 +1253,7 @@ function turndown(content, options, article) {
 				if (options.tableFormatting?.stripLinks) {
 					cellTurndownService.addRule('links', {
 						filter: (node, _tdopts) => {
-							return node.nodeName === 'A' && node.getAttribute('href');
+							return node.nodeName === 'A' && Boolean(node.getAttribute('href'));
 						},
 						replacement: (content, _node, _tdopts) => {
 							return content;
@@ -1159,12 +1269,12 @@ function turndown(content, options, article) {
 					? [headerRow, ...(tbody ? Array.from(tbody.children) : [])]
 					: (tbody ? Array.from(tbody.children) : Array.from(node.querySelectorAll('tr')));
 
-				const tableMatrix = Array.from({ length: rows.length }, () => []);
-				const columnWidths = [];
+				const tableMatrix: string[][] = Array.from({ length: rows.length }, () => []);
+				const columnWidths: number[] = [];
 
 				// Process each row
 				rows.forEach((row, rowIndex) => {
-					Array.from(row.children).forEach(cell => {
+					Array.from(row.children).forEach((cell) => {
 						// Process cell content using the cell-specific turndown service
 						let processedContent = '';
 
@@ -1175,11 +1285,11 @@ function turndown(content, options, article) {
 						// Apply formatting stripping if configured
 						if (options.tableFormatting?.stripFormatting) {
 							// Replace formatting elements with their text content
-							['b', 'strong', 'i', 'em', 'u', 'mark', 'sub', 'sup'].forEach(tag => {
+							['b', 'strong', 'i', 'em', 'u', 'mark', 'sub', 'sup'].forEach((tag) => {
 								const elements = cellContainer.getElementsByTagName(tag);
 								// We need to convert to array because the collection changes as we modify
-								Array.from(elements).forEach(el => {
-									el.replaceWith(document.createTextNode(el.textContent.trim()));
+								Array.from(elements).forEach((el) => {
+									el.replaceWith(document.createTextNode(el.textContent?.trim() ?? ''));
 								});
 							});
 						}
@@ -1188,8 +1298,8 @@ function turndown(content, options, article) {
 						processedContent = cellTurndownService.turndown(cellContainer.innerHTML);
 
 						// Handle rowspan and colspan (keeping original behavior)
-						const colspan = parseInt(cell.getAttribute('colspan'), 10) || 1;
-						const rowspan = parseInt(cell.getAttribute('rowspan'), 10) || 1;
+						const colspan = parseInt(cell.getAttribute('colspan') ?? '1', 10) || 1;
+						const rowspan = parseInt(cell.getAttribute('rowspan') ?? '1', 10) || 1;
 
 						// Add content to the matrix - keep existing behavior for rowspan/colspan
 						for (let i = 0; i < rowspan; i++) {
@@ -1223,7 +1333,7 @@ function turndown(content, options, article) {
 				let markdown = '\n\n';
 
 				// Format cells with proper alignment and spacing
-				const formatCell = (content, columnIndex) => {
+				const formatCell = (content: string, columnIndex: number) => {
 					// Ensure content is a string
 					const safeContent = content || '';
 
@@ -1266,7 +1376,7 @@ function turndown(content, options, article) {
 					markdown += `|${headerContent}|\n`;
 
 					// Build separator with proper column widths
-					const separator = columnWidths.map(width => {
+					const separator = columnWidths.map((width) => {
 						const minWidth = Math.max(3, width);
 						return '-'.repeat(minWidth + 2); // +2 for padding
 					}).join('|');
@@ -1293,17 +1403,18 @@ function turndown(content, options, article) {
 		},
 	});
 
-	turndownService.keep(['iframe', 'sub', 'sup', 'u', 'ins', 'del', 'small', 'big']);
+	turndownService.keep(['iframe', 'sub', 'sup', 'u', 'ins', 'del', 'small']);
 
-	const imageList = {};
+	const imageList: Record<string, string> = {};
+	const imageReferences: string[] = [];
 	// add an image rule
 	turndownService.addRule('images', {
 		filter: (node, _tdopts) => {
 			// if we're looking at an img node with a src
 			if (node.nodeName === 'IMG' && node.getAttribute('src')) {
 				// get the original src
-				const src = node.getAttribute('src');
-				const resolvedSrc = validateUri(src, uriBase);
+				const src = node.getAttribute('src') ?? '';
+				const resolvedSrc = validateUri(src, uriBase ?? '');
 				// set the new src
 				node.setAttribute('src', resolvedSrc);
 
@@ -1316,8 +1427,8 @@ function turndown(content, options, article) {
 						let i = 1;
 						while (Object.values(imageList).includes(imageFilename)) {
 							const parts = imageFilename.split('.');
-							if (i === 1) parts.splice(parts.length - 1, 0, i++);
-							else parts.splice(parts.length - 2, 1, i++);
+							if (i === 1) parts.splice(parts.length - 1, 0, String(i++));
+							else parts.splice(parts.length - 2, 1, String(i++));
 							imageFilename = parts.join('.');
 						}
 						// add it to the list of images to download later
@@ -1355,25 +1466,24 @@ function turndown(content, options, article) {
 				const title = cleanAttribute(node.getAttribute('title'));
 				const titlePart = title ? ` "${title}"` : '';
 				if (options.imageRefStyle === 'referenced') {
-					const id = this.references.length + 1;
-					this.references.push(`[fig${id}]: ${src}${titlePart}`);
+					const id = imageReferences.length + 1;
+					imageReferences.push(`[fig${id}]: ${src}${titlePart}`);
 					return `![${alt}][fig${id}]`;
 				} else return src ? `![${alt}](${src}${titlePart})` : '';
 			}
 		},
-		references: [],
-		append: function(_options) {
+		append() {
 			var references = '';
-			if (this.references.length) {
-				references = `\n\n${this.references.join('\n')}\n\n`;
-				this.references = []; // Reset references
+			if (imageReferences.length) {
+				references = `\n\n${imageReferences.join('\n')}\n\n`;
+				imageReferences.length = 0;
 			}
 			return references;
 		},
 	});
 
 	// Utility function to check if an element is inside a table
-	function isInsideTable(node) {
+	function isInsideTable(node: Node): boolean {
 		let parent = node.parentNode;
 		while (parent) {
 			if (parent.nodeName === 'TABLE') {
@@ -1390,12 +1500,12 @@ function turndown(content, options, article) {
 			// Only process links if linkStyle is NOT 'referenced'
 			// This allows the built-in referenceLink rule to handle referenced links
 			return node.nodeName === 'A'
-				&& node.getAttribute('href')
+				&& Boolean(node.getAttribute('href'))
 				&& tdopts.linkStyle !== 'referenced';
 		},
-		replacement: (content, node, _tdopts) => {
-			// get the href
-			const href = validateUri(node.getAttribute('href'), uriBase);
+			replacement: (content, node, _tdopts) => {
+				// get the href
+				const href = validateUri(node.getAttribute('href') ?? '', uriBase ?? '');
 
 			// If we're in a table AND strip links is enabled, OR if linkStyle is set to stripLinks
 			// just return the text content without the link
@@ -1431,22 +1541,22 @@ function turndown(content, options, article) {
 		},
 	});
 
-	function repeat(character, count) {
+	function repeat(character: string, count: number): string {
 		return Array(count + 1).join(character);
 	}
 
-	function convertToFencedCodeBlock(node, options) {
+	function convertToFencedCodeBlock(node: Element, options: OffscreenRuntimeOptions): string {
 		const sharedApi = getCodeBlockUtilsApi();
 		if (sharedApi?.convertToFencedCodeBlock) {
 			return sharedApi.convertToFencedCodeBlock(node, options);
 		}
 
-		function normalizeCodeBlockSpacing(text, maxBlankLines = 2) {
+		function normalizeCodeBlockSpacing(text: string, maxBlankLines = 2): string {
 			const lines = text.split('\n');
-			const normalizedLines = [];
+			const normalizedLines: string[] = [];
 			let blankLineCount = 0;
 
-			lines.forEach(line => {
+			lines.forEach((line) => {
 				if (/^[ \t]*$/.test(line)) {
 					blankLineCount += 1;
 					if (blankLineCount <= maxBlankLines) {
@@ -1461,7 +1571,7 @@ function turndown(content, options, article) {
 			return normalizedLines.join('\n');
 		}
 
-		function detectPreLanguage(node, code) {
+		function detectPreLanguage(node: Element, code: string): string {
 			const shouldAutoDetectLanguage = options.autoDetectCodeLanguage !== false;
 			const idMatch = node.id?.match(/code-lang-(.+)/);
 			if (idMatch?.length > 1) {
@@ -1472,9 +1582,9 @@ function turndown(content, options, article) {
 				.toLowerCase()
 				.split(/\s+/)
 				.filter(Boolean);
-			const candidates = new Set();
+			const candidates = new Set<string>();
 
-			classTokens.forEach(token => {
+			classTokens.forEach((token) => {
 				candidates.add(token);
 				if (token.startsWith('language-')) candidates.add(token.substring(9));
 				if (token.startsWith('lang-')) candidates.add(token.substring(5));
@@ -2402,7 +2512,7 @@ async function downloadMarkdown(
 	imageList: Record<string, string> = {},
 	mdClipsFolder = '',
 	providedOptions: OffscreenOptions | null = null,
-	notificationDelta = null,
+	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
 	const options = providedOptions || defaultOptions;
 
@@ -2543,7 +2653,7 @@ async function downloadGeneratedFileExport(
 	tabId: number,
 	providedOptions: OffscreenOptions | null = null,
 	mimeType = 'application/octet-stream',
-	notificationDelta = null,
+	notificationDelta: NotificationDelta | null | undefined = null,
 ): Promise<void> {
 	const options = providedOptions || defaultOptions;
 	const downloadsAPI = browser.downloads || (typeof chrome !== 'undefined' ? chrome.downloads : null);
