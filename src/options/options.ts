@@ -1,10 +1,76 @@
-// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
+import type {
+	CustomSendToTargetInput,
+	ExtensionOptions,
+	SendToCustomTarget,
+	SnipSnipAgentBridgeStateApi,
+	SnipSnipLibraryStateApi,
+	SnipSnipOptionsStateApi,
+	SnipSnipTemplateUtilsApi,
+} from '@/lib/types/index.ts';
 import { getItemsBag, setItemsBag, storage } from '@/shared/storage.ts';
 import { browser } from 'wxt/browser';
 
-const createMenus = globalThis.createMenus;
-const defaultOptions = globalThis.defaultOptions || {};
+type OptionsState =
+	& Omit<Partial<ExtensionOptions>, 'sendToCustomTargets' | 'defaultSendToTarget' | 'siteRules'>
+	& Record<string, unknown>
+	& {
+		sendToCustomTargets?: CustomSendToTarget[];
+		defaultSendToTarget?: string;
+		sendToMaxUrlLength?: number;
+		siteRules?: SiteRule[];
+		tableFormatting?: Partial<ExtensionOptions['tableFormatting']>;
+		mdClipsFolder?: string | null;
+		obsidianFolder?: string;
+		popupTheme?: string;
+		specialTheme?: string;
+		colorBlindTheme?: string;
+		popupAccent?: string;
+		compactMode?: boolean;
+		showThemeToggleInPopup?: boolean;
+		showUserGuideIcon?: boolean;
+		contextMenus?: boolean;
+		batchProcessingEnabled?: boolean;
+		obsidianIntegration?: boolean;
+		agentBridgeEnabled?: boolean;
+		libraryEnabled?: boolean;
+		autoSaveOnPopupOpen?: boolean;
+		itemsToKeep?: number;
+		defaultExportType?: string;
+		defaultSendToTargetCustomOptions?: string;
+	};
+
+type SiteRulesApi = NonNullable<typeof globalThis.snipSnipSiteRules> & {
+	collectOverrideKeys?: (overrides?: SiteRuleOverride) => string[];
+};
+type SearchIndexEntry = {
+	card: HTMLElement;
+	section: HTMLElement;
+};
+type SearchTokenMatch = {
+	token: string;
+	fieldSource: string;
+};
+type SearchResultEntry = SearchIndexEntry & {
+	matches: boolean;
+	tokenMatches: SearchTokenMatch[];
+};
+type OptionsSearchApi = {
+	buildSearchIndex(rootNode: Document): SearchIndexEntry[];
+	normalizeSearchText(value: unknown): string;
+	searchSettings(index: SearchIndexEntry[], query: string): { results: SearchResultEntry[] };
+};
+type ToastElement = HTMLElement & { _hideTimeout?: ReturnType<typeof setTimeout> };
+type SiteRuleBooleanKey = 'includeTemplate' | 'downloadImages';
+type SiteRuleEnumKey = 'imageStyle' | 'imageRefStyle';
+type SiteRuleTextKey = 'frontmatter' | 'backmatter' | 'title' | 'imagePrefix' | 'mdClipsFolder';
+type SiteRuleTableKey = keyof NonNullable<SiteRuleOverride['tableFormatting']>;
+
+type ElementConstructor<T extends Element> = abstract new(...args: never[]) => T;
+
+const createMenus = Reflect.get(globalThis, 'createMenus');
+const defaultOptions: OptionsState = globalThis.defaultOptions ? { ...globalThis.defaultOptions } : {};
 const _moment = globalThis.moment;
+const chromeApi = Reflect.get(globalThis, 'chrome');
 
 interface LibrarySettings {
 	enabled: boolean;
@@ -40,26 +106,26 @@ interface SendToUrlValidation {
 }
 
 interface CustomSendToTarget {
-	id: string;
+	id: SendToCustomTarget['id'];
 	name: string;
 	urlTemplate: string;
 }
 
 interface SiteRuleOverride {
-	includeTemplate?: string;
-	downloadImages?: string;
+	includeTemplate?: boolean;
+	downloadImages?: boolean;
 	frontmatter?: string;
 	backmatter?: string;
 	title?: string;
 	imagePrefix?: string;
-	mdClipsFolder?: string;
+	mdClipsFolder?: string | null;
 	imageStyle?: string;
 	imageRefStyle?: string;
 	tableFormatting?: {
-		stripLinks?: string;
-		stripFormatting?: string;
-		prettyPrint?: string;
-		centerText?: string;
+		stripLinks?: boolean;
+		stripFormatting?: boolean;
+		prettyPrint?: boolean;
+		centerText?: boolean;
 	};
 }
 
@@ -72,7 +138,7 @@ interface SiteRule {
 }
 
 /** @type {Object} */
-let options: object = defaultOptions;
+let options: OptionsState = { ...defaultOptions };
 /** @type {LibrarySettings} */
 let librarySettings: LibrarySettings = {
 	enabled: true,
@@ -96,7 +162,7 @@ let agentBridgeStatus: AgentBridgeStatus = {
 	updatedAt: '',
 };
 let agentBridgeInstallCommand = 'snipsnip install-host';
-let keyupTimeout = null;
+let keyupTimeout: ReturnType<typeof setTimeout> | null = null;
 let templatePreviewListenersBound = false;
 const SPECIAL_THEME_CLASS_NAMES = [
 	'special-theme-claude',
@@ -115,22 +181,22 @@ const ACCENT_CLASS_NAMES = ['accent-sage', 'accent-ocean', 'accent-slate', 'acce
 const POPUP_THEME_CACHE_KEY = 'snipsnip-popup-theme-cache-v1';
 const DEFAULT_SEND_TO_TARGET = 'chatgpt';
 const DEFAULT_SEND_TO_MAX_URL_LENGTH = 3600;
-const SITE_RULE_BOOLEAN_FIELD_IDS = {
+const SITE_RULE_BOOLEAN_FIELD_IDS: Record<SiteRuleBooleanKey, string> = {
 	includeTemplate: 'siteRuleIncludeTemplate',
 	downloadImages: 'siteRuleDownloadImages',
 };
-const SITE_RULE_ENUM_FIELD_IDS = {
+const SITE_RULE_ENUM_FIELD_IDS: Record<SiteRuleEnumKey, string> = {
 	imageStyle: 'siteRuleImageStyle',
 	imageRefStyle: 'siteRuleImageRefStyle',
 };
-const SITE_RULE_TEXT_FIELD_IDS = {
+const SITE_RULE_TEXT_FIELD_IDS: Record<SiteRuleTextKey, { toggleId: string; inputId: string }> = {
 	frontmatter: { toggleId: 'siteRuleFrontmatterEnabled', inputId: 'siteRuleFrontmatter' },
 	backmatter: { toggleId: 'siteRuleBackmatterEnabled', inputId: 'siteRuleBackmatter' },
 	title: { toggleId: 'siteRuleTitleEnabled', inputId: 'siteRuleTitle' },
 	imagePrefix: { toggleId: 'siteRuleImagePrefixEnabled', inputId: 'siteRuleImagePrefix' },
 	mdClipsFolder: { toggleId: 'siteRuleMdClipsFolderEnabled', inputId: 'siteRuleMdClipsFolder' },
 };
-const SITE_RULE_TABLE_FIELD_IDS = {
+const SITE_RULE_TABLE_FIELD_IDS: Record<SiteRuleTableKey, string> = {
 	stripLinks: 'siteRuleTableStripLinks',
 	stripFormatting: 'siteRuleTableStripFormatting',
 	prettyPrint: 'siteRuleTablePrettyPrint',
@@ -157,36 +223,105 @@ let siteRuleEditorState: SiteRuleEditorState = {
 	ruleId: null,
 };
 
-function getOptionsStateApi() {
+function objectKeys<T extends object>(value: T): Array<Extract<keyof T, string>> {
+	return Object.keys(value) as Array<Extract<keyof T, string>>;
+}
+
+function getElementByIdOfType<T extends Element>(id: string, ctor: ElementConstructor<T>): T | null {
+	const element = document.getElementById(id);
+	return element instanceof ctor ? element : null;
+}
+
+function queryElementOfType<T extends Element>(
+	selector: string,
+	ctor: ElementConstructor<T>,
+	root: ParentNode = document,
+): T | null {
+	const element = root.querySelector(selector);
+	return element instanceof ctor ? element : null;
+}
+
+function queryAllOfType<T extends Element>(
+	selector: string,
+	ctor: ElementConstructor<T>,
+	root: ParentNode = document,
+): T[] {
+	return Array.from(root.querySelectorAll(selector)).filter((element): element is T => element instanceof ctor);
+}
+
+function getInputById(id: string): HTMLInputElement | null {
+	return getElementByIdOfType(id, HTMLInputElement);
+}
+
+function getTextAreaById(id: string): HTMLTextAreaElement | null {
+	return getElementByIdOfType(id, HTMLTextAreaElement);
+}
+
+function getButtonById(id: string): HTMLButtonElement | null {
+	return getElementByIdOfType(id, HTMLButtonElement);
+}
+
+function getHtmlElementById(id: string): HTMLElement | null {
+	return getElementByIdOfType(id, HTMLElement);
+}
+
+function getInputValueByName(name: string): string {
+	return queryElementOfType(`[name='${name}']`, HTMLInputElement)?.value ?? '';
+}
+
+function getTextAreaValueByName(name: string): string {
+	return queryElementOfType(`[name='${name}']`, HTMLTextAreaElement)?.value ?? '';
+}
+
+function getCheckedByName(name: string): boolean {
+	return queryElementOfType(`[name='${name}']`, HTMLInputElement)?.checked === true;
+}
+
+function _getOptionsSearchApi(): OptionsSearchApi | null {
+	const candidate = Reflect.get(globalThis, 'snipSnipOptionsSearch');
+	if (
+		candidate
+		&& typeof candidate === 'object'
+		&& typeof Reflect.get(candidate, 'buildSearchIndex') === 'function'
+		&& typeof Reflect.get(candidate, 'normalizeSearchText') === 'function'
+		&& typeof Reflect.get(candidate, 'searchSettings') === 'function'
+	) {
+		return candidate as OptionsSearchApi;
+	}
+
+	return null;
+}
+
+function getOptionsStateApi(): SnipSnipOptionsStateApi | null {
 	return globalThis.snipSnipOptionsState || null;
 }
 
-function getLibraryStateApi() {
+function getLibraryStateApi(): SnipSnipLibraryStateApi | null {
 	return globalThis.snipSnipLibraryState || null;
 }
 
-function getAgentBridgeStateApi() {
+function getAgentBridgeStateApi(): SnipSnipAgentBridgeStateApi | null {
 	return globalThis.snipSnipAgentBridgeState || null;
 }
 
-function getSiteRulesApi() {
+function getSiteRulesApi(): SiteRulesApi | null {
 	return globalThis.snipSnipSiteRules || null;
 }
 
-function getTemplateUtils() {
+function getTemplateUtils(): SnipSnipTemplateUtilsApi | null {
 	return globalThis.snipSnipTemplateUtils || null;
 }
 
-function normalizeSiteRulesState(rules): SiteRule[] {
+function normalizeSiteRulesState(rules: unknown): SiteRule[] {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRules) {
-		return siteRulesApi.normalizeSiteRules(rules);
+		return siteRulesApi.normalizeSiteRules(rules) as SiteRule[];
 	}
 
 	return Array.isArray(rules) ? rules.slice() : [];
 }
 
-function normalizeSiteRuleOverridesState(overrides): SiteRuleOverride {
+function normalizeSiteRuleOverridesState(overrides: unknown): SiteRuleOverride {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.normalizeSiteRuleOverrides) {
 		return siteRulesApi.normalizeSiteRuleOverrides(overrides);
@@ -195,7 +330,7 @@ function normalizeSiteRuleOverridesState(overrides): SiteRuleOverride {
 	return overrides && typeof overrides === 'object' ? { ...overrides } : {};
 }
 
-function validateSiteRulePatternState(pattern): { valid: boolean; error: string; normalizedPattern: string } {
+function validateSiteRulePatternState(pattern: unknown): { valid: boolean; error: string; normalizedPattern: string } {
 	const siteRulesApi = getSiteRulesApi();
 	if (siteRulesApi?.validateSiteRulePattern) {
 		return siteRulesApi.validateSiteRulePattern(pattern);
@@ -232,10 +367,10 @@ function buildCustomSendToTargetId(): string {
 	return `custom-target-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function getSendToUrlValidationState(value): SendToUrlValidation {
+function getSendToUrlValidationState(value: unknown): SendToUrlValidation {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.validateSendToUrlTemplate) {
-		return optionsStateApi.validateSendToUrlTemplate(value);
+		return optionsStateApi.validateSendToUrlTemplate(typeof value === 'string' ? value : undefined);
 	}
 
 	const normalizedValue = String(value || '').trim();
@@ -268,10 +403,10 @@ function getSendToUrlValidationState(value): SendToUrlValidation {
 	return { valid: true, normalizedValue, error: '' };
 }
 
-function normalizeCustomSendToTargetsState(targets): CustomSendToTarget[] {
+function normalizeCustomSendToTargetsState(targets: unknown): CustomSendToTarget[] {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeCustomSendToTargets) {
-		return optionsStateApi.normalizeCustomSendToTargets(targets);
+		return optionsStateApi.normalizeCustomSendToTargets(targets as CustomSendToTargetInput[]) as CustomSendToTarget[];
 	}
 
 	if (!Array.isArray(targets)) {
@@ -306,12 +441,22 @@ function normalizeCustomSendToTargetsState(targets): CustomSendToTarget[] {
 }
 
 function normalizeDefaultSendToTargetState(
-	value,
+	value: unknown,
 	customTargets: CustomSendToTarget[] = normalizeCustomSendToTargetsState(options?.sendToCustomTargets),
 ): string {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeDefaultSendToTarget) {
-		return optionsStateApi.normalizeDefaultSendToTarget(value, customTargets, DEFAULT_SEND_TO_TARGET);
+		const normalizedCustomTargets = customTargets.map((target) => ({
+			...target,
+			id: target.id.startsWith('custom-')
+				? (target.id as `custom-${string}`)
+				: (`custom-${target.id}` as `custom-${string}`),
+		}));
+		return optionsStateApi.normalizeDefaultSendToTarget(
+			typeof value === 'string' ? value : undefined,
+			normalizedCustomTargets,
+			DEFAULT_SEND_TO_TARGET,
+		);
 	}
 
 	const normalizedValue = String(value || '').trim();
@@ -325,7 +470,7 @@ function normalizeDefaultSendToTargetState(
 }
 
 function normalizeSendToMaxUrlLengthState(
-	value,
+	value: unknown,
 	fallbackValue: number = defaultOptions?.sendToMaxUrlLength ?? DEFAULT_SEND_TO_MAX_URL_LENGTH,
 ): number {
 	const optionsStateApi = getOptionsStateApi();
@@ -360,9 +505,9 @@ function renderDefaultSendToTargetOptions() {
 
 	const defaultTarget = normalizeDefaultSendToTargetState(options?.defaultSendToTarget, getNormalizedSendToTargets());
 	const builtInInputs = {
-		chatgpt: document.getElementById('send-to-target-chatgpt'),
-		claude: document.getElementById('send-to-target-claude'),
-		perplexity: document.getElementById('send-to-target-perplexity'),
+		chatgpt: getInputById('send-to-target-chatgpt'),
+		claude: getInputById('send-to-target-claude'),
+		perplexity: getInputById('send-to-target-perplexity'),
 	};
 	Object.entries(builtInInputs).forEach(([targetId, input]) => {
 		if (input) {
@@ -441,8 +586,11 @@ function renderAssistantTargetsList() {
 	});
 }
 
-function handleDefaultSendToTargetChoice(event) {
+function handleDefaultSendToTargetChoice(event: Event) {
 	const input = event.target;
+	if (!(input instanceof HTMLInputElement)) {
+		return;
+	}
 	if (!input || input.name !== 'defaultSendToTarget') {
 		return;
 	}
@@ -453,8 +601,8 @@ function handleDefaultSendToTargetChoice(event) {
 }
 
 async function handleAddCustomSendToTarget() {
-	const nameInput = document.getElementById('customSendToName');
-	const urlInput = document.getElementById('customSendToUrl');
+	const nameInput = getInputById('customSendToName');
+	const urlInput = getInputById('customSendToUrl');
 	const name = String(nameInput?.value || '').trim();
 	const validation = getSendToUrlValidationState(urlInput?.value || '');
 
@@ -498,7 +646,7 @@ async function handleAddCustomSendToTarget() {
 	nameInput?.focus();
 }
 
-function removeCustomSendToTarget(targetId) {
+function removeCustomSendToTarget(targetId: string) {
 	const currentTargets = getNormalizedSendToTargets();
 	const removedTarget = currentTargets.find((target) => target.id === targetId);
 	if (!removedTarget) {
@@ -525,11 +673,15 @@ function initSendToControls() {
 		});
 	});
 	document.getElementById('assistantTargetsList')?.addEventListener('click', (event) => {
-		const removeButton = event.target.closest('[data-target-id]');
+		const removeButton = event.target instanceof Element ? event.target.closest('[data-target-id]') : null;
 		if (!removeButton) {
 			return;
 		}
-		removeCustomSendToTarget(removeButton.dataset.targetId);
+		const targetId = removeButton instanceof HTMLElement ? removeButton.dataset.targetId : undefined;
+		if (!targetId) {
+			return;
+		}
+		removeCustomSendToTarget(targetId);
 	});
 
 	['customSendToName', 'customSendToUrl'].forEach((inputId) => {
@@ -553,7 +705,7 @@ function getSiteRulesList(): SiteRule[] {
 	return normalizeSiteRulesState(options?.siteRules);
 }
 
-function setSiteRules(nextRules): void {
+function setSiteRules(nextRules: unknown): void {
 	options.siteRules = normalizeSiteRulesState(nextRules);
 }
 
@@ -570,7 +722,7 @@ function findSiteRule(ruleId: string): SiteRule | null {
  * @returns {boolean|undefined}
  */
 function readTriStateBoolean(id: string): boolean | undefined {
-	const value = document.getElementById(id)?.value || 'inherit';
+	const value = getInputById(id)?.value || 'inherit';
 	if (value === 'true') return true;
 	if (value === 'false') return false;
 	return undefined;
@@ -582,14 +734,14 @@ function readTriStateBoolean(id: string): boolean | undefined {
  * @returns {void}
  */
 function setTriStateBoolean(id: string, value: boolean | undefined): void {
-	const input = document.getElementById(id);
+	const input = getInputById(id);
 	if (!input) return;
 	input.value = value === true ? 'true' : value === false ? 'false' : 'inherit';
 }
 
-function setTextOverrideControl(toggleId: string, inputId: string, value): void {
-	const toggle = document.getElementById(toggleId);
-	const input = document.getElementById(inputId);
+function setTextOverrideControl(toggleId: string, inputId: string, value: string | null | undefined): void {
+	const toggle = getInputById(toggleId);
+	const input = getInputById(inputId) || getTextAreaById(inputId);
 	const enabled = value !== undefined;
 	if (toggle) {
 		toggle.checked = enabled;
@@ -605,8 +757,8 @@ function setTextOverrideControl(toggleId: string, inputId: string, value): void 
  */
 function refreshSiteRuleTextOverrideStates(): void {
 	Object.values(SITE_RULE_TEXT_FIELD_IDS).forEach(({ toggleId, inputId }) => {
-		const toggle = document.getElementById(toggleId);
-		const input = document.getElementById(inputId);
+		const toggle = getInputById(toggleId);
+		const input = getInputById(inputId) || getTextAreaById(inputId);
 		if (!toggle || !input) return;
 		input.disabled = !toggle.checked;
 		input.closest('.site-rule-text-override')?.classList.toggle('is-disabled', !toggle.checked);
@@ -633,17 +785,25 @@ function clearSiteRuleEditorFeedback(): void {
  */
 function resetSiteRuleEditor(): void {
 	siteRuleEditorState = { mode: 'create', ruleId: null };
-	document.getElementById('siteRuleEditorTitle').textContent = 'Add Site Rule';
-	document.getElementById('siteRuleName').value = '';
-	document.getElementById('siteRulePattern').value = '';
-	document.getElementById('siteRuleEnabled').checked = true;
+	const editorTitle = document.getElementById('siteRuleEditorTitle');
+	const siteRuleName = getInputById('siteRuleName');
+	const siteRulePattern = getInputById('siteRulePattern');
+	const siteRuleEnabled = getInputById('siteRuleEnabled');
+	if (editorTitle) editorTitle.textContent = 'Add Site Rule';
+	if (siteRuleName) siteRuleName.value = '';
+	if (siteRulePattern) siteRulePattern.value = '';
+	if (siteRuleEnabled) siteRuleEnabled.checked = true;
 
-	Object.values(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((id) => setTriStateBoolean(id));
+	Object.values(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((id) => {
+		setTriStateBoolean(id, undefined);
+	});
 	Object.values(SITE_RULE_ENUM_FIELD_IDS).forEach((id) => {
-		const input = document.getElementById(id);
+		const input = getInputById(id);
 		if (input) input.value = 'inherit';
 	});
-	Object.values(SITE_RULE_TABLE_FIELD_IDS).forEach((id) => setTriStateBoolean(id));
+	Object.values(SITE_RULE_TABLE_FIELD_IDS).forEach((id) => {
+		setTriStateBoolean(id, undefined);
+	});
 	Object.values(SITE_RULE_TEXT_FIELD_IDS).forEach(({ toggleId, inputId }) => {
 		setTextOverrideControl(toggleId, inputId, undefined);
 	});
@@ -667,24 +827,28 @@ function openSiteRuleEditor(ruleId: string | null = null): void {
 		const rule = findSiteRule(ruleId);
 		if (rule) {
 			siteRuleEditorState = { mode: 'edit', ruleId };
-			document.getElementById('siteRuleEditorTitle').textContent = 'Edit Site Rule';
-			document.getElementById('siteRuleName').value = rule.name || '';
-			document.getElementById('siteRulePattern').value = rule.pattern || '';
-			document.getElementById('siteRuleEnabled').checked = rule.enabled !== false;
+			const editorTitle = document.getElementById('siteRuleEditorTitle');
+			const siteRuleName = getInputById('siteRuleName');
+			const siteRulePattern = getInputById('siteRulePattern');
+			const siteRuleEnabled = getInputById('siteRuleEnabled');
+			if (editorTitle) editorTitle.textContent = 'Edit Site Rule';
+			if (siteRuleName) siteRuleName.value = rule.name || '';
+			if (siteRulePattern) siteRulePattern.value = rule.pattern || '';
+			if (siteRuleEnabled) siteRuleEnabled.checked = rule.enabled !== false;
 
-			Object.keys(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((key) => {
+			objectKeys(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((key) => {
 				setTriStateBoolean(SITE_RULE_BOOLEAN_FIELD_IDS[key], rule.overrides?.[key]);
 			});
-			Object.keys(SITE_RULE_ENUM_FIELD_IDS).forEach((key) => {
-				const input = document.getElementById(SITE_RULE_ENUM_FIELD_IDS[key]);
+			objectKeys(SITE_RULE_ENUM_FIELD_IDS).forEach((key) => {
+				const input = getInputById(SITE_RULE_ENUM_FIELD_IDS[key]);
 				if (input) {
 					input.value = rule.overrides?.[key] || 'inherit';
 				}
 			});
-			Object.keys(SITE_RULE_TABLE_FIELD_IDS).forEach((key) => {
+			objectKeys(SITE_RULE_TABLE_FIELD_IDS).forEach((key) => {
 				setTriStateBoolean(SITE_RULE_TABLE_FIELD_IDS[key], rule.overrides?.tableFormatting?.[key]);
 			});
-			Object.keys(SITE_RULE_TEXT_FIELD_IDS).forEach((key) => {
+			objectKeys(SITE_RULE_TEXT_FIELD_IDS).forEach((key) => {
 				const config = SITE_RULE_TEXT_FIELD_IDS[key];
 				setTextOverrideControl(config.toggleId, config.inputId, rule.overrides?.[key]);
 			});
@@ -712,31 +876,33 @@ function closeSiteRuleEditor(): void {
  * @returns {SiteRuleOverride}
  */
 function buildSiteRuleOverridesFromEditor(): SiteRuleOverride {
-	const overrides = {};
+	const overrides: SiteRuleOverride = {};
 
-	Object.keys(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((key) => {
+	objectKeys(SITE_RULE_BOOLEAN_FIELD_IDS).forEach((key) => {
 		const value = readTriStateBoolean(SITE_RULE_BOOLEAN_FIELD_IDS[key]);
 		if (value !== undefined) {
 			overrides[key] = value;
 		}
 	});
 
-	Object.keys(SITE_RULE_ENUM_FIELD_IDS).forEach((key) => {
-		const value = document.getElementById(SITE_RULE_ENUM_FIELD_IDS[key])?.value || 'inherit';
+	objectKeys(SITE_RULE_ENUM_FIELD_IDS).forEach((key) => {
+		const value = getInputById(SITE_RULE_ENUM_FIELD_IDS[key])?.value || 'inherit';
 		if (value !== 'inherit') {
 			overrides[key] = value;
 		}
 	});
 
-	Object.keys(SITE_RULE_TEXT_FIELD_IDS).forEach((key) => {
+	objectKeys(SITE_RULE_TEXT_FIELD_IDS).forEach((key) => {
 		const { toggleId, inputId } = SITE_RULE_TEXT_FIELD_IDS[key];
-		if (document.getElementById(toggleId)?.checked) {
-			overrides[key] = document.getElementById(inputId)?.value ?? '';
+		const toggle = getInputById(toggleId);
+		const input = getInputById(inputId) || getTextAreaById(inputId);
+		if (toggle?.checked) {
+			overrides[key] = input?.value ?? '';
 		}
 	});
 
-	const tableFormatting = {};
-	Object.keys(SITE_RULE_TABLE_FIELD_IDS).forEach((key) => {
+	const tableFormatting: NonNullable<SiteRuleOverride['tableFormatting']> = {};
+	objectKeys(SITE_RULE_TABLE_FIELD_IDS).forEach((key) => {
 		const value = readTriStateBoolean(SITE_RULE_TABLE_FIELD_IDS[key]);
 		if (value !== undefined) {
 			tableFormatting[key] = value;
@@ -759,7 +925,10 @@ function getSiteRuleOverrideLabels(rule: SiteRule): string[] {
 		? siteRulesApi.collectOverrideKeys(rule?.overrides)
 		: [];
 
-	return overrideKeys.map((key) => SITE_RULE_OVERRIDE_LABELS[key] || key);
+	return overrideKeys.map((key) => {
+		const label = Reflect.get(SITE_RULE_OVERRIDE_LABELS, key);
+		return typeof label === 'string' ? label : key;
+	});
 }
 
 /**
@@ -843,7 +1012,7 @@ function renderSiteRules(): void {
  * @returns {Promise<void>}
  */
 async function saveSiteRuleEditor(): Promise<void> {
-	const patternInput = document.getElementById('siteRulePattern');
+	const patternInput = getInputById('siteRulePattern');
 	const rawPattern = patternInput?.value || '';
 	const validation = validateSiteRulePatternState(rawPattern);
 	const feedback = document.getElementById('siteRulePatternFeedback');
@@ -866,8 +1035,8 @@ async function saveSiteRuleEditor(): Promise<void> {
 		id: siteRuleEditorState.mode === 'edit' && siteRuleEditorState.ruleId
 			? siteRuleEditorState.ruleId
 			: buildSiteRuleIdState(),
-		name: String(document.getElementById('siteRuleName')?.value || '').trim() || validation.normalizedPattern,
-		enabled: document.getElementById('siteRuleEnabled')?.checked !== false,
+		name: String(getInputById('siteRuleName')?.value || '').trim() || validation.normalizedPattern,
+		enabled: getInputById('siteRuleEnabled')?.checked !== false,
 		pattern: validation.normalizedPattern,
 		overrides: buildSiteRuleOverridesFromEditor(),
 	};
@@ -949,13 +1118,17 @@ function initSiteRuleControls(): void {
 		});
 	});
 	document.getElementById('siteRulePattern')?.addEventListener('input', (event) => {
-		const validation = validateSiteRulePatternState(event.target.value);
+		const target = event.target;
+		if (!(target instanceof HTMLInputElement)) {
+			return;
+		}
+		const validation = validateSiteRulePatternState(target.value);
 		const feedback = document.getElementById('siteRulePatternFeedback');
-		event.target.classList.toggle('is-invalid', !validation.valid && event.target.value.trim().length > 0);
+		target.classList.toggle('is-invalid', !validation.valid && target.value.trim().length > 0);
 		if (!feedback) {
 			return;
 		}
-		if (!event.target.value.trim()) {
+		if (!target.value.trim()) {
 			feedback.textContent = '';
 			feedback.classList.remove('is-error', 'is-success');
 			return;
@@ -970,7 +1143,7 @@ function initSiteRuleControls(): void {
 	});
 
 	document.getElementById('siteRulesList')?.addEventListener('click', (event) => {
-		const button = event.target.closest('[data-site-rule-action]');
+		const button = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-site-rule-action]') : null;
 		if (!button) {
 			return;
 		}
@@ -999,11 +1172,15 @@ function initSiteRuleControls(): void {
 	});
 
 	document.getElementById('siteRulesList')?.addEventListener('change', (event) => {
-		const toggle = event.target.closest('[data-site-rule-toggle]');
-		if (!toggle) {
+		const toggle = event.target instanceof HTMLInputElement ? event.target.closest<HTMLInputElement>('[data-site-rule-toggle]') : null;
+		if (!(toggle instanceof HTMLInputElement)) {
 			return;
 		}
-		toggleSiteRuleEnabled(toggle.dataset.siteRuleToggle, toggle.checked);
+		const ruleId = toggle.dataset.siteRuleToggle;
+		if (!ruleId) {
+			return;
+		}
+		toggleSiteRuleEnabled(ruleId, toggle.checked);
 	});
 
 	resetSiteRuleEditor();
@@ -1016,13 +1193,17 @@ function usesOptionalNativeMessagingPermission() {
 }
 
 function isNativeMessagingApiAvailable() {
+	const chromeRuntime = chromeApi && typeof chromeApi === 'object' ? Reflect.get(chromeApi, 'runtime') : null;
+	const chromeConnectNative = chromeRuntime && typeof chromeRuntime === 'object'
+		? Reflect.get(chromeRuntime, 'connectNative')
+		: null;
 	return Boolean(
 		browser.runtime?.connectNative
-			|| (typeof chrome !== 'undefined' && chrome.runtime?.connectNative),
+			|| chromeConnectNative,
 	);
 }
 
-function getAgentBridgeInstallCommandForPlatform(platformOs) {
+function getAgentBridgeInstallCommandForPlatform(platformOs: string | undefined): string {
 	switch (String(platformOs || '').trim().toLowerCase()) {
 		case 'win':
 			return '.\\snipsnip.exe install-host';
@@ -1064,20 +1245,20 @@ async function resolveAgentBridgeInstallCommand() {
 	return agentBridgeInstallCommand;
 }
 
-function normalizeLibrarySettingsState(settings) {
+function normalizeLibrarySettingsState(settings: Partial<LibrarySettings> | null | undefined): LibrarySettings {
 	const libraryApi = getLibraryStateApi();
 	if (libraryApi?.normalizeLibrarySettings) {
-		return libraryApi.normalizeLibrarySettings(settings);
+		return libraryApi.normalizeLibrarySettings(settings ?? undefined);
 	}
 
 	return {
 		enabled: settings?.enabled !== false,
 		autoSaveOnPopupOpen: settings?.autoSaveOnPopupOpen !== false,
-		itemsToKeep: Math.max(1, Number.parseInt(settings?.itemsToKeep ?? 10, 10) || 10),
+		itemsToKeep: Math.max(1, Number.parseInt(String(settings?.itemsToKeep ?? 10), 10) || 10),
 	};
 }
 
-async function saveLibrarySettingsState(nextSettings) {
+async function saveLibrarySettingsState(nextSettings: Partial<LibrarySettings>): Promise<LibrarySettings> {
 	const libraryApi = getLibraryStateApi();
 	librarySettings = normalizeLibrarySettingsState(nextSettings);
 
@@ -1090,7 +1271,7 @@ async function saveLibrarySettingsState(nextSettings) {
 	return librarySettings;
 }
 
-async function loadLibrarySettingsState() {
+async function loadLibrarySettingsState(): Promise<LibrarySettings> {
 	const libraryApi = getLibraryStateApi();
 	if (libraryApi?.loadLibrarySettings) {
 		librarySettings = await libraryApi.loadLibrarySettings();
@@ -1102,19 +1283,19 @@ async function loadLibrarySettingsState() {
 	return librarySettings;
 }
 
-async function resetLibrarySettingsState() {
+async function resetLibrarySettingsState(): Promise<LibrarySettings> {
 	const libraryApi = getLibraryStateApi();
 	if (libraryApi?.resetLibrarySettings) {
 		librarySettings = await libraryApi.resetLibrarySettings();
 		return librarySettings;
 	}
 
-	librarySettings = normalizeLibrarySettingsState();
+	librarySettings = normalizeLibrarySettingsState(undefined);
 	await storage.setItem('local:librarySettings', librarySettings);
 	return librarySettings;
 }
 
-async function trimLibraryItemsState(itemsToKeep) {
+async function trimLibraryItemsState(itemsToKeep: number): Promise<unknown[]> {
 	const libraryApi = getLibraryStateApi();
 	if (libraryApi?.trimStoredLibraryItems) {
 		return await libraryApi.trimStoredLibraryItems(itemsToKeep);
@@ -1133,10 +1314,10 @@ async function clearLibraryItemsState() {
 	return [];
 }
 
-function normalizeAgentBridgeSettingsState(settings) {
+function normalizeAgentBridgeSettingsState(settings: Partial<AgentBridgeSettings> | null | undefined): AgentBridgeSettings {
 	const bridgeApi = getAgentBridgeStateApi();
 	if (bridgeApi?.normalizeSettings) {
-		return bridgeApi.normalizeSettings(settings);
+		return bridgeApi.normalizeSettings(settings ?? undefined);
 	}
 
 	return {
@@ -1144,10 +1325,10 @@ function normalizeAgentBridgeSettingsState(settings) {
 	};
 }
 
-function normalizeAgentBridgeStatusState(status) {
+function normalizeAgentBridgeStatusState(status: Partial<AgentBridgeStatus> | null | undefined): AgentBridgeStatus {
 	const bridgeApi = getAgentBridgeStateApi();
 	if (bridgeApi?.normalizeStatus) {
-		return bridgeApi.normalizeStatus(status);
+		return bridgeApi.normalizeStatus(status ?? undefined);
 	}
 
 	return {
@@ -1163,7 +1344,7 @@ function normalizeAgentBridgeStatusState(status) {
 	};
 }
 
-async function saveAgentBridgeSettingsState(nextSettings) {
+async function saveAgentBridgeSettingsState(nextSettings: Partial<AgentBridgeSettings>): Promise<AgentBridgeSettings> {
 	const bridgeApi = getAgentBridgeStateApi();
 	agentBridgeSettings = normalizeAgentBridgeSettingsState(nextSettings);
 
@@ -1227,7 +1408,7 @@ async function requestAgentBridgePermission() {
 
 	const granted = await browser.permissions.request({
 		permissions: ['nativeMessaging'],
-	}).catch((error) => {
+	}).catch((error: unknown) => {
 		console.error('Failed to request native messaging permission:', error);
 		return false;
 	});
@@ -1247,7 +1428,7 @@ async function reloadExtensionForAgentBridgePermissionGrant() {
 	const container = document.getElementById('agent-bridge-container');
 	const statusHint = document.getElementById('agentBridgeStatusHint');
 	const statusText = document.getElementById('agentBridgeStatusText');
-	const refreshBtn = document.getElementById('refreshAgentBridgeStatus');
+	const refreshBtn = getButtonById('refreshAgentBridgeStatus');
 
 	if (container) {
 		container.dataset.bridgeState = 'starting';
@@ -1271,13 +1452,13 @@ async function reloadExtensionForAgentBridgePermissionGrant() {
 
 /* ── Permission Panel Management ── */
 
-function showPermissionPanel(panelState) {
-	const panel = document.getElementById('agentBridgePermissionPanel');
-	const container = document.getElementById('agent-bridge-container');
+function showPermissionPanel(panelState: string): void {
+	const panel = getHtmlElementById('agentBridgePermissionPanel');
+	const container = getHtmlElementById('agent-bridge-container');
 	if (!panel) return;
 
 	panel.hidden = false;
-	panel.querySelectorAll('.permission-panel-state').forEach(el => {
+	panel.querySelectorAll<HTMLElement>('.permission-panel-state').forEach((el) => {
 		el.classList.toggle('is-active', el.dataset.panelState === panelState);
 	});
 
@@ -1287,11 +1468,11 @@ function showPermissionPanel(panelState) {
 }
 
 function hidePermissionPanel() {
-	const panel = document.getElementById('agentBridgePermissionPanel');
-	const container = document.getElementById('agent-bridge-container');
+	const panel = getHtmlElementById('agentBridgePermissionPanel');
+	const container = getHtmlElementById('agent-bridge-container');
 	if (panel) {
 		panel.hidden = true;
-		panel.querySelectorAll('.permission-panel-state').forEach(el => {
+		panel.querySelectorAll<HTMLElement>('.permission-panel-state').forEach((el) => {
 			el.classList.remove('is-active');
 		});
 	}
@@ -1345,7 +1526,7 @@ async function handlePermissionContinue() {
 
 function handlePermissionCancel() {
 	hidePermissionPanel();
-	const toggle = document.querySelector("[name='agentBridgeEnabled']");
+	const toggle = queryElementOfType("[name='agentBridgeEnabled']", HTMLInputElement);
 	if (toggle) toggle.checked = false;
 	agentBridgeSettings.enabled = false;
 	setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
@@ -1357,13 +1538,13 @@ async function handlePermissionRetry() {
 
 function handlePermissionDismiss() {
 	hidePermissionPanel();
-	const toggle = document.querySelector("[name='agentBridgeEnabled']");
+	const toggle = queryElementOfType("[name='agentBridgeEnabled']", HTMLInputElement);
 	if (toggle) toggle.checked = false;
 	agentBridgeSettings.enabled = false;
 	setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
 }
 
-function normalizeImportedOptionsState(importedOptions) {
+function normalizeImportedOptionsState(importedOptions: unknown): OptionsState {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.normalizeImportedOptions) {
 		return optionsStateApi.normalizeImportedOptions(importedOptions, defaultOptions);
@@ -1396,7 +1577,7 @@ function normalizeImportedOptionsState(importedOptions) {
 	return normalizedOptions;
 }
 
-function getContextMenuTransitionState(previousOptions, nextOptions) {
+function getContextMenuTransitionState(previousOptions: Record<string, unknown>, nextOptions: Record<string, unknown>) {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.getContextMenuTransition) {
 		return optionsStateApi.getContextMenuTransition(previousOptions, nextOptions);
@@ -1410,7 +1591,7 @@ function getContextMenuTransitionState(previousOptions, nextOptions) {
 	return nextEnabled ? 'create' : 'remove';
 }
 
-function resetOptionKeysState(keys) {
+function resetOptionKeysState(keys: string[] | string) {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.resetOptionKeys) {
 		return optionsStateApi.resetOptionKeys(options, defaultOptions, keys);
@@ -1459,7 +1640,7 @@ function resetAllOptionsState() {
 	};
 }
 
-function buildExportFilenameState(date) {
+function buildExportFilenameState(date: Date | string | undefined) {
 	const optionsStateApi = getOptionsStateApi();
 	if (optionsStateApi?.buildExportFilename) {
 		return optionsStateApi.buildExportFilename(date);
@@ -1477,7 +1658,7 @@ function buildExportPayload() {
 	};
 }
 
-function applyContextMenuTransition(action) {
+function applyContextMenuTransition(action: 'none' | 'create' | 'remove') {
 	if (action === 'create') {
 		createMenus();
 	} else if (action === 'remove') {
@@ -1505,8 +1686,8 @@ function persistPopupThemeCache(source = options || defaultOptions) {
 	}
 }
 
-function normalizeColorBlindTheme(value) {
-	return ['deuteranopia', 'protanopia', 'tritanopia'].includes(value) ? value : 'deuteranopia';
+function normalizeColorBlindTheme(value: unknown) {
+	return ['deuteranopia', 'protanopia', 'tritanopia'].includes(String(value)) ? String(value) : 'deuteranopia';
 }
 
 function getColorBlindThemeClassName(value = options?.colorBlindTheme) {
@@ -1515,18 +1696,18 @@ function getColorBlindThemeClassName(value = options?.colorBlindTheme) {
 
 const CB_DROPDOWN_LABELS = { deuteranopia: 'Deuteranopia', protanopia: 'Protanopia', tritanopia: 'Tritanopia' };
 
-function updateCbDropdownLabel(value) {
+function updateCbDropdownLabel(value: string) {
 	const labelEl = document.getElementById('colorBlindThemeBtnLabel');
 	if (labelEl) labelEl.textContent = CB_DROPDOWN_LABELS[value] || 'Deuteranopia';
 	const panel = document.getElementById('colorBlindThemePanel');
 	if (panel) {
-		panel.querySelectorAll('.dd-item[data-value]').forEach(item => {
+		queryAllOfType('.dd-item[data-value]', HTMLElement, panel).forEach(item => {
 			item.setAttribute('aria-selected', String(item.dataset.value === value));
 		});
 	}
 }
 
-function toggleCbDropdown(e) {
+function toggleCbDropdown(e: Event) {
 	e.stopPropagation();
 	const panel = document.getElementById('colorBlindThemePanel');
 	const btn = document.getElementById('colorBlindThemeBtn');
@@ -1640,20 +1821,20 @@ function configureReviewLink() {
 	reviewLink.href = isFirefox ? firefoxUrl : chromeUrl;
 }
 
-const _saveOptions = e => {
+const _saveOptions = (e: Event) => {
 	e.preventDefault();
 
 	const customSendToTargets = normalizeCustomSendToTargetsState(options.sendToCustomTargets);
 	options = {
-		frontmatter: document.querySelector("[name='frontmatter']").value,
-		backmatter: document.querySelector("[name='backmatter']").value,
-		title: document.querySelector("[name='title']").value,
-		disallowedChars: document.querySelector("[name='disallowedChars']").value,
-		includeTemplate: document.querySelector("[name='includeTemplate']").checked,
-		saveAs: document.querySelector("[name='saveAs']").checked,
-		downloadImages: document.querySelector("[name='downloadImages']").checked,
-		imagePrefix: document.querySelector("[name='imagePrefix']").value,
-		mdClipsFolder: document.querySelector("[name='mdClipsFolder']").value,
+		frontmatter: getTextAreaValueByName('frontmatter'),
+		backmatter: getTextAreaValueByName('backmatter'),
+		title: getInputValueByName('title'),
+		disallowedChars: getInputValueByName('disallowedChars'),
+		includeTemplate: getCheckedByName('includeTemplate'),
+		saveAs: getCheckedByName('saveAs'),
+		downloadImages: getCheckedByName('downloadImages'),
+		imagePrefix: getInputValueByName('imagePrefix'),
+		mdClipsFolder: getInputValueByName('mdClipsFolder'),
 		defaultExportType: getCheckedValue(document.querySelectorAll("input[name='defaultExportType']")) || 'markdown',
 		defaultSendToTarget: normalizeDefaultSendToTargetState(
 			getCheckedValue(document.querySelectorAll("input[name='defaultSendToTarget']")) || DEFAULT_SEND_TO_TARGET,
@@ -1661,26 +1842,26 @@ const _saveOptions = e => {
 		),
 		sendToCustomTargets: customSendToTargets,
 		sendToMaxUrlLength: normalizeSendToMaxUrlLengthState(
-			document.querySelector("[name='sendToMaxUrlLength']")?.value,
+			getInputValueByName('sendToMaxUrlLength'),
 			defaultOptions?.sendToMaxUrlLength,
 		),
-		turndownEscape: document.querySelector("[name='turndownEscape']").checked,
+		turndownEscape: getCheckedByName('turndownEscape'),
 		hashtagHandling: getCheckedValue(document.querySelectorAll("input[name='hashtagHandling']")),
-		contextMenus: document.querySelector("[name='contextMenus']").checked,
-		batchProcessingEnabled: document.querySelector("[name='batchProcessingEnabled']").checked,
-		obsidianIntegration: document.querySelector("[name='obsidianIntegration']").checked,
-		obsidianVault: document.querySelector("[name='obsidianVault']").value,
-		obsidianFolder: document.querySelector("[name='obsidianFolder']").value,
+		contextMenus: getCheckedByName('contextMenus'),
+		batchProcessingEnabled: getCheckedByName('batchProcessingEnabled'),
+		obsidianIntegration: getCheckedByName('obsidianIntegration'),
+		obsidianVault: getInputValueByName('obsidianVault'),
+		obsidianFolder: getInputValueByName('obsidianFolder'),
 
-		preserveCodeFormatting: document.querySelector("[name='preserveCodeFormatting']").checked,
-		autoDetectCodeLanguage: document.querySelector("[name='autoDetectCodeLanguage']").checked,
+		preserveCodeFormatting: getCheckedByName('preserveCodeFormatting'),
+		autoDetectCodeLanguage: getCheckedByName('autoDetectCodeLanguage'),
 
 		// Add table formatting options
 		tableFormatting: {
-			stripLinks: document.querySelector("[name='tableFormatting.stripLinks']").checked,
-			stripFormatting: document.querySelector("[name='tableFormatting.stripFormatting']").checked,
-			prettyPrint: document.querySelector("[name='tableFormatting.prettyPrint']").checked,
-			centerText: document.querySelector("[name='tableFormatting.centerText']").checked,
+			stripLinks: getCheckedByName('tableFormatting.stripLinks'),
+			stripFormatting: getCheckedByName('tableFormatting.stripFormatting'),
+			prettyPrint: getCheckedByName('tableFormatting.prettyPrint'),
+			centerText: getCheckedByName('tableFormatting.centerText'),
 		},
 
 		headingStyle: getCheckedValue(document.querySelectorAll("input[name='headingStyle']")),
@@ -1697,12 +1878,12 @@ const _saveOptions = e => {
 		downloadMode: getCheckedValue(document.querySelectorAll("input[name='downloadMode']")),
 		popupTheme: getCheckedValue(document.querySelectorAll("input[name='popupTheme']")),
 		specialTheme: getCheckedValue(document.querySelectorAll("input[name='specialTheme']")) || 'none',
-		colorBlindTheme: normalizeColorBlindTheme(document.querySelector("[name='colorBlindTheme']")?.value),
-		specialThemeIcon: document.querySelector("[name='specialThemeIcon']").checked,
+		colorBlindTheme: normalizeColorBlindTheme(getInputValueByName('colorBlindTheme')),
+		specialThemeIcon: getCheckedByName('specialThemeIcon'),
 		popupAccent: getCheckedValue(document.querySelectorAll("input[name='popupAccent']")),
-		compactMode: document.querySelector("[name='compactMode']").checked,
-		showThemeToggleInPopup: document.querySelector("[name='showThemeToggleInPopup']").checked,
-		showUserGuideIcon: document.querySelector("[name='showUserGuideIcon']").checked,
+		compactMode: getCheckedByName('compactMode'),
+		showThemeToggleInPopup: getCheckedByName('showThemeToggleInPopup'),
+		showUserGuideIcon: getCheckedByName('showUserGuideIcon'),
 		editorTheme: getCheckedValue(document.querySelectorAll("input[name='editorTheme']")),
 		siteRules: normalizeSiteRulesState(options.siteRules),
 	};
@@ -1710,17 +1891,19 @@ const _saveOptions = e => {
 	save();
 };
 
-const save = (feedback = { message: 'Options Saved 💾', type: 'success' }) => {
+const save = (
+	feedback: false | { message: string; type: string } = { message: 'Options Saved 💾', type: 'success' },
+) => {
 	const spinner = document.getElementById('spinner');
-	spinner.style.display = 'block';
+	if (spinner) spinner.style.display = 'block';
 	options = normalizeImportedOptionsState(options);
 	options.siteRules = normalizeSiteRulesState(options.siteRules);
 
-	const safeUpdateMenu = (id, update) => {
+	const safeUpdateMenu = (id: string, update: { checked: boolean }) => {
 		if (!browser.contextMenus || typeof browser.contextMenus.update !== 'function') {
 			return Promise.resolve();
 		}
-		return browser.contextMenus.update(id, update).catch((err) => {
+		return browser.contextMenus.update(id, update).catch((err: unknown) => {
 			const message = String(err?.message || err || '');
 			if (!message.includes('Cannot find menu item')) {
 				console.warn(`Failed to update context menu '${id}':`, err);
@@ -1752,17 +1935,20 @@ const save = (feedback = { message: 'Options Saved 💾', type: 'success' }) => 
 			if (feedback !== false) {
 				showToast(feedback?.message || 'Options Saved 💾', feedback?.type || 'success');
 			}
-			spinner.style.display = 'none';
+			if (spinner) spinner.style.display = 'none';
 		})
-		.catch(err => {
+		.catch((err: unknown) => {
 			showToast(String(err), 'error');
-			spinner.style.display = 'none';
+			if (spinner) spinner.style.display = 'none';
 		});
 };
 
 // Toast notification system
-function showToast(message, type) {
-	const toast = document.getElementById('status');
+function showToast(message: string, type: string) {
+	const toast = getElementByIdOfType('status', HTMLElement) as ToastElement | null;
+	if (!toast) {
+		return;
+	}
 	toast.textContent = message;
 	toast.className = `toast ${type} visible`;
 	clearTimeout(toast._hideTimeout);
@@ -1812,7 +1998,7 @@ function buildTemplatePreviewSampleArticle() {
 	};
 }
 
-function renderTemplatePreviewOutput(outputId, templateValue) {
+function renderTemplatePreviewOutput(outputId: string, templateValue: unknown) {
 	const output = document.getElementById(outputId);
 	if (!output) {
 		return;
@@ -1835,11 +2021,8 @@ function renderTemplatePreviewOutput(outputId, templateValue) {
 }
 
 function renderTemplatePreviews() {
-	const frontmatterInput = document.getElementById('frontmatter');
-	const backmatterInput = document.getElementById('backmatter');
-
-	renderTemplatePreviewOutput('frontmatter-preview-output', frontmatterInput?.value || '');
-	renderTemplatePreviewOutput('backmatter-preview-output', backmatterInput?.value || '');
+	renderTemplatePreviewOutput('frontmatter-preview-output', getTextAreaById('frontmatter')?.value || '');
+	renderTemplatePreviewOutput('backmatter-preview-output', getTextAreaById('backmatter')?.value || '');
 }
 
 function bindTemplatePreviewListeners() {
@@ -1848,7 +2031,7 @@ function bindTemplatePreviewListeners() {
 	}
 
 	['frontmatter', 'backmatter'].forEach((id) => {
-		const input = document.getElementById(id);
+		const input = getTextAreaById(id);
 		if (!input) {
 			return;
 		}
@@ -1859,54 +2042,85 @@ function bindTemplatePreviewListeners() {
 	templatePreviewListenersBound = true;
 }
 
-const setCurrentChoice = result => {
+const setCurrentChoice = (result: Record<string, unknown>) => {
 	options = normalizeImportedOptionsState(result);
 
 	// if browser doesn't support the download api (i.e. Safari)
 	// we have to use contentLink download mode
 	if (!browser.downloads) {
 		options.downloadMode = 'contentLink';
-		document.querySelectorAll("[name='downloadMode']").forEach(el => el.disabled = true);
-		document.querySelector('#downloadMode .card-desc').innerText = 'The Downloads API is unavailable in this browser.';
+		queryAllOfType("[name='downloadMode']", HTMLInputElement).forEach((el) => {
+			el.disabled = true;
+		});
+		const cardDesc = queryElementOfType('#downloadMode .card-desc', HTMLElement);
+		if (cardDesc) {
+			cardDesc.innerText = 'The Downloads API is unavailable in this browser.';
+		}
 	}
 
 	const downloadImages = options.downloadImages && options.downloadMode === 'downloadsApi';
 
-	if (!downloadImages && (options.imageStyle === 'markdown' || options.imageStyle.startsWith('obsidian'))) {
+	const imageStyle = String(options.imageStyle || 'originalSource');
+	if (!downloadImages && (imageStyle === 'markdown' || imageStyle.startsWith('obsidian'))) {
 		options.imageStyle = 'originalSource';
 	}
 
 	options.preserveCodeFormatting = options.preserveCodeFormatting === true;
 	options.autoDetectCodeLanguage = options.autoDetectCodeLanguage !== false;
 
-	document.querySelector("[name='frontmatter']").value = options.frontmatter;
-	document.querySelector("[name='backmatter']").value = options.backmatter;
-	document.querySelector("[name='title']").value = options.title;
-	document.querySelector("[name='disallowedChars']").value = options.disallowedChars;
-	document.querySelector("[name='includeTemplate']").checked = options.includeTemplate;
-	document.querySelector("[name='saveAs']").checked = options.saveAs;
-	document.querySelector("[name='downloadImages']").checked = options.downloadImages;
-	document.querySelector("[name='imagePrefix']").value = options.imagePrefix;
-	document.querySelector("[name='mdClipsFolder']").value = result.mdClipsFolder;
-	document.querySelector("[name='turndownEscape']").checked = options.turndownEscape;
-	document.querySelector("[name='contextMenus']").checked = options.contextMenus;
-	document.querySelector("[name='batchProcessingEnabled']").checked = options.batchProcessingEnabled !== false;
-	document.querySelector("[name='obsidianIntegration']").checked = options.obsidianIntegration;
-	document.querySelector("[name='obsidianVault']").value = options.obsidianVault;
-	document.querySelector("[name='obsidianFolder']").value = options.obsidianFolder;
-	document.querySelector("[name='sendToMaxUrlLength']").value = options.sendToMaxUrlLength;
+	const frontmatterInput = queryElementOfType("[name='frontmatter']", HTMLTextAreaElement);
+	const backmatterInput = queryElementOfType("[name='backmatter']", HTMLTextAreaElement);
+	const titleInput = queryElementOfType("[name='title']", HTMLInputElement);
+	const disallowedCharsInput = queryElementOfType("[name='disallowedChars']", HTMLInputElement);
+	const includeTemplateInput = queryElementOfType("[name='includeTemplate']", HTMLInputElement);
+	const saveAsInput = queryElementOfType("[name='saveAs']", HTMLInputElement);
+	const downloadImagesInput = queryElementOfType("[name='downloadImages']", HTMLInputElement);
+	const imagePrefixInput = queryElementOfType("[name='imagePrefix']", HTMLInputElement);
+	const mdClipsFolderInput = queryElementOfType("[name='mdClipsFolder']", HTMLInputElement);
+	const turndownEscapeInput = queryElementOfType("[name='turndownEscape']", HTMLInputElement);
+	const contextMenusInput = queryElementOfType("[name='contextMenus']", HTMLInputElement);
+	const batchProcessingEnabledInput = queryElementOfType("[name='batchProcessingEnabled']", HTMLInputElement);
+	const obsidianIntegrationInput = queryElementOfType("[name='obsidianIntegration']", HTMLInputElement);
+	const obsidianVaultInput = queryElementOfType("[name='obsidianVault']", HTMLInputElement);
+	const obsidianFolderInput = queryElementOfType("[name='obsidianFolder']", HTMLInputElement);
+	const sendToMaxUrlLengthInput = queryElementOfType("[name='sendToMaxUrlLength']", HTMLInputElement);
+	if (frontmatterInput) frontmatterInput.value = String(options.frontmatter || '');
+	if (backmatterInput) backmatterInput.value = String(options.backmatter || '');
+	if (titleInput) titleInput.value = String(options.title || '');
+	if (disallowedCharsInput) disallowedCharsInput.value = String(options.disallowedChars || '');
+	if (includeTemplateInput) includeTemplateInput.checked = options.includeTemplate === true;
+	if (saveAsInput) saveAsInput.checked = options.saveAs === true;
+	if (downloadImagesInput) downloadImagesInput.checked = options.downloadImages === true;
+	if (imagePrefixInput) imagePrefixInput.value = String(options.imagePrefix || '');
+	if (mdClipsFolderInput) {
+		mdClipsFolderInput.value = typeof result.mdClipsFolder === 'string'
+			? result.mdClipsFolder
+			: '';
+	}
+	if (turndownEscapeInput) turndownEscapeInput.checked = options.turndownEscape === true;
+	if (contextMenusInput) contextMenusInput.checked = options.contextMenus === true;
+	if (batchProcessingEnabledInput) batchProcessingEnabledInput.checked = options.batchProcessingEnabled !== false;
+	if (obsidianIntegrationInput) obsidianIntegrationInput.checked = options.obsidianIntegration === true;
+	if (obsidianVaultInput) obsidianVaultInput.value = String(options.obsidianVault || '');
+	if (obsidianFolderInput) obsidianFolderInput.value = String(options.obsidianFolder || '');
+	if (sendToMaxUrlLengthInput) sendToMaxUrlLengthInput.value = String(options.sendToMaxUrlLength || '');
 
 	// Set preserveCodeFormatting checkbox
-	document.querySelector("[name='preserveCodeFormatting']").checked = options.preserveCodeFormatting;
-	document.querySelector("[name='autoDetectCodeLanguage']").checked = options.autoDetectCodeLanguage;
+	const preserveCodeFormattingInput = queryElementOfType("[name='preserveCodeFormatting']", HTMLInputElement);
+	const autoDetectCodeLanguageInput = queryElementOfType("[name='autoDetectCodeLanguage']", HTMLInputElement);
+	if (preserveCodeFormattingInput) preserveCodeFormattingInput.checked = options.preserveCodeFormatting === true;
+	if (autoDetectCodeLanguageInput) autoDetectCodeLanguageInput.checked = options.autoDetectCodeLanguage === true;
 
 	// Set table formatting checkboxes
-	document.querySelector("[name='tableFormatting.stripLinks']").checked = Boolean(options.tableFormatting.stripLinks);
-	document.querySelector("[name='tableFormatting.stripFormatting']").checked = Boolean(
-		options.tableFormatting.stripFormatting,
-	);
-	document.querySelector("[name='tableFormatting.prettyPrint']").checked = Boolean(options.tableFormatting.prettyPrint);
-	document.querySelector("[name='tableFormatting.centerText']").checked = Boolean(options.tableFormatting.centerText);
+	const tableFormatting = options.tableFormatting || {};
+	const stripLinksInput = queryElementOfType("[name='tableFormatting.stripLinks']", HTMLInputElement);
+	const stripFormattingInput = queryElementOfType("[name='tableFormatting.stripFormatting']", HTMLInputElement);
+	const prettyPrintInput = queryElementOfType("[name='tableFormatting.prettyPrint']", HTMLInputElement);
+	const centerTextInput = queryElementOfType("[name='tableFormatting.centerText']", HTMLInputElement);
+	if (stripLinksInput) stripLinksInput.checked = Boolean(tableFormatting.stripLinks);
+	if (stripFormattingInput) stripFormattingInput.checked = Boolean(tableFormatting.stripFormatting);
+	if (prettyPrintInput) prettyPrintInput.checked = Boolean(tableFormatting.prettyPrint);
+	if (centerTextInput) centerTextInput.checked = Boolean(tableFormatting.centerText);
 
 	setCheckedValue(document.querySelectorAll("[name='headingStyle']"), options.headingStyle);
 	setCheckedValue(document.querySelectorAll("[name='hr']"), options.hr);
@@ -1927,12 +2141,17 @@ const setCurrentChoice = result => {
 
 	setCheckedValue(document.querySelectorAll("[name='popupTheme']"), options.popupTheme || 'system');
 	setCheckedValue(document.querySelectorAll("[name='specialTheme']"), options.specialTheme || 'none');
-	document.querySelector("[name='colorBlindTheme']").value = normalizeColorBlindTheme(options.colorBlindTheme);
-	document.querySelector("[name='specialThemeIcon']").checked = options.specialThemeIcon !== false;
+	const colorBlindThemeInput = queryElementOfType("[name='colorBlindTheme']", HTMLInputElement);
+	const specialThemeIconInput = queryElementOfType("[name='specialThemeIcon']", HTMLInputElement);
+	if (colorBlindThemeInput) colorBlindThemeInput.value = normalizeColorBlindTheme(options.colorBlindTheme);
+	if (specialThemeIconInput) specialThemeIconInput.checked = options.specialThemeIcon !== false;
 	setCheckedValue(document.querySelectorAll("[name='popupAccent']"), options.popupAccent || 'sage');
-	document.querySelector("[name='compactMode']").checked = options.compactMode || false;
-	document.querySelector("[name='showThemeToggleInPopup']").checked = options.showThemeToggleInPopup !== false;
-	document.querySelector("[name='showUserGuideIcon']").checked = options.showUserGuideIcon !== false;
+	const compactModeInput = queryElementOfType("[name='compactMode']", HTMLInputElement);
+	const showThemeToggleInput = queryElementOfType("[name='showThemeToggleInPopup']", HTMLInputElement);
+	const showUserGuideIconInput = queryElementOfType("[name='showUserGuideIcon']", HTMLInputElement);
+	if (compactModeInput) compactModeInput.checked = options.compactMode === true;
+	if (showThemeToggleInput) showThemeToggleInput.checked = options.showThemeToggleInPopup !== false;
+	if (showUserGuideIconInput) showUserGuideIconInput.checked = options.showUserGuideIcon !== false;
 	setCheckedValue(document.querySelectorAll("[name='editorTheme']"), options.editorTheme || 'default');
 
 	updateSpecialThemeControlState();
@@ -2070,7 +2289,7 @@ const refreshElements = () => {
 
 	show(
 		document.getElementById('imageRefOptions'),
-		!options.imageStyle.startsWith('obsidian') && options.imageStyle !== 'noImage',
+		!(options.imageStyle?.startsWith('obsidian')) && options.imageStyle !== 'noImage',
 	);
 
 	show(document.getElementById('fence'), options.codeBlockStyle === 'fenced');
@@ -2612,7 +2831,9 @@ function initSearch() {
 			el.removeAttribute('data-search-force-shown');
 		});
 
-		sections.forEach(section => section.classList.remove('search-section-empty'));
+		sections.forEach((section) => {
+			section.classList.remove('search-section-empty');
+		});
 
 		const activeTab = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
 		const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -2779,15 +3000,21 @@ function _initSearchLegacy() {
 			document.querySelectorAll('[data-search-force-shown]').forEach(el => {
 				el.removeAttribute('data-search-force-shown');
 			});
-			sections.forEach(s => s.classList.remove('search-section-empty'));
+			sections.forEach((section) => {
+				section.classList.remove('search-section-empty');
+			});
 			// Re-trigger sidebar to show correct section
 			const activeTab = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
 			const sidebarItems = document.querySelectorAll('.sidebar-item');
 			const allSections = document.querySelectorAll('.section');
-			sidebarItems.forEach(item => item.classList.remove('active'));
+			sidebarItems.forEach((item) => {
+				item.classList.remove('active');
+			});
 			const activeItem = document.querySelector(`.sidebar-item[data-section="${activeTab}"]`);
 			if (activeItem) activeItem.classList.add('active');
-			allSections.forEach(s => s.classList.remove('active'));
+			allSections.forEach((section) => {
+				section.classList.remove('active');
+			});
 			const activeSection = document.getElementById(`section-${activeTab}`);
 			if (activeSection) activeSection.classList.add('active');
 			// Restore conditional visibility

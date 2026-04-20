@@ -85,6 +85,12 @@ declare global {
 	var snipSnipSiteRules:
 		| {
 			normalizeSiteRules?(rules: unknown): unknown[];
+			normalizeSiteRuleOverrides?(overrides: unknown): Record<string, unknown>;
+			validateSiteRulePattern?(pattern: unknown): {
+				valid: boolean;
+				error: string;
+				normalizedPattern: string;
+			};
 			resolveSiteRuleOptions?(pageUrl: string, options: Record<string, unknown>): {
 				options: Record<string, unknown>;
 				matchedRule: unknown;
