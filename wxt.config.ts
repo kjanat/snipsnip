@@ -3,7 +3,7 @@ import { defineConfig } from 'wxt';
 
 const autoIcons: AutoIconsOptions = {
 	enabled: true,
-	baseIconPath: 'assets/icon.svg',
+	baseIconPath: 'assets/alt-icon.svg',
 	developmentIndicator: 'overlay',
 	sizes: [192, 256, 512],
 };
