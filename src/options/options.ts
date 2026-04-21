@@ -281,6 +281,41 @@ function normalizeSpecialTheme(value: unknown): SpecialTheme {
 		: 'none';
 }
 
+function normalizeDefaultExportType(value: unknown): DefaultExportType {
+	const normalized = String(value || 'markdown');
+	return normalized === 'html' || normalized === 'text' || normalized === 'pdf' || normalized === 'copy'
+			|| normalized === 'sendTo'
+		? normalized
+		: 'markdown';
+}
+
+function normalizeDownloadMode(value: unknown): DownloadMode {
+	return value === 'contentLink' ? 'contentLink' : 'downloadsApi';
+}
+
+function normalizePopupTheme(value: unknown): ExtensionOptions['popupTheme'] {
+	if (value === 'light' || value === 'dark') {
+		return value;
+	}
+
+	return 'system';
+}
+
+function normalizeImageStyle(value: unknown): NonNullable<ExtensionOptions['imageStyle']> {
+	if (
+		value === 'originalSource' || value === 'noImage' || value === 'base64' || value === 'obsidian'
+		|| value === 'obsidian-nofolder'
+	) {
+		return value;
+	}
+
+	return 'markdown';
+}
+
+function normalizeImageRefStyle(value: unknown): NonNullable<ExtensionOptions['imageRefStyle']> {
+	return value === 'referenced' ? 'referenced' : 'inlined';
+}
+
 function getTableFormattingState(value: unknown): TableFormattingState {
 	if (!isRecord(value)) {
 		return {};
@@ -1729,7 +1764,7 @@ function normalizeColorBlindTheme(value: unknown): ColorBlindTheme {
 	return normalized === 'protanopia' || normalized === 'tritanopia' ? normalized : 'deuteranopia';
 }
 
-function getColorBlindThemeClassName(value: unknown = options?.colorBlindTheme): string {
+function _getColorBlindThemeClassName(value: unknown = options?.colorBlindTheme): string {
 	return `colorblind-theme-${normalizeColorBlindTheme(value)}`;
 }
 
@@ -1875,7 +1910,9 @@ const _saveOptions = (e: Event) => {
 		downloadImages: getCheckedByName('downloadImages'),
 		imagePrefix: getInputValueByName('imagePrefix'),
 		mdClipsFolder: getInputValueByName('mdClipsFolder'),
-		defaultExportType: getCheckedValue(document.querySelectorAll("input[name='defaultExportType']")) || 'markdown',
+		defaultExportType: normalizeDefaultExportType(
+			getCheckedValue(document.querySelectorAll("input[name='defaultExportType']")),
+		),
 		defaultSendToTarget: normalizeDefaultSendToTargetState(
 			getCheckedValue(document.querySelectorAll("input[name='defaultSendToTarget']")) || DEFAULT_SEND_TO_TARGET,
 			customSendToTargets,
@@ -1913,11 +1950,11 @@ const _saveOptions = (e: Event) => {
 		strongDelimiter: getCheckedValue(document.querySelectorAll("input[name='strongDelimiter']")),
 		linkStyle: getCheckedValue(document.querySelectorAll("input[name='linkStyle']")),
 		linkReferenceStyle: getCheckedValue(document.querySelectorAll("input[name='linkReferenceStyle']")),
-		imageStyle: getCheckedValue(document.querySelectorAll("input[name='imageStyle']")),
-		imageRefStyle: getCheckedValue(document.querySelectorAll("input[name='imageRefStyle']")),
-		downloadMode: getCheckedValue(document.querySelectorAll("input[name='downloadMode']")),
-		popupTheme: getCheckedValue(document.querySelectorAll("input[name='popupTheme']")),
-		specialTheme: getCheckedValue(document.querySelectorAll("input[name='specialTheme']")) || 'none',
+		imageStyle: normalizeImageStyle(getCheckedValue(document.querySelectorAll("input[name='imageStyle']"))),
+		imageRefStyle: normalizeImageRefStyle(getCheckedValue(document.querySelectorAll("input[name='imageRefStyle']"))),
+		downloadMode: normalizeDownloadMode(getCheckedValue(document.querySelectorAll("input[name='downloadMode']"))),
+		popupTheme: normalizePopupTheme(getCheckedValue(document.querySelectorAll("input[name='popupTheme']"))),
+		specialTheme: normalizeSpecialTheme(getCheckedValue(document.querySelectorAll("input[name='specialTheme']"))),
 		colorBlindTheme: normalizeColorBlindTheme(getInputValueByName('colorBlindTheme')),
 		specialThemeIcon: getCheckedByName('specialThemeIcon'),
 		popupAccent: getCheckedValue(document.querySelectorAll("input[name='popupAccent']")),
@@ -2405,9 +2442,10 @@ const inputChange = async (e: Event | undefined) => {
 			} else if (key === 'libraryAutoSaveOnPopupOpen') {
 				librarySettings.autoSaveOnPopupOpen = Boolean(value);
 			} else if (key === 'libraryItemsToKeep') {
+				const nextItemsToKeep = typeof value === 'number' ? value : Number.parseInt(String(value), 10);
 				librarySettings.itemsToKeep = normalizeLibrarySettingsState({
 					...librarySettings,
-					itemsToKeep: typeof value === 'string' ? Number.parseInt(value, 10) : value,
+					itemsToKeep: nextItemsToKeep,
 				}).itemsToKeep;
 				const itemsToKeepInput = queryElementOfType("[name='libraryItemsToKeep']", HTMLInputElement);
 				if (itemsToKeepInput) itemsToKeepInput.value = String(librarySettings.itemsToKeep);
@@ -2443,8 +2481,9 @@ const inputChange = async (e: Event | undefined) => {
 		} else {
 			if (target instanceof HTMLInputElement && target.type === 'checkbox') value = target.checked;
 			if (key === 'sendToMaxUrlLength') {
-				value = normalizeSendToMaxUrlLengthState(value, defaultOptions?.sendToMaxUrlLength);
-				target.value = String(value);
+				const nextMaxUrlLength = normalizeSendToMaxUrlLengthState(value, defaultOptions?.sendToMaxUrlLength);
+				value = String(nextMaxUrlLength);
+				target.value = String(nextMaxUrlLength);
 			}
 
 			// Handle nested table formatting options
@@ -2635,7 +2674,11 @@ function initSidebar() {
 			searchInput.dispatchEvent(new Event('input'));
 		}
 
-		const { activeItem } = switchSection(item.dataset.section);
+		const sectionId = item.dataset.section;
+		if (!sectionId) {
+			return;
+		}
+		const { activeItem } = switchSection(sectionId);
 		if (shouldFocus && activeItem) {
 			activeItem.focus();
 		}
@@ -2678,35 +2721,37 @@ function initSidebar() {
 // ── Per-card and global reset ──
 
 function injectResetLinks() {
-	document.querySelectorAll('.setting-card[data-setting-key], .setting-card[data-local-setting-key]').forEach(card => {
-		// Skip if already injected
-		if (card.querySelector('.reset-setting-link')) return;
+	queryAllOfType('.setting-card[data-setting-key], .setting-card[data-local-setting-key]', HTMLElement).forEach(
+		(card) => {
+			// Skip if already injected
+			if (card.querySelector('.reset-setting-link')) return;
 
-		const resetBtn = document.createElement('button');
-		resetBtn.type = 'button';
-		resetBtn.className = 'reset-setting-link';
-		resetBtn.textContent = 'Reset';
-		resetBtn.title = 'Reset to default';
+			const resetBtn = document.createElement('button');
+			resetBtn.type = 'button';
+			resetBtn.className = 'reset-setting-link';
+			resetBtn.textContent = 'Reset';
+			resetBtn.title = 'Reset to default';
 
-		// If card has a card-title, wrap title + reset in a row
-		const titleEl = card.querySelector(':scope > .card-title');
-		if (titleEl) {
-			const row = document.createElement('div');
-			row.className = 'card-title-row';
-			titleEl.before(row);
-			row.appendChild(titleEl);
-			row.appendChild(resetBtn);
-		} else {
-			// For toggle-only cards, insert as first child (positioned absolutely via CSS)
-			card.insertBefore(resetBtn, card.firstChild);
-		}
+			// If card has a card-title, wrap title + reset in a row
+			const titleEl = card.querySelector(':scope > .card-title');
+			if (titleEl) {
+				const row = document.createElement('div');
+				row.className = 'card-title-row';
+				titleEl.before(row);
+				row.appendChild(titleEl);
+				row.appendChild(resetBtn);
+			} else {
+				// For toggle-only cards, insert as first child (positioned absolutely via CSS)
+				card.insertBefore(resetBtn, card.firstChild);
+			}
 
-		resetBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			resetSettingByCard(card);
-		});
-	});
+			resetBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				resetSettingByCard(card);
+			});
+		},
+	);
 }
 
 async function resetSettingByCard(card: HTMLElement) {
@@ -2727,7 +2772,11 @@ async function resetSettingByCard(card: HTMLElement) {
 		return;
 	}
 
-	const keys = card.dataset.settingKey.split(',');
+	const settingKey = card.dataset.settingKey;
+	if (!settingKey) {
+		return;
+	}
+	const keys = settingKey.split(',');
 	const resetResult = resetOptionKeysState(keys);
 	options = resetResult.options;
 	setCurrentChoice(options);
@@ -2762,7 +2811,7 @@ const loaded = () => {
 	initSiteRuleControls();
 
 	browser.storage.onChanged?.addListener?.(
-		(changes: Record<string, browser.Storage.StorageChange>, areaName: string) => {
+		(changes: Record<string, { newValue?: unknown }>, areaName: string) => {
 			if (areaName !== 'local') {
 				return;
 			}
@@ -2772,12 +2821,16 @@ const loaded = () => {
 			const statusKey = bridgeApi?.STORAGE_KEYS?.STATUS;
 
 			if (settingsKey && changes[settingsKey]) {
-				agentBridgeSettings = normalizeAgentBridgeSettingsState(changes[settingsKey].newValue);
+				agentBridgeSettings = normalizeAgentBridgeSettingsState(
+					isRecord(changes[settingsKey].newValue) ? changes[settingsKey].newValue : undefined,
+				);
 				setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
 			}
 
 			if (statusKey && changes[statusKey]) {
-				agentBridgeStatus = normalizeAgentBridgeStatusState(changes[statusKey].newValue);
+				agentBridgeStatus = normalizeAgentBridgeStatusState(
+					isRecord(changes[statusKey].newValue) ? changes[statusKey].newValue : undefined,
+				);
 				setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
 			}
 		},
@@ -2821,9 +2874,10 @@ const loaded = () => {
 		const item = e.target instanceof HTMLElement ? e.target.closest<HTMLElement>('.dd-item[data-value]') : null;
 		if (!item) return;
 		const value = item.dataset.value;
+		if (!value) return;
 		const hiddenInput = queryElementOfType("[name='colorBlindTheme']", HTMLInputElement);
 		if (hiddenInput) hiddenInput.value = value;
-		options.colorBlindTheme = value;
+		options.colorBlindTheme = normalizeColorBlindTheme(value);
 		closeCbDropdown();
 		save();
 		refreshElements();
@@ -2851,7 +2905,7 @@ const loaded = () => {
 	if (permGuideLink) {
 		permGuideLink.addEventListener('click', (e: MouseEvent) => {
 			e.preventDefault();
-			const setupGuide = document.getElementById('agentBridgeSetupGuide');
+			const setupGuide = getElementByIdOfType('agentBridgeSetupGuide', HTMLDetailsElement);
 			if (setupGuide) {
 				setupGuide.open = true;
 				setupGuide.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2872,6 +2926,11 @@ function initSearch() {
 	if (!searchInput || !contentPanel || !noResults || !noResultsQuery || !searchApi) {
 		return;
 	}
+	const activeSearchInput = searchInput;
+	const activeContentPanel = contentPanel;
+	const activeNoResults = noResults;
+	const activeNoResultsQuery = noResultsQuery;
+	const activeSearchApi = searchApi;
 
 	const sections = queryAllOfType('.section', HTMLElement);
 	const searchIndex = searchApi.buildSearchIndex(document);
@@ -2888,8 +2947,8 @@ function initSearch() {
 	}
 
 	function restoreDefaultView() {
-		contentPanel.classList.remove('search-active');
-		noResults.classList.remove('visible');
+		activeContentPanel.classList.remove('search-active');
+		activeNoResults.classList.remove('visible');
 		updateSearchStatus('');
 
 		searchIndex.forEach(({ card }) => {
@@ -2932,17 +2991,17 @@ function initSearch() {
 		refreshElements();
 	}
 
-	function performSearch(query) {
-		const normalizedQuery = searchApi.normalizeSearchText(query);
+	function performSearch(query: string) {
+		const normalizedQuery = activeSearchApi.normalizeSearchText(query);
 
 		if (!normalizedQuery) {
 			restoreDefaultView();
 			return;
 		}
 
-		contentPanel.classList.add('search-active');
+		activeContentPanel.classList.add('search-active');
 
-		const searchResults = searchApi.searchSettings(searchIndex, normalizedQuery);
+		const searchResults = activeSearchApi.searchSettings(searchIndex, normalizedQuery);
 		let totalMatches = 0;
 
 		searchResults.results.forEach(({ card, section, matches, tokenMatches }) => {
@@ -2979,7 +3038,7 @@ function initSearch() {
 					const rawKeywords = card.dataset.searchKeywords || '';
 					const keywords = rawKeywords.split(',').map((k) => k.trim()).filter(Boolean);
 					const matchedKeywords = keywords.filter((kw) => {
-						const normKw = searchApi.normalizeSearchText(kw);
+						const normKw = activeSearchApi.normalizeSearchText(kw);
 						return aliasSources.some((m) => normKw.includes(m.token) || normKw.startsWith(m.token));
 					});
 					if (matchedKeywords.length > 0) {
@@ -2988,7 +3047,7 @@ function initSearch() {
 				}
 
 				let parent = card.parentElement;
-				while (parent && parent !== contentPanel) {
+				while (parent && parent !== activeContentPanel) {
 					if (parent.style.display === 'none') {
 						parent.style.display = '';
 						parent.style.opacity = '1';
@@ -3006,18 +3065,18 @@ function initSearch() {
 		});
 
 		if (totalMatches === 0) {
-			noResultsQuery.textContent = query.trim();
-			noResults.classList.add('visible');
+			activeNoResultsQuery.textContent = query.trim();
+			activeNoResults.classList.add('visible');
 			updateSearchStatus(`No settings match "${query.trim()}"`);
 		} else {
-			noResults.classList.remove('visible');
+			activeNoResults.classList.remove('visible');
 			updateSearchStatus(`Showing ${totalMatches} of ${totalSettings} settings`);
 		}
 	}
 
-	searchInput.addEventListener('input', () => {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => performSearch(searchInput.value), 150);
+	activeSearchInput.addEventListener('input', () => {
+		if (searchTimeout) clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(() => performSearch(activeSearchInput.value), 150);
 	});
 
 	document.addEventListener('keydown', (e) => {
@@ -3025,173 +3084,40 @@ function initSearch() {
 			const tag = document.activeElement?.tagName;
 			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 			e.preventDefault();
-			searchInput.focus();
+			activeSearchInput.focus();
 		}
 
-		if (e.key === 'Escape' && document.activeElement === searchInput) {
-			searchInput.value = '';
+		if (e.key === 'Escape' && document.activeElement === activeSearchInput) {
+			activeSearchInput.value = '';
 			performSearch('');
-			searchInput.blur();
-		}
-	});
-}
-
-function _initSearchLegacy() {
-	const searchInput = document.getElementById('settings-search');
-	const contentPanel = document.querySelector('.content-panel');
-	const noResults = document.getElementById('search-no-results');
-	const noResultsQuery = document.getElementById('search-no-results-query');
-	const _shortcutHint = document.getElementById('search-shortcut-hint');
-
-	// Build search index: collect all setting-cards with their searchable text
-	// Also include the downloadModeGroup's inner cards as individual entries
-	const sections = document.querySelectorAll('.section');
-	const searchIndex = [];
-
-	sections.forEach(section => {
-		// Get direct setting-cards and also cards inside #downloadModeGroup
-		const cards = section.querySelectorAll('.setting-card');
-		cards.forEach(card => {
-			const text = card.textContent.toLowerCase();
-			searchIndex.push({ card, section, text });
-		});
-	});
-
-	let searchTimeout = null;
-
-	function performSearch(query) {
-		query = query.trim().toLowerCase();
-
-		if (!query) {
-			// Exit search mode — restore normal sidebar navigation
-			contentPanel.classList.remove('search-active');
-			noResults.classList.remove('visible');
-			searchIndex.forEach(({ card }) => {
-				card.classList.remove('search-hidden', 'search-match');
-				card.style.removeProperty('display');
-				card.style.removeProperty('opacity');
-			});
-			// Also restore parent wrappers that may have been force-shown
-			document.querySelectorAll('[data-search-force-shown]').forEach(el => {
-				el.removeAttribute('data-search-force-shown');
-			});
-			sections.forEach((section) => {
-				section.classList.remove('search-section-empty');
-			});
-			// Re-trigger sidebar to show correct section
-			const activeTab = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
-			const currentSidebarItems = queryAllOfType('.sidebar-item', HTMLElement);
-			const allSections = queryAllOfType('.section', HTMLElement);
-			currentSidebarItems.forEach((item) => {
-				item.classList.remove('active');
-			});
-			const activeItem = queryElementOfType(`.sidebar-item[data-section="${activeTab}"]`, HTMLElement);
-			if (activeItem) activeItem.classList.add('active');
-			allSections.forEach((section) => {
-				section.classList.remove('active');
-			});
-			const activeSection = document.getElementById(`section-${activeTab}`);
-			if (activeSection) activeSection.classList.add('active');
-			// Restore conditional visibility
-			refreshElements();
-			return;
-		}
-
-		// Enter search mode
-		contentPanel.classList.add('search-active');
-
-		const terms = query.split(/\s+/).filter(Boolean);
-		let totalMatches = 0;
-
-		searchIndex.forEach(({ card, text }) => {
-			const matches = terms.every(term => text.includes(term));
-			card.classList.toggle('search-hidden', !matches);
-			card.classList.toggle('search-match', matches);
-			if (matches) {
-				totalMatches++;
-				// Override any inline display:none from show() / refreshElements()
-				card.style.display = '';
-				card.style.opacity = '1';
-				// Force-show any conditionally hidden children so they are interactable in search results
-				queryAllOfType('[data-search-reveal]', HTMLElement, card).forEach((child) => {
-					if (child.style.display === 'none') {
-						child.style.display = '';
-						child.style.opacity = '1';
-						child.setAttribute('data-search-force-shown', '');
-					}
-				});
-				// Also ensure parent wrappers (like #downloadModeGroup) are visible
-				let parent = card.parentElement;
-				while (parent && parent !== contentPanel) {
-					if (parent.style.display === 'none') {
-						parent.style.display = '';
-						parent.style.opacity = '1';
-						parent.setAttribute('data-search-force-shown', '');
-					}
-					parent = parent.parentElement;
-				}
-			}
-		});
-
-		// Mark sections that have zero visible cards
-		sections.forEach((section) => {
-			const hasVisible = section.querySelector('.setting-card.search-match');
-			section.classList.toggle('search-section-empty', !hasVisible);
-		});
-
-		// Show/hide no-results message
-		if (totalMatches === 0) {
-			noResultsQuery.textContent = query;
-			noResults.classList.add('visible');
-		} else {
-			noResults.classList.remove('visible');
-		}
-	}
-
-	searchInput.addEventListener('input', () => {
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => performSearch(searchInput.value), 150);
-	});
-
-	// "/" keyboard shortcut to focus search
-	document.addEventListener('keydown', (e) => {
-		if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-			const tag = document.activeElement?.tagName;
-			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-			e.preventDefault();
-			searchInput.focus();
-		}
-		// Escape to clear search
-		if (e.key === 'Escape' && document.activeElement === searchInput) {
-			searchInput.value = '';
-			performSearch('');
-			searchInput.blur();
+			activeSearchInput.blur();
 		}
 	});
 }
 
 document.addEventListener('DOMContentLoaded', loaded);
-document.getElementById('status').addEventListener('click', hideToast);
+getHtmlElementById('status')?.addEventListener('click', hideToast);
 
 /// https://www.somacon.com/p143.php
 // return the value of the radio button that is checked
 // return an empty string if none are checked, or
 // there are no radio buttons
-function getCheckedValue(radioObj) {
+function getCheckedValue(radioObj: RadioNodeList | HTMLInputElement | NodeListOf<HTMLInputElement> | null): string {
 	if (!radioObj) {
 		return '';
 	}
-	const radioLength = radioObj.length;
-	if (radioLength === undefined) {
+	if (radioObj instanceof HTMLInputElement) {
 		if (radioObj.checked) {
 			return radioObj.value;
 		} else {
 			return '';
 		}
 	}
+	const radioLength = radioObj.length;
 	for (let i = 0; i < radioLength; i++) {
-		if (radioObj[i].checked) {
-			return radioObj[i].value;
+		const input = radioObj.item(i);
+		if (input instanceof HTMLInputElement && input.checked) {
+			return input.value;
 		}
 	}
 	return '';
@@ -3201,19 +3127,26 @@ function getCheckedValue(radioObj) {
 // do nothing if there are no radio buttons
 // if the given value does not exist, all the radio buttons
 // are reset to unchecked
-function setCheckedValue(radioObj, newValue) {
+function setCheckedValue(
+	radioObj: RadioNodeList | HTMLInputElement | NodeListOf<HTMLInputElement> | null,
+	newValue: unknown,
+): void {
 	if (!radioObj) {
 		return;
 	}
-	const radioLength = radioObj.length;
-	if (radioLength === undefined) {
-		radioObj.checked = radioObj.value === newValue.toString();
+	if (radioObj instanceof HTMLInputElement) {
+		radioObj.checked = radioObj.value === String(newValue);
 		return;
 	}
+	const radioLength = radioObj.length;
 	for (let i = 0; i < radioLength; i++) {
-		radioObj[i].checked = false;
-		if (radioObj[i].value === newValue.toString()) {
-			radioObj[i].checked = true;
+		const input = radioObj.item(i);
+		if (!(input instanceof HTMLInputElement)) {
+			continue;
+		}
+		input.checked = false;
+		if (input.value === String(newValue)) {
+			input.checked = true;
 		}
 	}
 }

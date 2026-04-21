@@ -1,10 +1,36 @@
-// @ts-nocheck — legacy JS renamed to TS; incremental typing pending.
 import { onMessage, sendMessage } from '@/lib/messaging.ts';
+import type {
+	AgentBridgeSettings,
+	AgentBridgeStatus,
+	LibrarySettings,
+	NotificationMetricsDelta,
+} from '@/lib/types/index.ts';
 import { getItemsBag, getItemsRecord, setItemsBag, storage } from '@/shared/storage.ts';
 type BackgroundMessage = import('@/lib/background/message-contracts.ts').BackgroundMessage;
+type NotificationState = import('@/shared/notifications.ts').NotificationState;
+type NotificationHelpersApi = typeof import('@/shared/notifications.ts');
+type PlatformInfo = { os?: string };
+type InstallDetails = { reason?: string; previousVersion?: string; temporary?: boolean };
+type TabChangeInfo = { status?: string; url?: string };
+type PortLike = {
+	postMessage(message: unknown): void;
+	disconnect(): void;
+	onDisconnect: { addListener(listener: (port: unknown) => void): void };
+	onMessage: { addListener(listener: (message: unknown) => void): void };
+	error?: unknown;
+};
+type PendingNotificationDisplayLock = {
+	tabId: number | null;
+	createdAt: number;
+	timeoutId: ReturnType<typeof setTimeout>;
+};
+type BatchSignal = {
+	cancel(): void;
+};
+type BatchState = Record<string, unknown>;
 // Log platform info. browser.runtime.getBrowserInfo is Firefox-only — on
 // Chromium we report `chromium` instead of spamming "Can't get browser info".
-browser.runtime.getPlatformInfo().then(async platformInfo => {
+browser.runtime.getPlatformInfo().then(async (platformInfo: PlatformInfo) => {
 	const browserInfo = browser.runtime.getBrowserInfo
 		? await browser.runtime.getBrowserInfo()
 		: { name: 'chromium' };
@@ -28,14 +54,14 @@ onMessage('process-error', async (msg) => {
 		// Popup may have been closed; nothing actionable here.
 	});
 });
-browser.runtime.onInstalled.addListener((details) => {
+browser.runtime.onInstalled.addListener((details: InstallDetails) => {
 	handleInstalled(details).catch((error) => {
 		console.error('[Notifications] Failed to handle install event:', error);
 	});
 });
 if (browser.runtime.onStartup?.addListener) {
 	browser.runtime.onStartup.addListener(() => {
-		initializeAgentBridge().catch((error) => {
+		initializeAgentBridge().catch((error: unknown) => {
 			console.error('[Agent Bridge] Failed to initialize on startup:', error);
 		});
 	});
@@ -45,12 +71,12 @@ browser.commands.onCommand.addListener(handleCommands);
 browser.downloads.onChanged.addListener(handleDownloadChange);
 browser.storage.onChanged.addListener(handleStorageChange);
 if (browser.tabs?.onRemoved?.addListener) {
-	browser.tabs.onRemoved.addListener((tabId) => {
+	browser.tabs.onRemoved.addListener((tabId: number) => {
 		clearPendingNotificationDisplayLocksForTab(tabId);
 	});
 }
 if (browser.tabs?.onUpdated?.addListener) {
-	browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+	browser.tabs.onUpdated.addListener((tabId: number, changeInfo: TabChangeInfo) => {
 		if (changeInfo.status === 'loading' || typeof changeInfo.url === 'string') {
 			clearPendingNotificationDisplayLocksForTab(tabId);
 		}
@@ -64,27 +90,28 @@ initializeAgentBridge().catch((error) => {
 });
 
 // Track active downloads
-const activeDownloads = new Map();
+const activeDownloads = new Map<number, string>();
 let batchConversionInProgress = false;
-let activeBatchSignal = null;
-let batchState = null;
-const notificationHelpers = globalThis.snipSnipNotifications;
+let activeBatchSignal: BatchSignal | null = null;
+let batchState: BatchState | null = null;
+const notificationHelpers: NotificationHelpersApi | null =
+	globalThis.snipSnipNotifications as NotificationHelpersApi | undefined ?? null;
 const SINGLE_DOWNLOAD_NOTIFICATION_DELTA = Object.freeze({ downloads: 1, exports: 1 });
 const BATCH_DOWNLOAD_NOTIFICATION_DELTA = Object.freeze({ downloads: 1, exports: 0 });
 const NO_EXPORT_DOWNLOAD_NOTIFICATION_DELTA = Object.freeze({ downloads: 0, exports: 0 });
 const PENDING_NOTIFICATION_DISPLAY_LOCK_TIMEOUT_MS = 5000;
-let releaseHighlightsCachePromise = null;
-let notificationStateTaskChain = Promise.resolve();
-const pendingNotificationDisplayLocks = new Map();
+let releaseHighlightsCachePromise: Promise<{ versions?: Record<string, unknown> }> | null = null;
+let notificationStateTaskChain: Promise<void> = Promise.resolve();
+const pendingNotificationDisplayLocks = new Map<string, PendingNotificationDisplayLock>();
 const AGENT_BRIDGE_HOST_NAME = 'com.snipsnip.bridge';
 const AGENT_BRIDGE_RECONNECT_DELAY_MS = 3000;
-let agentBridgePort = null;
-let agentBridgeConnectPromise = null;
-let agentBridgeReconnectTimer = null;
+let agentBridgePort: PortLike | null = null;
+let agentBridgeConnectPromise: Promise<PortLike | null> | null = null;
+let agentBridgeReconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let agentBridgeSuccessfulConnect = false;
 let agentBridgeOffscreenReady = false;
 
-function runNotificationStateTask(task) {
+function runNotificationStateTask(task: () => Promise<void>): Promise<void> {
 	const run = notificationStateTaskChain.then(() => task(), () => task());
 	notificationStateTaskChain = run.catch((error) => {
 		console.error('[Notifications] Notification state task failed:', error);
@@ -93,17 +120,33 @@ function runNotificationStateTask(task) {
 }
 
 async function loadNotificationState() {
+	if (!notificationHelpers) {
+		return {
+			lastInstalledVersion: null,
+			successfulExportsCount: 0,
+			successfulDownloadsCount: 0,
+			successfulCopiesCount: 0,
+			successfulObsidianSendsCount: 0,
+			successfulBatchUrlsCount: 0,
+			shownSupportThresholds: [],
+			shownUpdateVersions: [],
+			pendingNotifications: [],
+		} satisfies NotificationState;
+	}
 	const stored = await getItemsRecord('local', notificationHelpers.STORAGE_KEYS);
 	return notificationHelpers.ensureNotificationState(stored);
 }
 
-async function saveNotificationState(state) {
+async function saveNotificationState(state: unknown): Promise<NotificationState> {
+	if (!notificationHelpers) {
+		return await loadNotificationState();
+	}
 	const normalizedState = notificationHelpers.ensureNotificationState(state);
-	await setItemsBag('local', normalizedState);
+	await setItemsBag('local', { ...normalizedState });
 	return normalizedState;
 }
 
-function clearPendingNotificationDisplayLock(notificationId) {
+function clearPendingNotificationDisplayLock(notificationId: string) {
 	const lock = pendingNotificationDisplayLocks.get(notificationId);
 	if (lock?.timeoutId) {
 		clearTimeout(lock.timeoutId);
@@ -111,7 +154,7 @@ function clearPendingNotificationDisplayLock(notificationId) {
 	pendingNotificationDisplayLocks.delete(notificationId);
 }
 
-function clearPendingNotificationDisplayLocksForTab(tabId) {
+function clearPendingNotificationDisplayLocksForTab(tabId: number) {
 	if (!Number.isInteger(tabId)) {
 		return;
 	}
@@ -123,7 +166,7 @@ function clearPendingNotificationDisplayLocksForTab(tabId) {
 	}
 }
 
-function hasPendingNotificationDisplayLock(notificationId) {
+function hasPendingNotificationDisplayLock(notificationId: string) {
 	const lock = pendingNotificationDisplayLocks.get(notificationId);
 	if (!lock) {
 		return false;
@@ -137,7 +180,7 @@ function hasPendingNotificationDisplayLock(notificationId) {
 	return true;
 }
 
-function setPendingNotificationDisplayLock(notificationId, tabId) {
+function setPendingNotificationDisplayLock(notificationId: string, tabId: number | null) {
 	clearPendingNotificationDisplayLock(notificationId);
 
 	const timeoutId = setTimeout(() => {
@@ -151,7 +194,10 @@ function setPendingNotificationDisplayLock(notificationId, tabId) {
 	});
 }
 
-async function recordNotificationMetricsSafely(delta, options = {}) {
+async function recordNotificationMetricsSafely(
+	delta: NotificationMetricsDelta | null | undefined,
+	options: Record<string, unknown> = {},
+) {
 	if (!delta || typeof delta !== 'object') {
 		return null;
 	}
@@ -166,7 +212,7 @@ async function recordNotificationMetricsSafely(delta, options = {}) {
 
 async function loadReleaseHighlightsAsset() {
 	if (!releaseHighlightsCachePromise) {
-		releaseHighlightsCachePromise = fetch(browser.runtime.getURL('shared/release-highlights.json'))
+		releaseHighlightsCachePromise = fetch(new URL('/shared/release-highlights.json', self.location.origin).toString())
 			.then(async (response) => {
 				if (!response.ok) {
 					throw new Error(`Unexpected status ${response.status}`);
@@ -183,7 +229,7 @@ async function loadReleaseHighlightsAsset() {
 	return releaseHighlightsCachePromise;
 }
 
-async function getReleaseHighlights(version) {
+async function getReleaseHighlights(version: string) {
 	const asset = await loadReleaseHighlightsAsset();
 	const highlights = asset?.versions?.[version];
 	if (!Array.isArray(highlights)) {
@@ -233,14 +279,14 @@ async function createContextMenus() {
 	await contextMenusApi.createMenus();
 }
 
-function cloneRuntimeOptions(source = {}) {
+function cloneRuntimeOptions(source: Record<string, unknown> = {}) {
 	const nextOptions = {
 		...source,
 	};
 
-	if (source?.tableFormatting && typeof source.tableFormatting === 'object') {
+	if (source.tableFormatting && typeof source.tableFormatting === 'object') {
 		nextOptions.tableFormatting = {
-			...source.tableFormatting,
+			...(source.tableFormatting as Record<string, unknown>),
 		};
 	}
 
@@ -248,7 +294,10 @@ function cloneRuntimeOptions(source = {}) {
 	return nextOptions;
 }
 
-function resolveOptionsForPageUrl(pageUrl, providedOptions = null) {
+function resolveOptionsForPageUrl(
+	pageUrl: string | null | undefined,
+	providedOptions: Record<string, unknown> | null = null,
+) {
 	const baseOptions = providedOptions || getRuntimeDefaultOptions();
 	const siteRulesApi = getSiteRulesApi();
 	if (pageUrl && siteRulesApi?.resolveSiteRuleOptions) {
@@ -316,10 +365,7 @@ function usesOptionalNativeMessagingPermission() {
 }
 
 function isNativeMessagingApiAvailable() {
-	return Boolean(
-		browser.runtime?.connectNative
-			|| (typeof chrome !== 'undefined' && chrome.runtime?.connectNative),
-	);
+	return Boolean(browser.runtime?.connectNative);
 }
 
 async function ensureAgentBridgeOffscreenReady(force = false) {
@@ -457,7 +503,7 @@ function postAgentBridgeMessage(message) {
 	try {
 		agentBridgePort.postMessage(message);
 		return true;
-	} catch (error) {
+	} catch (error: unknown) {
 		console.error('[Agent Bridge] Failed to send native message:', error);
 		return false;
 	}
