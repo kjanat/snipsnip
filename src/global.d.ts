@@ -75,6 +75,23 @@ declare global {
 	var snipSnipNotifications: Record<string, unknown> | undefined;
 	var snipSnipObsidian: SnipSnipObsidianApi | undefined;
 	var snipSnipOptionsState: SnipSnipOptionsStateApi | undefined;
+	var snipSnipOptionsSearch:
+		| {
+			buildSearchIndex(rootNode: Document): Array<{ card: HTMLElement; section: HTMLElement }>;
+			normalizeSearchText(value: unknown): string;
+			searchSettings(
+				index: Array<{ card: HTMLElement; section: HTMLElement }>,
+				query: string,
+			): {
+				results: Array<{
+					card: HTMLElement;
+					section: HTMLElement;
+					matches: boolean;
+					tokenMatches: Array<{ token: string; fieldSource: string }>;
+				}>;
+			};
+		}
+		| undefined;
 	var snipSnipPagePaths:
 		| {
 			guide: string;

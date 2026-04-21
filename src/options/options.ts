@@ -1606,8 +1606,9 @@ function normalizeImportedOptionsState(importedOptions: unknown): OptionsState {
 	);
 
 	const validPrimaryActions = new Set<DefaultExportType>(['markdown', 'text', 'html', 'pdf', 'copy', 'sendTo']);
-	normalizedOptions.defaultExportType = validPrimaryActions.has(normalizedOptions.defaultExportType)
-		? normalizedOptions.defaultExportType
+	const defaultExportType = normalizedOptions.defaultExportType;
+	normalizedOptions.defaultExportType = defaultExportType && validPrimaryActions.has(defaultExportType)
+		? defaultExportType
 		: defaultOptions.defaultExportType;
 
 	return normalizedOptions;
@@ -2341,7 +2342,7 @@ const refreshElements = () => {
 
 	show(document.getElementById('fence'), options.codeBlockStyle === 'fenced');
 
-	const downloadImages = options.downloadImages && options.downloadMode === 'downloadsApi';
+	const downloadImages = options.downloadImages === true && options.downloadMode === 'downloadsApi';
 
 	show(document.getElementById('imagePrefix'), downloadImages);
 
@@ -2708,11 +2709,11 @@ function injectResetLinks() {
 	});
 }
 
-async function resetSettingByCard(card) {
-	const localKey = card.dataset.localSettingKey;
+async function resetSettingByCard(card: HTMLElement) {
+	const localKey = card.dataset.localSettingKey as keyof LibrarySettings | undefined;
 
 	if (localKey) {
-		const defaults = normalizeLibrarySettingsState();
+		const defaults = normalizeLibrarySettingsState(undefined);
 		librarySettings = {
 			...librarySettings,
 			[localKey]: defaults[localKey],
@@ -2760,37 +2761,39 @@ const loaded = () => {
 	restoreOptions();
 	initSiteRuleControls();
 
-	browser.storage.onChanged?.addListener?.((changes, areaName) => {
-		if (areaName !== 'local') {
-			return;
-		}
+	browser.storage.onChanged?.addListener?.(
+		(changes: Record<string, browser.Storage.StorageChange>, areaName: string) => {
+			if (areaName !== 'local') {
+				return;
+			}
 
-		const bridgeApi = getAgentBridgeStateApi();
-		const settingsKey = bridgeApi?.STORAGE_KEYS?.SETTINGS;
-		const statusKey = bridgeApi?.STORAGE_KEYS?.STATUS;
+			const bridgeApi = getAgentBridgeStateApi();
+			const settingsKey = bridgeApi?.STORAGE_KEYS?.SETTINGS;
+			const statusKey = bridgeApi?.STORAGE_KEYS?.STATUS;
 
-		if (settingsKey && changes[settingsKey]) {
-			agentBridgeSettings = normalizeAgentBridgeSettingsState(changes[settingsKey].newValue);
-			setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
-		}
+			if (settingsKey && changes[settingsKey]) {
+				agentBridgeSettings = normalizeAgentBridgeSettingsState(changes[settingsKey].newValue);
+				setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
+			}
 
-		if (statusKey && changes[statusKey]) {
-			agentBridgeStatus = normalizeAgentBridgeStatusState(changes[statusKey].newValue);
-			setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
-		}
-	});
+			if (statusKey && changes[statusKey]) {
+				agentBridgeStatus = normalizeAgentBridgeStatusState(changes[statusKey].newValue);
+				setCurrentAgentBridgeChoice(agentBridgeSettings, agentBridgeStatus);
+			}
+		},
+	);
 
 	// Inject per-card reset links
 	injectResetLinks();
 
 	// Reset All button
-	const resetAllBtn = document.getElementById('reset-all');
+	const resetAllBtn = getButtonById('reset-all');
 	if (resetAllBtn) {
 		resetAllBtn.addEventListener('click', resetAllSettings);
 	}
 
 	// Attach event listeners (skip the search input)
-	document.querySelectorAll('input,textarea,button,select').forEach(input => {
+	queryAllOfType('input,textarea,button,select', HTMLElement).forEach((input) => {
 		if (input.id === 'settings-search') return;
 		if (input.closest('#siteRulesCard')) return;
 		if (input.closest('#defaultSendToTargetCard') || input.closest('#assistantTargetsCard')) return;
@@ -2802,35 +2805,35 @@ const loaded = () => {
 		) return;
 		// Skip colorblind theme dropdown (has its own handlers)
 		if (input.id === 'colorBlindThemeBtn' || input.closest('#colorBlindThemePanel')) return;
-		if (input.tagName === 'TEXTAREA' || input.type === 'text') {
+		if (input instanceof HTMLTextAreaElement || (input instanceof HTMLInputElement && input.type === 'text')) {
 			input.addEventListener('keyup', inputKeyup);
-		} else if (input.type === 'number') {
+		} else if (input instanceof HTMLInputElement && input.type === 'number') {
 			input.addEventListener('keyup', inputKeyup);
 			input.addEventListener('change', inputChange);
-		} else if (input.tagName === 'BUTTON') {
+		} else if (input instanceof HTMLButtonElement) {
 			input.addEventListener('click', buttonClick);
 		} else input.addEventListener('change', inputChange);
 	});
 
 	// Colorblind theme custom dropdown
 	document.getElementById('colorBlindThemeBtn')?.addEventListener('click', toggleCbDropdown);
-	document.getElementById('colorBlindThemePanel')?.addEventListener('click', (e) => {
-		const item = e.target.closest('.dd-item[data-value]');
+	getHtmlElementById('colorBlindThemePanel')?.addEventListener('click', (e: MouseEvent) => {
+		const item = e.target instanceof HTMLElement ? e.target.closest<HTMLElement>('.dd-item[data-value]') : null;
 		if (!item) return;
 		const value = item.dataset.value;
-		const hiddenInput = document.querySelector("[name='colorBlindTheme']");
+		const hiddenInput = queryElementOfType("[name='colorBlindTheme']", HTMLInputElement);
 		if (hiddenInput) hiddenInput.value = value;
 		options.colorBlindTheme = value;
 		closeCbDropdown();
 		save();
 		refreshElements();
 	});
-	document.addEventListener('click', (e) => {
-		if (!document.getElementById('colorBlindDropdownWrap')?.contains(e.target)) {
+	document.addEventListener('click', (e: MouseEvent) => {
+		if (!getHtmlElementById('colorBlindDropdownWrap')?.contains(e.target as Node | null)) {
 			closeCbDropdown();
 		}
 	});
-	document.addEventListener('keydown', (e) => {
+	document.addEventListener('keydown', (e: KeyboardEvent) => {
 		if (e.key === 'Escape') closeCbDropdown();
 	});
 
@@ -2908,10 +2911,10 @@ function initSearch() {
 		});
 
 		const activeTab = sessionStorage.getItem('snipsnip-options-tab') || 'templates';
-		const sidebarItems = document.querySelectorAll('.sidebar-item');
-		const allSections = document.querySelectorAll('.section');
+		const sidebarItems = queryAllOfType('.sidebar-item', HTMLElement);
+		const allSections = queryAllOfType('.section', HTMLElement);
 
-		sidebarItems.forEach(item => {
+		sidebarItems.forEach((item) => {
 			const isActive = item.dataset.section === activeTab;
 			item.classList.toggle('active', isActive);
 			item.setAttribute('aria-selected', String(isActive));
@@ -2919,7 +2922,7 @@ function initSearch() {
 		});
 		const _activeItem = document.querySelector(`.sidebar-item[data-section="${activeTab}"]`);
 
-		allSections.forEach(section => {
+		allSections.forEach((section) => {
 			const isActive = section.id === `section-${activeTab}`;
 			section.classList.toggle('active', isActive);
 			section.setAttribute('aria-hidden', String(!isActive));
@@ -2956,7 +2959,7 @@ function initSearch() {
 				card.style.opacity = '1';
 
 				// Force-show any conditionally hidden children so they are interactable in search results
-				card.querySelectorAll('[data-search-reveal]').forEach(child => {
+				queryAllOfType('[data-search-reveal]', HTMLElement, card).forEach((child) => {
 					if (child.style.display === 'none') {
 						child.style.display = '';
 						child.style.opacity = '1';
@@ -2971,13 +2974,13 @@ function initSearch() {
 					card.dataset.searchBreadcrumb = sectionLabel + (cardTitle ? ` \u203a ${cardTitle}` : '');
 				}
 
-				const aliasSources = tokenMatches.filter(m => m.fieldSource === 'alias');
+				const aliasSources = tokenMatches.filter((m) => m.fieldSource === 'alias');
 				if (aliasSources.length > 0) {
 					const rawKeywords = card.dataset.searchKeywords || '';
-					const keywords = rawKeywords.split(',').map(k => k.trim()).filter(Boolean);
-					const matchedKeywords = keywords.filter(kw => {
+					const keywords = rawKeywords.split(',').map((k) => k.trim()).filter(Boolean);
+					const matchedKeywords = keywords.filter((kw) => {
 						const normKw = searchApi.normalizeSearchText(kw);
-						return aliasSources.some(m => normKw.includes(m.token) || normKw.startsWith(m.token));
+						return aliasSources.some((m) => normKw.includes(m.token) || normKw.startsWith(m.token));
 					});
 					if (matchedKeywords.length > 0) {
 						card.dataset.searchAlias = `matched via: ${matchedKeywords.slice(0, 2).join(', ')}`;
@@ -2996,7 +2999,7 @@ function initSearch() {
 			}
 		});
 
-		sections.forEach(section => {
+		sections.forEach((section) => {
 			const hasVisible = section.querySelector('.setting-card.search-match');
 			section.classList.toggle('search-section-empty', !hasVisible);
 			section.setAttribute('aria-hidden', String(!hasVisible));
