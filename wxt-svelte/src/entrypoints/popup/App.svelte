@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { type ExportFormat, exportPayload } from '@/lib/export';
 	import { sanitizeFilename } from '@/lib/filename';
+	import {
+		extractImageRefs,
+		fetchImageBundle,
+		rewriteImageRefs,
+	} from '@/lib/images';
 	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { sendMessage } from '@/lib/messaging';
-	import { settingsItem } from '@/lib/storage';
+	import { getSettings } from '@/lib/storage';
 	import { applyTemplate } from '@/lib/template';
 	import type { ClipMode, ClipResult } from '@/lib/types';
+	import { buildZipBlob } from '@/lib/zip';
 	import { onMount } from 'svelte';
 
 	let mode: ClipMode = $state('document');
@@ -51,25 +57,54 @@
 
 	async function downloadCurrent(): Promise<void> {
 		if (!result) return;
-		const settings = await settingsItem.getValue();
-		const stem = sanitizeFilename(
-			applyTemplate(settings.title, result.article),
-		);
-		const payload = exportPayload(editable, result.article.title, format);
-		const blob = typeof payload.content === 'string'
-			? new Blob([payload.content], { type: payload.mime })
-			: payload.content;
-		const url = URL.createObjectURL(blob);
-		await browser.downloads.download({
-			url,
-			filename: `${stem}.${payload.ext}`,
-			saveAs: settings.saveAs,
-		});
+		busy = true;
+		error = null;
+		try {
+			const settings = await getSettings();
+			const stem = sanitizeFilename(
+				applyTemplate(settings.title, result.article),
+			);
+
+			if (settings.downloadImages && format === 'md') {
+				const refs = extractImageRefs(editable, result.article.url);
+				const images = await fetchImageBundle(refs);
+				const rewritten = rewriteImageRefs(editable, images);
+				const blob = buildZipBlob([
+					{ path: `${stem}.md`, content: rewritten },
+					...images.map((image) => ({
+						path: image.localPath,
+						content: image.bytes,
+					})),
+				]);
+				const url = URL.createObjectURL(blob);
+				await browser.downloads.download({
+					url,
+					filename: `${stem}.zip`,
+					saveAs: settings.saveAs,
+				});
+				return;
+			}
+
+			const payload = exportPayload(editable, result.article.title, format);
+			const blob = typeof payload.content === 'string'
+				? new Blob([payload.content], { type: payload.mime })
+				: payload.content;
+			const url = URL.createObjectURL(blob);
+			await browser.downloads.download({
+				url,
+				filename: `${stem}.${payload.ext}`,
+				saveAs: settings.saveAs,
+			});
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			busy = false;
+		}
 	}
 
 	async function sendToObsidian(): Promise<void> {
 		if (!result) return;
-		const settings = await settingsItem.getValue();
+		const settings = await getSettings();
 		if (!settings.obsidianVault) {
 			error = 'Set an Obsidian vault in Settings first.';
 			return;

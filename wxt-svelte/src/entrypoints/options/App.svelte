@@ -158,6 +158,10 @@
 			<input type="checkbox" bind:checked={settings.saveAs}>
 			Prompt "Save As…" dialog on download
 		</label>
+		<label class="inline">
+			<input type="checkbox" bind:checked={settings.downloadImages}>
+			Bundle images alongside Markdown (downloads as ZIP)
+		</label>
 		<label class="stacked">
 			Obsidian vault
 			<input

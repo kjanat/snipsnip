@@ -1,11 +1,12 @@
 <script lang="ts">
 	import {
+		type BatchClipResult,
 		type BatchItem,
-		buildZip,
+		buildBatchZip,
 		fetchAndConvert,
 		parseUrlList,
 	} from '@/lib/batch';
-	import { settingsItem } from '@/lib/storage';
+	import { getSettings } from '@/lib/storage';
 
 	let raw = $state('');
 	let items = $state<BatchItem[]>([]);
@@ -25,8 +26,8 @@
 			zipUrl = null;
 		}
 		items = urls.map((url) => ({ url, status: 'pending' }));
-		const results: { filename: string; markdown: string }[] = [];
-		const settings = await settingsItem.getValue();
+		const results: BatchClipResult[] = [];
+		const settings = await getSettings();
 
 		for (let i = 0; i < items.length; i += 1) {
 			items[i] = { ...items[i], status: 'fetching' } as BatchItem;
@@ -49,7 +50,7 @@
 		}
 
 		if (results.length > 0) {
-			const blob = buildZip(results);
+			const blob = buildBatchZip(results);
 			zipUrl = URL.createObjectURL(blob);
 		}
 		running = false;

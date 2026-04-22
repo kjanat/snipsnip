@@ -1,9 +1,10 @@
 import { Readability } from '@mozilla/readability';
-import { zipSync } from 'fflate';
 import { convertHtmlToMarkdown } from './convert';
 import { sanitizeFilename, withMarkdownExtension } from './filename';
+import { extractImageRefs, fetchImageBundle, type ImageBundleEntry, rewriteImageRefs } from './images';
 import { applyTemplate } from './template';
 import type { ClipSettings, ExtractedArticle } from './types';
+import { buildZipBlob, disambiguateFilename } from './zip';
 
 export interface BatchItem {
 	url: string;
@@ -45,13 +46,16 @@ async function digest(input: string): Promise<string> {
 		.slice(0, 12);
 }
 
+export interface BatchClipResult {
+	markdown: string;
+	filename: string;
+	images: ImageBundleEntry[];
+}
+
 export async function fetchAndConvert(
 	url: string,
 	settings: ClipSettings,
-): Promise<{
-	markdown: string;
-	filename: string;
-}> {
+): Promise<BatchClipResult> {
 	const response = await fetch(url, { redirect: 'follow' });
 	if (!response.ok) {
 		throw new Error(`HTTP ${response.status}`);
@@ -78,33 +82,36 @@ export async function fetchAndConvert(
 	const backmatter = settings.includeTemplate
 		? applyTemplate(settings.backmatter, article)
 		: '';
-	const markdown = `${`${frontmatter}${body}${backmatter}`.trim()}\n`;
+	let markdown = `${`${frontmatter}${body}${backmatter}`.trim()}\n`;
+	let images: ImageBundleEntry[] = [];
+
+	if (settings.downloadImages) {
+		const refs = extractImageRefs(markdown, url);
+		images = await fetchImageBundle(refs);
+		markdown = rewriteImageRefs(markdown, images);
+	}
+
 	const filename = withMarkdownExtension(
 		sanitizeFilename(applyTemplate(settings.title, article)),
 	);
-	return { markdown, filename };
+	return { markdown, filename, images };
 }
 
-export function buildZip(entries: { filename: string; markdown: string }[]): Blob {
-	const seen = new Map<string, number>();
-	const fileMap: Record<string, Uint8Array> = {};
-	const encoder = new TextEncoder();
+export function buildBatchZip(entries: BatchClipResult[]): Blob {
+	const taken = new Map<string, number>();
+	const zipEntries = [];
 	for (const entry of entries) {
-		let name = entry.filename;
-		const count = seen.get(name) ?? 0;
-		if (count > 0) {
-			const dot = name.lastIndexOf('.');
-			const stem = dot > 0 ? name.slice(0, dot) : name;
-			const ext = dot > 0 ? name.slice(dot) : '';
-			name = `${stem} (${count})${ext}`;
+		const mdName = disambiguateFilename(taken, entry.filename);
+		zipEntries.push({ path: mdName, content: entry.markdown });
+		const stem = mdName.replace(/\.md$/i, '');
+		for (const image of entry.images) {
+			zipEntries.push({
+				path: `${stem}-${image.localPath}`,
+				content: image.bytes,
+			});
 		}
-		seen.set(entry.filename, count + 1);
-		fileMap[name] = encoder.encode(entry.markdown);
 	}
-	const compressed = zipSync(fileMap);
-	const buffer = new ArrayBuffer(compressed.byteLength);
-	new Uint8Array(buffer).set(compressed);
-	return new Blob([buffer], { type: 'application/zip' });
+	return buildZipBlob(zipEntries);
 }
 
 export function parseUrlList(input: string): string[] {
