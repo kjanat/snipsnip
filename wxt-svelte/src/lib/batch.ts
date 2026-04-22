@@ -2,9 +2,8 @@ import { Readability } from '@mozilla/readability';
 import { zipSync } from 'fflate';
 import { convertHtmlToMarkdown } from './convert';
 import { sanitizeFilename, withMarkdownExtension } from './filename';
-import { settingsItem } from './storage';
 import { applyTemplate } from './template';
-import type { ExtractedArticle } from './types';
+import type { ClipSettings, ExtractedArticle } from './types';
 
 export interface BatchItem {
 	url: string;
@@ -46,7 +45,10 @@ async function digest(input: string): Promise<string> {
 		.slice(0, 12);
 }
 
-export async function fetchAndConvert(url: string): Promise<{
+export async function fetchAndConvert(
+	url: string,
+	settings: ClipSettings,
+): Promise<{
 	markdown: string;
 	filename: string;
 }> {
@@ -69,7 +71,6 @@ export async function fetchAndConvert(url: string): Promise<{
 		hash: await digest(`${url}::${parsed.html}`),
 	};
 
-	const settings = await settingsItem.getValue();
 	const body = convertHtmlToMarkdown(parsed.html, settings);
 	const frontmatter = settings.includeTemplate
 		? applyTemplate(settings.frontmatter, article)

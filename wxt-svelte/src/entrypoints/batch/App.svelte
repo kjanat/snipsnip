@@ -5,6 +5,7 @@
 		fetchAndConvert,
 		parseUrlList,
 	} from '@/lib/batch';
+	import { settingsItem } from '@/lib/storage';
 
 	let raw = $state('');
 	let items = $state<BatchItem[]>([]);
@@ -25,11 +26,12 @@
 		}
 		items = urls.map((url) => ({ url, status: 'pending' }));
 		const results: { filename: string; markdown: string }[] = [];
+		const settings = await settingsItem.getValue();
 
 		for (let i = 0; i < items.length; i += 1) {
 			items[i] = { ...items[i], status: 'fetching' } as BatchItem;
 			try {
-				const out = await fetchAndConvert(urls[i] ?? '');
+				const out = await fetchAndConvert(urls[i] ?? '', settings);
 				items[i] = {
 					...items[i],
 					status: 'done',
