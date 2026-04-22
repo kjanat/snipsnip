@@ -8,6 +8,9 @@
 		"url": "https://github.com/kjanat"
 	},
 	"type": "module",
+	"workspaces": [
+		"wxt-svelte"
+	],
 	"scripts": {
 		"bd": "bun generate:highlights && bun run build && bun fmt",
 		"benchmark:popup": "bun src/scripts/benchmark-popup-startup.ts",
