@@ -123,6 +123,14 @@
 					<option value="obsidian-nofolder">Obsidian embed (flat)</option>
 				</select>
 			</label>
+			<label>
+				Complex tables
+				<select bind:value={settings.htmlTableFallback}>
+					<option value="auto">Auto (HTML when GFM can't represent)</option>
+					<option value="always">Always emit raw HTML</option>
+					<option value="never">Never fall back (trust GFM)</option>
+				</select>
+			</label>
 		</div>
 	</section>
 

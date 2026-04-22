@@ -73,31 +73,44 @@ describe('convertHtmlToMarkdown', () => {
 		expect(md.match(/<table>/g)?.length).toBe(2);
 	});
 
-	test('falls back to raw HTML for blockquote, code block, br, colspan', () => {
+	test('falls back to raw HTML for blockquote, code block, colspan', () => {
 		expect(
 			convertHtmlToMarkdown(
-				'<table><tr><td><blockquote>q</blockquote></td></tr></table>',
+				'<table><thead><tr><th>A</th></tr></thead><tbody><tr><td><blockquote>q</blockquote></td></tr></tbody></table>',
 				DEFAULT_SETTINGS,
 			),
 		).toContain('<table>');
 		expect(
 			convertHtmlToMarkdown(
-				'<table><tr><td><pre><code>x</code></pre></td></tr></table>',
+				'<table><thead><tr><th>A</th></tr></thead><tbody><tr><td><pre><code>x</code></pre></td></tr></tbody></table>',
 				DEFAULT_SETTINGS,
 			),
 		).toContain('<table>');
 		expect(
 			convertHtmlToMarkdown(
-				'<table><tr><td>line<br>line</td></tr></table>',
+				'<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td colspan="2">spanning</td></tr></tbody></table>',
 				DEFAULT_SETTINGS,
 			),
 		).toContain('<table>');
-		expect(
-			convertHtmlToMarkdown(
-				'<table><tr><td colspan="2">spanning</td></tr></table>',
-				DEFAULT_SETTINGS,
-			),
-		).toContain('<table>');
+	});
+
+	test('keeps <br> in cell as literal <br> inside GFM table', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>line one<br>line two</td></tr></tbody></table>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toMatch(/^\| A \|/m);
+		expect(md).toContain('<br>');
+		expect(md).not.toContain('<table>');
+	});
+
+	test('falls back to HTML when table has no header row', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><tbody><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></tbody></table>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toContain('<table>');
+		expect(md).not.toMatch(/^\| a \| b \|/m);
 	});
 
 	test('keeps GFM table when all cells are inline-only', () => {
@@ -107,5 +120,25 @@ describe('convertHtmlToMarkdown', () => {
 		);
 		expect(md).toMatch(/^\| A \| B \|/m);
 		expect(md).not.toContain('<table>');
+	});
+
+	test('htmlTableFallback=always forces HTML even for trivial tables', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>',
+			{ ...DEFAULT_SETTINGS, htmlTableFallback: 'always' },
+		);
+		expect(md).toContain('<table>');
+		expect(md).not.toMatch(/^\| A \|/m);
+	});
+
+	test('htmlTableFallback=never bypasses our rule, gfm gets first crack', () => {
+		// gfm will produce broken-but-attempted GFM for block-cell tables instead
+		// of triggering our HTML fallback.
+		const md = convertHtmlToMarkdown(
+			'<table><thead><tr><th>A</th></tr></thead><tbody><tr><td><ul><li>x</li></ul></td></tr></tbody></table>',
+			{ ...DEFAULT_SETTINGS, htmlTableFallback: 'never' },
+		);
+		expect(md).toMatch(/^\| A \|/m);
+		expect(md).toMatch(/\|\s+---\s+\|/);
 	});
 });

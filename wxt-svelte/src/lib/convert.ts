@@ -24,14 +24,34 @@ function cellHasBlockContent(cell: Element): boolean {
 		if (BLOCK_CHILD_TAGS.has(descendant.tagName)) return true;
 	}
 	if (cell.querySelectorAll('p').length > 1) return true;
-	if (cell.querySelectorAll('br').length > 0) return true;
 	if (cell.hasAttribute('colspan') || cell.hasAttribute('rowspan')) return true;
 	return false;
 }
 
-function tableNeedsHtmlFallback(table: Element): boolean {
+function tableHasHeaderRow(table: Element): boolean {
+	if (table.querySelector(':scope > thead > tr > th')) return true;
+	const firstRow = table.querySelector(':scope > tbody > tr, :scope > tr');
+	if (!firstRow) return false;
+	return firstRow.querySelector(':scope > th') !== null;
+}
+
+function tableNeedsHtmlFallback(table: Element, mode: 'auto' | 'always' | 'never'): boolean {
+	if (mode === 'always') return true;
+	if (mode === 'never') return false;
+	if (!tableHasHeaderRow(table)) return true;
 	for (const cell of Array.from(table.querySelectorAll('th, td'))) {
 		if (cellHasBlockContent(cell)) return true;
+	}
+	return false;
+}
+
+function isInsideTableCell(node: Node): boolean {
+	let parent = node.parentNode as Element | null;
+	while (parent) {
+		const tag = parent.tagName;
+		if (tag === 'TD' || tag === 'TH') return true;
+		if (tag === 'TABLE') return false;
+		parent = parent.parentNode as Element | null;
 	}
 	return false;
 }
@@ -55,8 +75,15 @@ export function buildTurndown(settings: ClipSettings): TurndownService {
 	});
 	service.use(gfm);
 
+	service.addRule('br-in-table-cell', {
+		filter: (node) => node.nodeName === 'BR' && isInsideTableCell(node),
+		replacement: () => '<br>',
+	});
+
 	service.addRule('complex-table-html-fallback', {
-		filter: (node) => node.nodeName === 'TABLE' && tableNeedsHtmlFallback(node),
+		filter: (node) =>
+			node.nodeName === 'TABLE'
+			&& tableNeedsHtmlFallback(node, settings.htmlTableFallback),
 		replacement: (_content, node) => stripHtmlTable(node as Element),
 	});
 
