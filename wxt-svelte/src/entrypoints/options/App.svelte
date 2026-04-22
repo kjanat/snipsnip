@@ -1,20 +1,25 @@
 <script lang="ts">
-	import { DEFAULT_SETTINGS } from '@/lib/defaults';
-	import { settingsItem } from '@/lib/storage';
+	import {
+		DEFAULT_SETTINGS,
+		parseSettings,
+		safeParseSettings,
+	} from '@/lib/defaults';
+	import { getSettings, settingsItem } from '@/lib/storage';
 	import type { ClipSettings } from '@/lib/types';
 	import { onMount } from 'svelte';
 
 	let settings = $state<ClipSettings>({ ...DEFAULT_SETTINGS });
 	let saved = $state(false);
 	let loading = $state(true);
+	let importError = $state<string | null>(null);
 
 	onMount(async () => {
-		settings = await settingsItem.getValue();
+		settings = await getSettings();
 		loading = false;
 	});
 
 	async function save(): Promise<void> {
-		await settingsItem.setValue($state.snapshot(settings));
+		await settingsItem.setValue(safeParseSettings($state.snapshot(settings)));
 		saved = true;
 		setTimeout(() => (saved = false), 1500);
 	}
@@ -37,13 +42,17 @@
 	}
 
 	async function importSettings(event: Event): Promise<void> {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
+		const target = event.target;
+		if (!(target instanceof HTMLInputElement)) return;
+		const file = target.files?.[0];
 		if (!file) return;
-		const text = await file.text();
-		const parsed = JSON.parse(text) as Partial<ClipSettings>;
-		settings = { ...DEFAULT_SETTINGS, ...parsed };
-		await save();
+		try {
+			settings = parseSettings(JSON.parse(await file.text()));
+			importError = null;
+			await save();
+		} catch (e) {
+			importError = e instanceof Error ? e.message : 'Invalid settings file.';
+		}
 	}
 </script>
 
@@ -261,6 +270,9 @@
 			>
 		</label>
 	</footer>
+	{#if importError}
+		<p class="import-error" role="alert">Import failed: {importError}</p>
+	{/if}
 {/if}
 
 <style>
@@ -355,6 +367,14 @@
 	.file {
 		display: inline-flex;
 		align-items: center;
+	}
+	.import-error {
+		margin: 12px 0 0;
+		padding: 8px 12px;
+		border: 1px solid var(--danger);
+		border-radius: 6px;
+		color: var(--danger);
+		background: color-mix(in srgb, var(--danger) 10%, transparent);
 	}
 	.rule {
 		display: grid;

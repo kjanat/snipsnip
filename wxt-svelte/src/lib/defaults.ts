@@ -1,29 +1,13 @@
-import type { ClipSettings } from './types';
+import * as v from 'valibot';
+import { type ClipSettings, ClipSettingsSchema } from './types';
 
-export const DEFAULT_SETTINGS: ClipSettings = {
-	headingStyle: 'atx',
-	hr: '---',
-	bulletListMarker: '-',
-	codeBlockStyle: 'fenced',
-	fence: '```',
-	emDelimiter: '_',
-	strongDelimiter: '**',
-	linkStyle: 'inlined',
-	linkReferenceStyle: 'full',
-	imageStyle: 'markdown',
-	imageRefStyle: 'inlined',
-	frontmatter:
-		'---\ntitle: "{pageTitle}"\nsource: "{baseURI}"\nauthor: "{byline}"\npublished: "{publishedTime}"\ncreated: "{date:YYYY-MM-DDTHH:mm}"\n---\n\n# {pageTitle}\n\n',
-	backmatter: '',
-	title: '{pageTitle}',
-	includeTemplate: true,
-	downloadImages: false,
-	saveAs: false,
-	obsidianVault: '',
-	obsidianFolder: '',
-	agentBridgeEnabled: false,
-	agentBridgeHost: 'com.snipsnip.bridge',
-	notificationsEnabled: true,
-	historyLimit: 50,
-	siteRules: [],
-};
+export const DEFAULT_SETTINGS: ClipSettings = v.parse(ClipSettingsSchema, {});
+
+export function parseSettings(input: unknown): ClipSettings {
+	return v.parse(ClipSettingsSchema, input ?? {});
+}
+
+export function safeParseSettings(input: unknown): ClipSettings {
+	const result = v.safeParse(ClipSettingsSchema, input ?? {});
+	return result.success ? result.output : DEFAULT_SETTINGS;
+}
