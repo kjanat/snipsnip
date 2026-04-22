@@ -1,5 +1,9 @@
 <script lang="ts">
 	import {
+		isAgentBridgeGranted,
+		requestAgentBridgePermission,
+	} from '@/lib/agent-bridge';
+	import {
 		DEFAULT_SETTINGS,
 		parseSettings,
 		safeParseSettings,
@@ -12,11 +16,33 @@
 	let saved = $state(false);
 	let loading = $state(true);
 	let importError = $state<string | null>(null);
+	let bridgeGranted = $state(false);
+	let bridgeError = $state<string | null>(null);
 
 	onMount(async () => {
 		settings = await getSettings();
+		bridgeGranted = await isAgentBridgeGranted();
 		loading = false;
 	});
+
+	async function toggleAgentBridge(event: Event): Promise<void> {
+		const input = event.currentTarget;
+		if (!(input instanceof HTMLInputElement)) return;
+		bridgeError = null;
+		if (!input.checked) {
+			settings.agentBridgeEnabled = false;
+			return;
+		}
+		const granted = await requestAgentBridgePermission();
+		bridgeGranted = granted;
+		if (!granted) {
+			input.checked = false;
+			settings.agentBridgeEnabled = false;
+			bridgeError = 'Browser denied the nativeMessaging permission.';
+			return;
+		}
+		settings.agentBridgeEnabled = true;
+	}
 
 	async function save(): Promise<void> {
 		await settingsItem.setValue(safeParseSettings($state.snapshot(settings)));
@@ -206,9 +232,19 @@
 			demand. Requires a registered native messaging host on this machine.
 		</p>
 		<label class="inline">
-			<input type="checkbox" bind:checked={settings.agentBridgeEnabled}>
+			<input
+				type="checkbox"
+				checked={settings.agentBridgeEnabled}
+				onchange={toggleAgentBridge}
+			>
 			Enable Agent Bridge
 		</label>
+		<p class="muted small">
+			Permission status: {bridgeGranted ? 'granted ✓' : 'not granted'}
+		</p>
+		{#if bridgeError}
+			<p class="import-error" role="alert">{bridgeError}</p>
+		{/if}
 		<label class="stacked">
 			Native host name
 			<input

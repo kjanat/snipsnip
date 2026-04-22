@@ -25,6 +25,12 @@ export default defineContentScript({
 	main(ctx) {
 		const removePing = onMessage('ping', () => ({ ok: true }) as const);
 
+		const removeSelectionState = onMessage('getSelectionState', () => {
+			const selection = window.getSelection();
+			const text = selection ? selection.toString().trim() : '';
+			return { hasSelection: text.length > 0 };
+		});
+
 		const removePerformClip = onMessage('performClip', ({ data }) => {
 			if (ctx.isInvalid) return Promise.reject(new Error('Context invalidated'));
 			return runClipPipeline(data.mode);
@@ -44,6 +50,7 @@ export default defineContentScript({
 
 		ctx.onInvalidated(() => {
 			removePing();
+			removeSelectionState();
 			removePerformClip();
 			removeCopy();
 			removeObsidian();

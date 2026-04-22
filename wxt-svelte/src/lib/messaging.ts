@@ -33,6 +33,7 @@ export interface ProtocolMap {
 	copyMarkdown(markdown: string): { ok: true };
 	sendToObsidian(payload: ObsidianRequest): { ok: true };
 	ping(): { ok: true };
+	getSelectionState(): { hasSelection: boolean };
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

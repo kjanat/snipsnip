@@ -25,8 +25,22 @@
 	let downloaded = $state(false);
 
 	onMount(() => {
-		void run();
+		void initializeMode();
 	});
+
+	async function initializeMode(): Promise<void> {
+		try {
+			const tabId = await activeTabId();
+			await ensureContentScript(tabId);
+			const state = await sendMessage('getSelectionState', undefined, tabId);
+			mode = state.hasSelection ? 'selection' : 'document';
+		} catch {
+			// fall back to document mode if anything goes wrong;
+			// run() will surface the same error if it persists.
+			mode = 'document';
+		}
+		await run();
+	}
 
 	async function activeTabId(): Promise<number> {
 		const [tab] = await browser.tabs.query({
