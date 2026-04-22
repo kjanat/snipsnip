@@ -88,7 +88,7 @@
 			const payload = exportPayload(editable, result.article.title, format);
 			const blob = typeof payload.content === 'string'
 				? new Blob([payload.content], { type: payload.mime })
-				: payload.content;
+				: await payload.content;
 			const url = URL.createObjectURL(blob);
 			await browser.downloads.download({
 				url,
@@ -219,6 +219,7 @@
 			<option value="md">.md</option>
 			<option value="html">.html</option>
 			<option value="txt">.txt</option>
+			<option value="pdf">.pdf</option>
 		</select>
 	</div>
 	<button

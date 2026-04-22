@@ -1,6 +1,7 @@
 import { marked, type Token, type Tokens } from 'marked';
+import { generatePdfBlob } from './pdf';
 
-export type ExportFormat = 'md' | 'html' | 'txt';
+export type ExportFormat = 'md' | 'html' | 'txt' | 'pdf';
 
 const STYLE =
 	'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#1a1a1a}pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}code{background:#f6f8fa;padding:1px 4px;border-radius:3px}img{max-width:100%}blockquote{border-left:4px solid #d1d5db;padding-left:12px;color:#4b5563;margin-left:0}table{border-collapse:collapse}th,td{border:1px solid #d1d5db;padding:6px 10px}';
@@ -106,11 +107,17 @@ export function toPlainText(markdown: string): string {
 		.trim();
 }
 
+interface ExportPayload {
+	content: string | Blob | Promise<Blob>;
+	mime: string;
+	ext: string;
+}
+
 export function exportPayload(
 	markdown: string,
 	title: string,
 	format: ExportFormat,
-): { content: string | Blob; mime: string; ext: string } {
+): ExportPayload {
 	switch (format) {
 		case 'md':
 			return { content: markdown, mime: 'text/markdown', ext: 'md' };
@@ -118,5 +125,7 @@ export function exportPayload(
 			return { content: toHtmlDocument(markdown, title), mime: 'text/html', ext: 'html' };
 		case 'txt':
 			return { content: toPlainText(markdown), mime: 'text/plain', ext: 'txt' };
+		case 'pdf':
+			return { content: generatePdfBlob(markdown, title), mime: 'application/pdf', ext: 'pdf' };
 	}
 }
