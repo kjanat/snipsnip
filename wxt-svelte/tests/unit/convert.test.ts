@@ -131,6 +131,43 @@ describe('convertHtmlToMarkdown', () => {
 		expect(md).not.toMatch(/^\| A \|/m);
 	});
 
+	test('GitHub/JSR pre-with-spans (no <code>) becomes fenced block with sniffed language', () => {
+		const md = convertHtmlToMarkdown(
+			'<div class="highlight highlight-source-ts notranslate"><pre><span class="token comment">/** doc */</span>\n<span class="token keyword">const</span> x = <span class="token number">1</span>;</pre></div>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toContain('```ts');
+		expect(md).toContain('const x = 1;');
+		expect(md).toContain('/** doc */');
+		expect(md).toMatch(/```ts\n[\s\S]+\n```/);
+	});
+
+	test('pre-without-code with no language class still emits a fence', () => {
+		const md = convertHtmlToMarkdown(
+			'<pre><span>a</span>\n<span>b</span></pre>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toMatch(/```\na\nb\n```/);
+	});
+
+	test('pre-without-code respects indented codeBlockStyle', () => {
+		const md = convertHtmlToMarkdown(
+			'<pre>line1\nline2</pre>',
+			{ ...DEFAULT_SETTINGS, codeBlockStyle: 'indented' },
+		);
+		expect(md).toContain('    line1');
+		expect(md).toContain('    line2');
+		expect(md).not.toContain('```');
+	});
+
+	test('language-X class on the pre itself is sniffed', () => {
+		const md = convertHtmlToMarkdown(
+			'<pre class="language-rust"><span>fn main() {}</span></pre>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toContain('```rust');
+	});
+
 	test('htmlTableFallback=never bypasses our rule, gfm gets first crack', () => {
 		// gfm will produce broken-but-attempted GFM for block-cell tables instead
 		// of triggering our HTML fallback.

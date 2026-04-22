@@ -23,6 +23,8 @@ export default defineContentScript({
 	matches: ['<all_urls>'],
 	runAt: 'document_idle',
 	main(ctx) {
+		const removePing = onMessage('ping', () => ({ ok: true }) as const);
+
 		const removePerformClip = onMessage('performClip', ({ data }) => {
 			if (ctx.isInvalid) return Promise.reject(new Error('Context invalidated'));
 			return runClipPipeline(data.mode);
@@ -41,6 +43,7 @@ export default defineContentScript({
 		});
 
 		ctx.onInvalidated(() => {
+			removePing();
 			removePerformClip();
 			removeCopy();
 			removeObsidian();

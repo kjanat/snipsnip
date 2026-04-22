@@ -1,5 +1,6 @@
 import { syncAgentBridge } from '@/lib/agent-bridge';
 import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
+import { ensureContentScript } from '@/lib/inject-content';
 import { recordClip } from '@/lib/library-store';
 import { sendMessage } from '@/lib/messaging';
 import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications';
@@ -22,6 +23,7 @@ async function activeTabId(): Promise<number> {
 async function clipActiveTab(mode: 'document' | 'selection') {
 	const tabId = await activeTabId();
 	try {
+		await ensureContentScript(tabId);
 		const result = await sendMessage('performClip', { mode }, tabId);
 		const settings = await settingsItem.getValue();
 		const filename = withMarkdownExtension(
@@ -46,12 +48,14 @@ async function clipActiveTab(mode: 'document' | 'selection') {
 
 async function copyActiveTab(mode: 'document' | 'selection') {
 	const tabId = await activeTabId();
+	await ensureContentScript(tabId);
 	const { markdown } = await sendMessage('performClip', { mode }, tabId);
 	await sendMessage('copyMarkdown', markdown, tabId);
 }
 
 async function copyTabAsLink(): Promise<void> {
 	const tabId = await activeTabId();
+	await ensureContentScript(tabId);
 	const tab = await browser.tabs.get(tabId);
 	const link = `[${tab.title ?? tab.url ?? ''}](${tab.url ?? ''})`;
 	await sendMessage('copyMarkdown', link, tabId);
@@ -59,6 +63,7 @@ async function copyTabAsLink(): Promise<void> {
 
 async function sendActiveTabToObsidian(): Promise<void> {
 	const tabId = await activeTabId();
+	await ensureContentScript(tabId);
 	const result = await sendMessage('performClip', { mode: 'document' }, tabId);
 	const settings = await settingsItem.getValue();
 	const filename = sanitizeFilename(applyTemplate(settings.title, result.article));

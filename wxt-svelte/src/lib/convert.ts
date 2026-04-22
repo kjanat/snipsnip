@@ -61,6 +61,42 @@ function stripHtmlTable(table: Element): string {
 	return `\n\n${html}\n\n`;
 }
 
+const LANG_PATTERNS = [
+	/highlight-source-([\w-]+)/, // GitHub / JSR
+	/language-([\w-]+)/, // hljs / Prism
+	/lang-([\w-]+)/, // Pandoc
+];
+
+function sniffLanguage(pre: Element): string {
+	const candidates = [pre.className, pre.parentElement?.className ?? ''];
+	for (const cls of candidates) {
+		for (const pattern of LANG_PATTERNS) {
+			const match = cls.match(pattern);
+			if (match?.[1]) return match[1];
+		}
+	}
+	return '';
+}
+
+function preWithoutCode(node: Node): boolean {
+	if (node.nodeName !== 'PRE') return false;
+	return (node as Element).querySelector('code') === null;
+}
+
+function preCodeBlock(
+	node: Element,
+	settings: Pick<ClipSettings, 'codeBlockStyle' | 'fence'>,
+): string {
+	const text = (node.textContent ?? '').replace(/^\n+|\n+$/g, '');
+	if (text.length === 0) return '';
+	if (settings.codeBlockStyle === 'indented') {
+		return `\n\n${text.split('\n').map((line) => `    ${line}`).join('\n')}\n\n`;
+	}
+	const lang = sniffLanguage(node);
+	const fence = settings.fence;
+	return `\n\n${fence}${lang}\n${text}\n${fence}\n\n`;
+}
+
 export function buildTurndown(settings: ClipSettings): TurndownService {
 	const service = new TurndownService({
 		headingStyle: settings.headingStyle,
@@ -85,6 +121,11 @@ export function buildTurndown(settings: ClipSettings): TurndownService {
 			node.nodeName === 'TABLE'
 			&& tableNeedsHtmlFallback(node, settings.htmlTableFallback),
 		replacement: (_content, node) => stripHtmlTable(node as Element),
+	});
+
+	service.addRule('pre-without-code', {
+		filter: preWithoutCode,
+		replacement: (_content, node) => preCodeBlock(node as Element, settings),
 	});
 
 	if (settings.imageStyle === 'noImage') {

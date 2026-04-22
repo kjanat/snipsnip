@@ -6,6 +6,7 @@
 		fetchImageBundle,
 		rewriteImageRefs,
 	} from '@/lib/images';
+	import { ensureContentScript } from '@/lib/inject-content';
 	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { sendMessage } from '@/lib/messaging';
 	import { getSettings } from '@/lib/storage';
@@ -20,6 +21,8 @@
 	let result = $state<ClipResult | null>(null);
 	let editable = $state('');
 	let format: ExportFormat = $state('md');
+	let copied = $state(false);
+	let downloaded = $state(false);
 
 	onMount(() => {
 		void run();
@@ -39,6 +42,7 @@
 		error = null;
 		try {
 			const tabId = await activeTabId();
+			await ensureContentScript(tabId);
 			const next = await sendMessage('performClip', { mode }, tabId);
 			result = next;
 			editable = next.markdown;
@@ -52,7 +56,13 @@
 	}
 
 	async function copyAll(): Promise<void> {
-		await navigator.clipboard.writeText(editable);
+		try {
+			await navigator.clipboard.writeText(editable);
+			copied = true;
+			setTimeout(() => (copied = false), 1500);
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
 	}
 
 	async function downloadCurrent(): Promise<void> {
@@ -82,6 +92,8 @@
 					filename: `${stem}.zip`,
 					saveAs: settings.saveAs,
 				});
+				downloaded = true;
+				setTimeout(() => (downloaded = false), 1500);
 				return;
 			}
 
@@ -98,6 +110,8 @@
 				filename: `${stem}.${payload.ext}`,
 				saveAs: settings.saveAs,
 			});
+			downloaded = true;
+			setTimeout(() => (downloaded = false), 1500);
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
@@ -112,19 +126,24 @@
 			error = 'Set an Obsidian vault in Settings first.';
 			return;
 		}
-		const tabId = await activeTabId();
-		await sendMessage(
-			'sendToObsidian',
-			{
-				vault: settings.obsidianVault,
-				folder: settings.obsidianFolder,
-				filename: sanitizeFilename(
-					applyTemplate(settings.title, result.article),
-				),
-				markdown: editable,
-			},
-			tabId,
-		);
+		try {
+			const tabId = await activeTabId();
+			await ensureContentScript(tabId);
+			await sendMessage(
+				'sendToObsidian',
+				{
+					vault: settings.obsidianVault,
+					folder: settings.obsidianFolder,
+					filename: sanitizeFilename(
+						applyTemplate(settings.title, result.article),
+					),
+					markdown: editable,
+				},
+				tabId,
+			);
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
 	}
 
 	function openOptions(): void {
@@ -213,10 +232,12 @@
 </main>
 
 <footer>
-	<button type="button" onclick={copyAll} disabled={!result}>Copy</button>
+	<button type="button" onclick={copyAll} disabled={!result}>
+		{copied ? 'Copied ✓' : 'Copy'}
+	</button>
 	<div class="export-group">
 		<button type="button" onclick={downloadCurrent} disabled={!result}>
-			Download
+			{downloaded ? 'Saved ✓' : 'Download'}
 		</button>
 		<select bind:value={format} disabled={!result} aria-label="Export format">
 			<option value="md">.md</option>

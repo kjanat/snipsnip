@@ -32,6 +32,7 @@ export interface ProtocolMap {
 	downloadMarkdown(payload: DownloadRequest): { downloadId: number };
 	copyMarkdown(markdown: string): { ok: true };
 	sendToObsidian(payload: ObsidianRequest): { ok: true };
+	ping(): { ok: true };
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();
