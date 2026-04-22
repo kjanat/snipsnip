@@ -22,17 +22,28 @@ async function copyText(text: string): Promise<void> {
 export default defineContentScript({
 	matches: ['<all_urls>'],
 	runAt: 'document_idle',
-	main() {
-		onMessage('performClip', ({ data }) => runClipPipeline(data.mode));
+	main(ctx) {
+		const removePerformClip = onMessage('performClip', ({ data }) => {
+			if (ctx.isInvalid) return Promise.reject(new Error('Context invalidated'));
+			return runClipPipeline(data.mode);
+		});
 
-		onMessage('copyMarkdown', async ({ data }) => {
+		const removeCopy = onMessage('copyMarkdown', async ({ data }) => {
+			if (ctx.isInvalid) throw new Error('Context invalidated');
 			await copyText(data);
 			return { ok: true };
 		});
 
-		onMessage('sendToObsidian', ({ data }) => {
+		const removeObsidian = onMessage('sendToObsidian', ({ data }) => {
+			if (ctx.isInvalid) throw new Error('Context invalidated');
 			window.location.href = buildObsidianUri(data);
 			return { ok: true };
+		});
+
+		ctx.onInvalidated(() => {
+			removePerformClip();
+			removeCopy();
+			removeObsidian();
 		});
 	},
 });

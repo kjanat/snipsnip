@@ -31,14 +31,6 @@ export default defineConfig({
 		],
 		optional_permissions: ['nativeMessaging'],
 		host_permissions: ['<all_urls>'],
-		action: {
-			default_title: 'SnipSnip',
-			default_popup: 'popup.html',
-		},
-		options_ui: {
-			page: 'options.html',
-			open_in_tab: true,
-		},
 		commands: {
 			_execute_action: {
 				suggested_key: { default: 'Alt+Shift+M' },
@@ -62,12 +54,6 @@ export default defineConfig({
 				description: 'Copy current tab as Markdown to Obsidian',
 			},
 		},
-		web_accessible_resources: [
-			{
-				resources: ['page-context.js'],
-				matches: ['<all_urls>'],
-			},
-		],
 		...(browser === 'firefox'
 			? {
 				browser_specific_settings: {
