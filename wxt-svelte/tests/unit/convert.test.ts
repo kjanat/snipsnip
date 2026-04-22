@@ -53,4 +53,59 @@ describe('convertHtmlToMarkdown', () => {
 		expect(md).toMatch(/\*\s+one/);
 		expect(md).toMatch(/\*\s+two/);
 	});
+
+	test('falls back to raw HTML when a cell contains a list', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><tr><th>A</th></tr><tr><td><ul><li>x</li></ul></td></tr></table>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toContain('<table>');
+		expect(md).toContain('<ul>');
+		expect(md).not.toMatch(/^\| A \|/m);
+	});
+
+	test('falls back to raw HTML when a cell contains a nested table', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><tr><th>A</th></tr><tr><td><table><tr><td>inner</td></tr></table></td></tr></table>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toContain('<table>');
+		expect(md.match(/<table>/g)?.length).toBe(2);
+	});
+
+	test('falls back to raw HTML for blockquote, code block, br, colspan', () => {
+		expect(
+			convertHtmlToMarkdown(
+				'<table><tr><td><blockquote>q</blockquote></td></tr></table>',
+				DEFAULT_SETTINGS,
+			),
+		).toContain('<table>');
+		expect(
+			convertHtmlToMarkdown(
+				'<table><tr><td><pre><code>x</code></pre></td></tr></table>',
+				DEFAULT_SETTINGS,
+			),
+		).toContain('<table>');
+		expect(
+			convertHtmlToMarkdown(
+				'<table><tr><td>line<br>line</td></tr></table>',
+				DEFAULT_SETTINGS,
+			),
+		).toContain('<table>');
+		expect(
+			convertHtmlToMarkdown(
+				'<table><tr><td colspan="2">spanning</td></tr></table>',
+				DEFAULT_SETTINGS,
+			),
+		).toContain('<table>');
+	});
+
+	test('keeps GFM table when all cells are inline-only', () => {
+		const md = convertHtmlToMarkdown(
+			'<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>plain <strong>1</strong></td><td><a href="https://x">2</a></td></tr></tbody></table>',
+			DEFAULT_SETTINGS,
+		);
+		expect(md).toMatch(/^\| A \| B \|/m);
+		expect(md).not.toContain('<table>');
+	});
 });
