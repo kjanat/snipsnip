@@ -22,6 +22,6 @@ export async function runClipPipeline(mode: ClipMode): Promise<ClipResult> {
 		article,
 		frontmatter,
 		mode,
-		markdown: `${frontmatter}${body}${backmatter}`.trim() + '\n',
+		markdown: `${`${frontmatter}${body}${backmatter}`.trim()}\n`,
 	};
 }

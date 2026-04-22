@@ -1,3 +1,4 @@
+import { syncAgentBridge } from '@/lib/agent-bridge';
 import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
 import { sendMessage } from '@/lib/messaging';
 import { settingsItem } from '@/lib/storage';
@@ -71,6 +72,17 @@ export default defineBackground(() => {
 				title: item.title,
 				contexts: [...item.contexts],
 			});
+		}
+		void syncAgentBridge();
+	});
+
+	browser.runtime.onStartup.addListener(() => {
+		void syncAgentBridge();
+	});
+
+	browser.storage.onChanged.addListener((changes, area) => {
+		if (area === 'sync' && 'settings' in changes) {
+			void syncAgentBridge();
 		}
 	});
 

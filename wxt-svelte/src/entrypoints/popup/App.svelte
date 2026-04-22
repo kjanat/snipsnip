@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { downloadMarkdown } from '@/lib/clipboard';
 	import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
+	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { sendMessage } from '@/lib/messaging';
 	import { settingsItem } from '@/lib/storage';
 	import { applyTemplate } from '@/lib/template';
@@ -82,6 +83,10 @@
 		browser.runtime.openOptionsPage();
 	}
 
+	function openBatch(): void {
+		void browser.tabs.create({ url: browser.runtime.getURL('/batch.html') });
+	}
+
 	function setMode(next: ClipMode): void {
 		if (mode === next) return;
 		mode = next;
@@ -91,14 +96,19 @@
 
 <header>
 	<div class="brand">SnipSnip</div>
-	<button
-		class="ghost"
-		type="button"
-		onclick={openOptions}
-		aria-label="Settings"
-	>
-		⚙
-	</button>
+	<div class="header-actions">
+		<button class="ghost" type="button" onclick={openBatch} aria-label="Batch">
+			⇶
+		</button>
+		<button
+			class="ghost"
+			type="button"
+			onclick={openOptions}
+			aria-label="Settings"
+		>
+			⚙
+		</button>
+	</div>
 </header>
 
 <div class="tabs" role="tablist">
@@ -136,7 +146,7 @@
 					{result.article.byline}
 				</div>{/if}
 		</div>
-		<textarea bind:value={editable} spellcheck="false"></textarea>
+		<MarkdownEditor bind:value={editable} />
 	{:else if !error}
 		<div class="status">Nothing yet.</div>
 	{/if}
@@ -168,6 +178,10 @@
 	.brand {
 		font-weight: 700;
 		letter-spacing: 0.02em;
+	}
+	.header-actions {
+		display: flex;
+		gap: 4px;
 	}
 	.ghost {
 		background: transparent;
@@ -228,19 +242,6 @@
 		color: var(--muted);
 		text-align: center;
 		padding: 24px 0;
-	}
-	textarea {
-		width: 100%;
-		min-height: 240px;
-		resize: vertical;
-		font-family:
-			"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-		font-size: 12px;
-		padding: 8px;
-		background: var(--surface);
-		color: var(--fg);
-		border: 1px solid var(--border);
-		border-radius: 6px;
 	}
 
 	.error {

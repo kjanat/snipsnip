@@ -21,4 +21,6 @@ export const DEFAULT_SETTINGS: ClipSettings = {
 	saveAs: false,
 	obsidianVault: '',
 	obsidianFolder: '',
+	agentBridgeEnabled: false,
+	agentBridgeHost: 'com.snipsnip.bridge',
 };

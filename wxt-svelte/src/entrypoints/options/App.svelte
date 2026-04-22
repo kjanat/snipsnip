@@ -167,6 +167,26 @@
 		</label>
 	</section>
 
+	<section>
+		<h2>Agent Bridge</h2>
+		<p class="muted small">
+			Connect a native companion (CLI, MCP server, etc.) to read clips on
+			demand. Requires a registered native messaging host on this machine.
+		</p>
+		<label class="inline">
+			<input type="checkbox" bind:checked={settings.agentBridgeEnabled}>
+			Enable Agent Bridge
+		</label>
+		<label class="stacked">
+			Native host name
+			<input
+				type="text"
+				bind:value={settings.agentBridgeHost}
+				placeholder="com.snipsnip.bridge"
+			>
+		</label>
+	</section>
+
 	<footer>
 		<button type="button" class="primary" onclick={save}>
 			{saved ? 'Saved ✓' : 'Save'}

@@ -5,6 +5,8 @@
 	--border: #e5e7eb;
 	--accent: #2563eb;
 	--surface: #f8fafc;
+	--success: #15803d;
+	--danger: #b91c1c;
 	font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 	color-scheme: light dark;
 }
@@ -17,6 +19,8 @@
 		--border: #1f2937;
 		--accent: #60a5fa;
 		--surface: #111827;
+		--success: #4ade80;
+		--danger: #f87171;
 	}
 }
 
@@ -33,7 +37,7 @@ body {
 }
 
 #app {
-	max-width: 760px;
+	max-width: 880px;
 	padding: 32px 24px 64px;
 	margin: 0 auto;
 }

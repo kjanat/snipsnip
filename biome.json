@@ -8,7 +8,7 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["**", "!src/background/moment.min.js", "!**/*.min.js"]
+		"includes": ["**", "!src/background/moment.min.js", "!**/*.min.js", "!**/*.svelte"]
 	},
 	"formatter": { "enabled": false },
 	"linter": {

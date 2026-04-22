@@ -28,6 +28,7 @@ export default defineConfig({
 			'scripting',
 			...(browser === 'chrome' ? ['offscreen'] : []),
 		],
+		optional_permissions: ['nativeMessaging'],
 		host_permissions: ['<all_urls>'],
 		action: {
 			default_title: 'SnipSnip',

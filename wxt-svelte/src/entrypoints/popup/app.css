@@ -1,6 +1,4 @@
 :root {
-	font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-	color-scheme: light dark;
 	--bg: #ffffff;
 	--fg: #1a1a1a;
 	--muted: #6b7280;
@@ -9,6 +7,8 @@
 	--accent-fg: #ffffff;
 	--surface: #f8fafc;
 	--danger: #b91c1c;
+	font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+	color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,13 +29,13 @@
 }
 
 body {
-	margin: 0;
-	background: var(--bg);
-	color: var(--fg);
 	width: 420px;
 	min-height: 380px;
+	margin: 0;
 	font-size: 13px;
 	line-height: 1.45;
+	color: var(--fg);
+	background: var(--bg);
 }
 
 #app {

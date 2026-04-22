@@ -20,6 +20,8 @@ export interface ClipSettings {
 	saveAs: boolean;
 	obsidianVault: string;
 	obsidianFolder: string;
+	agentBridgeEnabled: boolean;
+	agentBridgeHost: string;
 }
 
 export interface ExtractedArticle {

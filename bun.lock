@@ -36,17 +36,25 @@
       "name": "snipsnip-svelte",
       "version": "0.1.0",
       "dependencies": {
+        "@codemirror/commands": "^6.10.3",
+        "@codemirror/lang-markdown": "^6.5.0",
+        "@codemirror/language": "^6.12.3",
+        "@codemirror/state": "^6.6.0",
+        "@codemirror/view": "^6.41.1",
         "@mozilla/readability": "^0.6.0",
         "@webext-core/messaging": "^2.3.0",
+        "fflate": "^0.8.2",
         "marked": "^18.0.2",
         "turndown": "^7.2.4",
         "turndown-plugin-gfm": "^1.0.2",
       },
       "devDependencies": {
+        "@playwright/test": "^1.59.1",
         "@tsconfig/svelte": "^5.0.8",
         "@types/turndown": "^5.0.6",
         "@wxt-dev/auto-icons": "^1.1.1",
         "@wxt-dev/module-svelte": "^2.0.4",
+        "playwright": "^1.59.1",
         "svelte": "^5.53.7",
         "svelte-check": "^4.4.4",
         "tslib": "^2.8.1",
@@ -583,6 +591,8 @@
     "fast-redact": ["fast-redact@3.5.0", "", {}, "sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A=="],
 
     "fdir": ["fdir@6.5.0", "", { "peerDependencies": { "picomatch": "^3 || ^4" }, "optionalPeers": ["picomatch"] }, "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg=="],
+
+    "fflate": ["fflate@0.8.2", "", {}, "sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A=="],
 
     "file-entry-cache": ["file-entry-cache@8.0.0", "", { "dependencies": { "flat-cache": "^4.0.0" } }, "sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ=="],
 
