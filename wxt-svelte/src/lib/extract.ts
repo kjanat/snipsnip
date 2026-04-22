@@ -1,5 +1,6 @@
 import { Readability } from '@mozilla/readability';
 import { applyRule, findMatchingRule } from './site-rules';
+import { resolveStylesOnLive } from './style-resolver';
 import type { ClipMode, ExtractedArticle, SiteRule } from './types';
 
 interface ReadabilityArticle {
@@ -56,6 +57,7 @@ async function digest(input: string): Promise<string> {
 export async function extractArticle(
 	mode: ClipMode,
 	siteRules: SiteRule[] = [],
+	options: { resolveStyles?: boolean } = {},
 ): Promise<ExtractedArticle> {
 	const url = location.href;
 	const fallbackTitle = document.title;
@@ -72,6 +74,9 @@ export async function extractArticle(
 		const cloned = document.cloneNode(true) as Document;
 		const matched = findMatchingRule(siteRules, location.hostname);
 		const prepared = matched ? applyRule(cloned, matched) : cloned;
+		if (options.resolveStyles) {
+			resolveStylesOnLive(document.body, prepared.body, window);
+		}
 		parsed = new Readability(prepared).parse() as ReadabilityArticle | null;
 		html = parsed?.content ?? prepared.body.innerHTML;
 	}

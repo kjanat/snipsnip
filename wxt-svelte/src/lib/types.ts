@@ -40,6 +40,7 @@ export const ClipSettingsSchema = v.object({
 	historyLimit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 50),
 	siteRules: v.optional(v.array(SiteRuleSchema), []),
 	htmlTableFallback: v.optional(v.picklist(['auto', 'always', 'never']), 'auto'),
+	resolveStyles: v.optional(v.boolean(), false),
 });
 
 export type ClipSettings = v.InferOutput<typeof ClipSettingsSchema>;

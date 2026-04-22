@@ -132,6 +132,17 @@
 				</select>
 			</label>
 		</div>
+		<label class="inline">
+			<input type="checkbox" bind:checked={settings.resolveStyles}>
+			Bake in resolved styles (recover bold / italic / strike / mono from CSS)
+		</label>
+		<p class="muted small">
+			Walks the live page's computed styles before extraction. Useful for sites
+			that use <code>&lt;span class="…"&gt;</code> instead of <code
+			>&lt;em&gt;</code> /
+			<code>&lt;strong&gt;</code> (Substack, Medium, custom CMSs). Slightly
+			slower on large pages.
+		</p>
 	</section>
 
 	<section>
