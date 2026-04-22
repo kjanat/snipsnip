@@ -111,6 +111,19 @@ export async function fetchImageBundle(refs: ImageRef[]): Promise<ImageBundleEnt
 	return bundle;
 }
 
+export function bytesToDataUri(bytes: Uint8Array, mime: string): string {
+	let binary = '';
+	const chunk = 0x8000;
+	for (let i = 0; i < bytes.length; i += chunk) {
+		binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)));
+	}
+	return `data:${mime};base64,${btoa(binary)}`;
+}
+
+export function bytesToText(bytes: Uint8Array): string {
+	return new TextDecoder().decode(bytes);
+}
+
 function escapeForRegex(value: string): string {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

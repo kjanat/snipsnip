@@ -113,10 +113,16 @@ interface ExportPayload {
 	ext: string;
 }
 
+export interface ExportOptions {
+	embedImages?: boolean;
+	baseUrl?: string | null;
+}
+
 export function exportPayload(
 	markdown: string,
 	title: string,
 	format: ExportFormat,
+	options: ExportOptions = {},
 ): ExportPayload {
 	switch (format) {
 		case 'md':
@@ -126,6 +132,13 @@ export function exportPayload(
 		case 'txt':
 			return { content: toPlainText(markdown), mime: 'text/plain', ext: 'txt' };
 		case 'pdf':
-			return { content: generatePdfBlob(markdown, title), mime: 'application/pdf', ext: 'pdf' };
+			return {
+				content: generatePdfBlob(markdown, title, {
+					embedImages: options.embedImages ?? false,
+					baseUrl: options.baseUrl ?? null,
+				}),
+				mime: 'application/pdf',
+				ext: 'pdf',
+			};
 	}
 }

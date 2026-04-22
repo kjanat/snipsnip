@@ -85,7 +85,10 @@
 				return;
 			}
 
-			const payload = exportPayload(editable, result.article.title, format);
+			const payload = exportPayload(editable, result.article.title, format, {
+				embedImages: settings.downloadImages,
+				baseUrl: result.article.url,
+			});
 			const blob = typeof payload.content === 'string'
 				? new Blob([payload.content], { type: payload.mime })
 				: await payload.content;
