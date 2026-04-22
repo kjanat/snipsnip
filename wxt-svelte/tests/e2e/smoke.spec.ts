@@ -58,4 +58,25 @@ test.describe('SnipSnip Svelte rebuild', () => {
 		await expect(batch.getByRole('button', { name: 'Convert' })).toBeVisible();
 		await batch.close();
 	});
+
+	test('library page renders empty state', async () => {
+		const library = await context.newPage();
+		await library.goto(`chrome-extension://${extensionId}/library.html`);
+		await expect(library.getByRole('heading', { name: 'Library' })).toBeVisible();
+		await expect(library.getByPlaceholder('Search title, URL, body…')).toBeVisible();
+		await expect(library.getByText('No clips saved yet.')).toBeVisible();
+		await library.close();
+	});
+
+	test('guide page renders sections + live status', async () => {
+		const guide = await context.newPage();
+		await guide.goto(`chrome-extension://${extensionId}/guide.html`);
+		await expect(guide.getByRole('heading', { name: /SnipSnip\s+v/ })).toBeVisible();
+		await expect(guide.getByRole('heading', { name: 'Get started' })).toBeVisible();
+		await expect(guide.getByRole('heading', { name: 'Hotkeys' })).toBeVisible();
+		await expect(guide.getByRole('heading', { name: 'Pages' })).toBeVisible();
+		await expect(guide.getByRole('heading', { name: 'Status' })).toBeVisible();
+		await expect(guide.getByText('Clips saved')).toBeVisible();
+		await guide.close();
+	});
 });

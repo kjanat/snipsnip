@@ -1,5 +1,6 @@
 import { Readability } from '@mozilla/readability';
-import type { ClipMode, ExtractedArticle } from './types';
+import { applyRule, findMatchingRule } from './site-rules';
+import type { ClipMode, ExtractedArticle, SiteRule } from './types';
 
 interface ReadabilityArticle {
 	title: string | null;
@@ -52,7 +53,10 @@ async function digest(input: string): Promise<string> {
 		.slice(0, 12);
 }
 
-export async function extractArticle(mode: ClipMode): Promise<ExtractedArticle> {
+export async function extractArticle(
+	mode: ClipMode,
+	siteRules: SiteRule[] = [],
+): Promise<ExtractedArticle> {
 	const url = location.href;
 	const fallbackTitle = document.title;
 	let html: string;
@@ -66,8 +70,10 @@ export async function extractArticle(mode: ClipMode): Promise<ExtractedArticle> 
 		html = selectionAsHtml(selection);
 	} else {
 		const cloned = document.cloneNode(true) as Document;
-		parsed = new Readability(cloned).parse() as ReadabilityArticle | null;
-		html = parsed?.content ?? document.body.innerHTML;
+		const matched = findMatchingRule(siteRules, location.hostname);
+		const prepared = matched ? applyRule(cloned, matched) : cloned;
+		parsed = new Readability(prepared).parse() as ReadabilityArticle | null;
+		html = parsed?.content ?? prepared.body.innerHTML;
 	}
 
 	const hash = await digest(`${url}::${html}`);

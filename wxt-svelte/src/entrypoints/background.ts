@@ -1,6 +1,8 @@
 import { syncAgentBridge } from '@/lib/agent-bridge';
 import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
+import { recordClip } from '@/lib/library-store';
 import { sendMessage } from '@/lib/messaging';
+import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications';
 import { settingsItem } from '@/lib/storage';
 import { applyTemplate } from '@/lib/template';
 
@@ -19,19 +21,27 @@ async function activeTabId(): Promise<number> {
 
 async function clipActiveTab(mode: 'document' | 'selection') {
 	const tabId = await activeTabId();
-	const result = await sendMessage('performClip', { mode }, tabId);
-	const settings = await settingsItem.getValue();
-	const filename = withMarkdownExtension(
-		sanitizeFilename(applyTemplate(settings.title, result.article)),
-	);
-	const blob = new Blob([result.markdown], { type: 'text/markdown' });
-	const url = URL.createObjectURL(blob);
-	const downloadId = await browser.downloads.download({
-		url,
-		filename,
-		saveAs: settings.saveAs,
-	});
-	return { downloadId };
+	try {
+		const result = await sendMessage('performClip', { mode }, tabId);
+		const settings = await settingsItem.getValue();
+		const filename = withMarkdownExtension(
+			sanitizeFilename(applyTemplate(settings.title, result.article)),
+		);
+		const blob = new Blob([result.markdown], { type: 'text/markdown' });
+		const url = URL.createObjectURL(blob);
+		const downloadId = await browser.downloads.download({
+			url,
+			filename,
+			saveAs: settings.saveAs,
+		});
+		await recordClip(result, filename);
+		await notifyClipSaved(filename);
+		return { downloadId };
+	} catch (e) {
+		const reason = e instanceof Error ? e.message : String(e);
+		await notifyClipFailed(reason);
+		throw e;
+	}
 }
 
 async function copyActiveTab(mode: 'document' | 'selection') {
@@ -65,7 +75,7 @@ async function sendActiveTabToObsidian(): Promise<void> {
 }
 
 export default defineBackground(() => {
-	browser.runtime.onInstalled.addListener(() => {
+	browser.runtime.onInstalled.addListener(({ reason }) => {
 		for (const item of CONTEXT_MENUS) {
 			browser.contextMenus.create({
 				id: item.id,
@@ -74,6 +84,9 @@ export default defineBackground(() => {
 			});
 		}
 		void syncAgentBridge();
+		if (reason === 'install') {
+			void browser.tabs.create({ url: browser.runtime.getURL('/guide.html') });
+		}
 	});
 
 	browser.runtime.onStartup.addListener(() => {

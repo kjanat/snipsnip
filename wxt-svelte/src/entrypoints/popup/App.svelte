@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { downloadMarkdown } from '@/lib/clipboard';
-	import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
+	import { type ExportFormat, exportPayload } from '@/lib/export';
+	import { sanitizeFilename } from '@/lib/filename';
 	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { sendMessage } from '@/lib/messaging';
 	import { settingsItem } from '@/lib/storage';
@@ -13,6 +13,7 @@
 	let error = $state<string | null>(null);
 	let result = $state<ClipResult | null>(null);
 	let editable = $state('');
+	let format: ExportFormat = $state('md');
 
 	onMount(() => {
 		void run();
@@ -51,10 +52,19 @@
 	async function downloadCurrent(): Promise<void> {
 		if (!result) return;
 		const settings = await settingsItem.getValue();
-		const filename = withMarkdownExtension(
-			sanitizeFilename(applyTemplate(settings.title, result.article)),
+		const stem = sanitizeFilename(
+			applyTemplate(settings.title, result.article),
 		);
-		await downloadMarkdown(editable, filename, settings.saveAs);
+		const payload = exportPayload(editable, result.article.title, format);
+		const blob = typeof payload.content === 'string'
+			? new Blob([payload.content], { type: payload.mime })
+			: payload.content;
+		const url = URL.createObjectURL(blob);
+		await browser.downloads.download({
+			url,
+			filename: `${stem}.${payload.ext}`,
+			saveAs: settings.saveAs,
+		});
 	}
 
 	async function sendToObsidian(): Promise<void> {
@@ -87,6 +97,10 @@
 		void browser.tabs.create({ url: browser.runtime.getURL('/batch.html') });
 	}
 
+	function openLibrary(): void {
+		void browser.tabs.create({ url: browser.runtime.getURL('/library.html') });
+	}
+
 	function setMode(next: ClipMode): void {
 		if (mode === next) return;
 		mode = next;
@@ -97,6 +111,14 @@
 <header>
 	<div class="brand">SnipSnip</div>
 	<div class="header-actions">
+		<button
+			class="ghost"
+			type="button"
+			onclick={openLibrary}
+			aria-label="Library"
+		>
+			☰
+		</button>
 		<button class="ghost" type="button" onclick={openBatch} aria-label="Batch">
 			⇶
 		</button>
@@ -154,9 +176,16 @@
 
 <footer>
 	<button type="button" onclick={copyAll} disabled={!result}>Copy</button>
-	<button type="button" onclick={downloadCurrent} disabled={!result}>
-		Download
-	</button>
+	<div class="export-group">
+		<button type="button" onclick={downloadCurrent} disabled={!result}>
+			Download
+		</button>
+		<select bind:value={format} disabled={!result} aria-label="Export format">
+			<option value="md">.md</option>
+			<option value="html">.html</option>
+			<option value="txt">.txt</option>
+		</select>
+	</div>
 	<button
 		class="primary"
 		type="button"
@@ -268,6 +297,30 @@
 		border-radius: 6px;
 		cursor: pointer;
 		font-weight: 500;
+	}
+	.export-group {
+		flex: 1;
+		display: flex;
+		gap: 0;
+	}
+	.export-group button {
+		flex: 1;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		border-right: none;
+	}
+	.export-group select {
+		padding: 0 6px;
+		border: 1px solid var(--border);
+		background: var(--surface);
+		color: var(--fg);
+		border-radius: 0 6px 6px 0;
+		cursor: pointer;
+		font: inherit;
+	}
+	.export-group select:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	footer button:hover:not(:disabled) {
 		border-color: var(--accent);

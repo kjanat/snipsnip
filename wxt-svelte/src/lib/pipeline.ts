@@ -5,10 +5,8 @@ import { applyTemplate } from './template';
 import type { ClipMode, ClipResult } from './types';
 
 export async function runClipPipeline(mode: ClipMode): Promise<ClipResult> {
-	const [article, settings] = await Promise.all([
-		extractArticle(mode),
-		settingsItem.getValue(),
-	]);
+	const settings = await settingsItem.getValue();
+	const article = await extractArticle(mode, settings.siteRules);
 
 	const body = convertHtmlToMarkdown(article.content, settings);
 	const frontmatter = settings.includeTemplate

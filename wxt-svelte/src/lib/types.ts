@@ -22,6 +22,15 @@ export interface ClipSettings {
 	obsidianFolder: string;
 	agentBridgeEnabled: boolean;
 	agentBridgeHost: string;
+	notificationsEnabled: boolean;
+	historyLimit: number;
+	siteRules: SiteRule[];
+}
+
+export interface SiteRule {
+	pattern: string;
+	contentSelector: string;
+	excludeSelectors: string;
 }
 
 export interface ExtractedArticle {

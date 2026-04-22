@@ -187,6 +187,64 @@
 		</label>
 	</section>
 
+	<section>
+		<h2>Notifications &amp; History</h2>
+		<label class="inline">
+			<input type="checkbox" bind:checked={settings.notificationsEnabled}>
+			Show desktop notifications on clip save / failure
+		</label>
+		<label class="stacked">
+			History limit (number of clips kept in Library)
+			<input type="number" min="1" max="500" bind:value={settings.historyLimit}>
+		</label>
+	</section>
+
+	<section>
+		<h2>Site Rules</h2>
+		<p class="muted small">
+			Override Readability for specific hostnames. <code>*</code> wildcards
+			allowed. Content selector picks the article root; exclude selectors strip
+			noise (comma-separated).
+		</p>
+		{#each settings.siteRules as rule, idx (idx)}
+			<div class="rule">
+				<input
+					type="text"
+					bind:value={rule.pattern}
+					placeholder="*.example.com"
+				>
+				<input
+					type="text"
+					bind:value={rule.contentSelector}
+					placeholder="article, main"
+				>
+				<input
+					type="text"
+					bind:value={rule.excludeSelectors}
+					placeholder=".ads, .footer"
+				>
+				<button
+					type="button"
+					class="rule-remove"
+					onclick={() => (settings.siteRules = settings.siteRules.filter((_, i) => i !== idx))}
+					aria-label="Remove rule"
+				>
+					×
+				</button>
+			</div>
+		{/each}
+		<button
+			type="button"
+			onclick={() => (settings.siteRules = [...settings.siteRules, {
+				pattern: '',
+				contentSelector: '',
+				excludeSelectors: '',
+			}])}
+		>
+			Add rule
+		</button>
+	</section>
+
 	<footer>
 		<button type="button" class="primary" onclick={save}>
 			{saved ? 'Saved ✓' : 'Save'}
@@ -297,5 +355,28 @@
 	.file {
 		display: inline-flex;
 		align-items: center;
+	}
+	.rule {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr auto;
+		gap: 6px;
+		margin-bottom: 8px;
+	}
+	.rule input {
+		font: inherit;
+		padding: 6px 8px;
+		border-radius: 6px;
+		border: 1px solid var(--border);
+		background: var(--bg);
+		color: var(--fg);
+	}
+	.rule-remove {
+		padding: 0 12px;
+		border: 1px solid var(--border);
+		background: var(--surface);
+		color: var(--danger);
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 18px;
 	}
 </style>

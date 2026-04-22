@@ -23,4 +23,7 @@ export const DEFAULT_SETTINGS: ClipSettings = {
 	obsidianFolder: '',
 	agentBridgeEnabled: false,
 	agentBridgeHost: 'com.snipsnip.bridge',
+	notificationsEnabled: true,
+	historyLimit: 50,
+	siteRules: [],
 };

@@ -3,9 +3,9 @@ import { defineConfig } from 'wxt';
 
 const autoIcons: AutoIconsOptions = {
 	enabled: true,
-	baseIconPath: 'assets/icon.svg',
+	baseIconPath: 'assets/alt-icon-square.svg',
 	developmentIndicator: 'overlay',
-	sizes: [16, 32, 48, 96, 128],
+	sizes: [16, 32, 48, 96, 128, 256, 512],
 };
 
 export default defineConfig({
@@ -25,6 +25,7 @@ export default defineConfig({
 			'storage',
 			'contextMenus',
 			'clipboardWrite',
+			'notifications',
 			'scripting',
 			...(browser === 'chrome' ? ['offscreen'] : []),
 		],
