@@ -1,6 +1,6 @@
 import { settingsItem } from './storage';
 
-const ICON = browser.runtime.getURL('/icon/128.png');
+const ICON = browser.runtime.getURL('/icons/128.png');
 
 async function notify(title: string, message: string): Promise<void> {
 	const settings = await settingsItem.getValue();
