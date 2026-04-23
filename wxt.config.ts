@@ -95,7 +95,7 @@ export default defineConfig({
 						id: 'snipsnip@kjanat.com',
 						strict_min_version: '150.0',
 						data_collection_permissions: {
-							required: ['none'],
+							required: ['browsingActivity', 'websiteContent'],
 						},
 					},
 				},
