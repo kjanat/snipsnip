@@ -6,7 +6,7 @@
 		HighlightStyle,
 		syntaxHighlighting,
 	} from '@codemirror/language';
-	import { EditorState } from '@codemirror/state';
+	import { Compartment, EditorState } from '@codemirror/state';
 	import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 	import { tags } from '@lezer/highlight';
 	import { onDestroy } from 'svelte';
@@ -47,12 +47,19 @@
 		value: string;
 		onChange?: (value: string) => void;
 		readonly?: boolean;
+		wrap?: boolean;
 	}
 
-	let { value = $bindable(''), onChange, readonly = false }: Props = $props();
+	let { value = $bindable(''), onChange, readonly = false, wrap = true }:
+		Props = $props();
 
 	let host: HTMLDivElement | undefined = $state();
 	let view: EditorView | undefined = $state();
+	const wrapCompartment = new Compartment();
+
+	function wrapExtension(enabled: boolean) {
+		return enabled ? EditorView.lineWrapping : [];
+	}
 
 	function makeState(initial: string): EditorState {
 		return EditorState.create({
@@ -65,7 +72,7 @@
 				syntaxHighlighting(highlightStyle),
 				markdown(),
 				keymap.of([...defaultKeymap, ...historyKeymap]),
-				EditorView.lineWrapping,
+				wrapCompartment.of(wrapExtension(wrap)),
 				EditorState.readOnly.of(readonly),
 				EditorView.updateListener.of((update) => {
 					if (!update.docChanged) return;
@@ -94,6 +101,13 @@
 		});
 	});
 
+	$effect(() => {
+		if (!view) return;
+		view.dispatch({
+			effects: wrapCompartment.reconfigure(wrapExtension(wrap)),
+		});
+	});
+
 	onDestroy(() => {
 		view?.destroy();
 	});
@@ -104,7 +118,8 @@
 <style>
 	.cm-host {
 		display: flex;
-		min-height: 240px;
+		flex: 1;
+		min-height: 0;
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		overflow: hidden;
@@ -118,8 +133,6 @@
 	}
 	.cm-host :global(.cm-scroller) {
 		font-family: inherit;
-	}
-	.cm-host :global(.cm-content) {
-		min-height: 240px;
+		overflow: auto;
 	}
 </style>

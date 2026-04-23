@@ -32,6 +32,7 @@
 	let format: ExportFormat = $state('md');
 	let copied = $state(false);
 	let downloaded = $state(false);
+	let wrap = $state(true);
 
 	onMount(() => {
 		void initializeMode();
@@ -245,19 +246,75 @@
 					{result.article.byline}
 				</div>{/if}
 		</div>
-		<MarkdownEditor bind:value={editable} />
+		<div class="editor-wrap">
+			<button
+				class="wrap-toggle"
+				type="button"
+				onclick={() => (wrap = !wrap)}
+				title={wrap ? 'Disable word wrap' : 'Enable word wrap'}
+				aria-label="Toggle word wrap"
+			>
+				{wrap ? '↩' : '→'}
+			</button>
+			<MarkdownEditor bind:value={editable} {wrap} />
+		</div>
 	{:else if !error}
 		<div class="status">Nothing yet.</div>
 	{/if}
 </main>
 
 <footer>
-	<button type="button" onclick={copyAll} disabled={!result}>
-		{copied ? 'Copied ✓' : 'Copy'}
+	<button
+		type="button"
+		onclick={copyAll}
+		disabled={!result}
+		title="Copy to clipboard"
+		aria-label="Copy to clipboard"
+	>
+		<svg
+			class="btn-icon"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			{#if copied}
+				<polyline points="20 6 9 17 4 12" />
+			{:else}
+				<rect width="14" height="14" x="8" y="8" rx="2" />
+				<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+			{/if}
+		</svg>
 	</button>
 	<div class="export-group">
-		<button type="button" onclick={downloadCurrent} disabled={!result}>
-			{downloaded ? 'Saved ✓' : 'Download'}
+		<button
+			type="button"
+			onclick={downloadCurrent}
+			disabled={!result}
+			title="Download"
+			aria-label="Download"
+		>
+			<svg
+				class="btn-icon"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				{#if downloaded}
+					<polyline points="20 6 9 17 4 12" />
+				{:else}
+					<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+					<polyline points="7 10 12 15 17 10" />
+					<line x1="12" x2="12" y1="15" y2="3" />
+				{/if}
+			</svg>
 		</button>
 		<select
 			bind:value={format}
@@ -276,8 +333,27 @@
 		type="button"
 		onclick={sendToObsidian}
 		disabled={!result}
+		title="Send to Obsidian"
+		aria-label="Send to Obsidian"
 	>
-		Obsidian
+		<svg
+			class="btn-icon obsidian-icon"
+			viewBox="0 0 19.41 25"
+			aria-hidden="true"
+		>
+			<path
+				fill="currentColor"
+				d="M6.92 14.596c.64-.191 1.672-.484 2.859-.557-.712-1.797-.884-3.37-.746-4.77.16-1.616.73-2.965 1.286-4.113q.177-.366.341-.692c.155-.31.3-.602.437-.896.227-.49.395-.922.48-1.324.083-.395.084-.748-.015-1.086-.1-.34-.31-.704-.71-1.104a1.67 1.67 0 0 0-1.536.374L4.161 5.066c-.288.259-.477.61-.534.992l-.445 2.947c.699.618 2.424 2.414 3.474 4.907q.14.333.263.683m-3.946-4.244a1.7 1.7 0 0 1-.102.303L.146 16.727a1.67 1.67 0 0 0 .326 1.846l4.288 4.416c2.19-3.23 1.87-6.27.87-8.646-.758-1.8-1.908-3.21-2.657-3.992"
+			/>
+			<path
+				fill="currentColor"
+				d="M5.75 23.51q.114.017.229.02c.814.025 2.182.096 3.292.3.906.168 2.7.67 4.178 1.101 1.127.33 2.289-.57 2.452-1.734.12-.848.343-1.807.755-2.686l-.01.003c-.697-1.947-1.586-3.204-2.517-4.007a5.5 5.5 0 0 0-2.893-1.31c-1.605-.226-3.075.196-4.001.468.555 2.311.384 5.03-1.484 7.844"
+			/>
+			<path
+				fill="currentColor"
+				d="M17.37 19.31a72 72 0 0 0 1.936-3.076.845.845 0 0 0-.064-.938c-.538-.713-1.566-2.16-2.127-3.501-.576-1.379-.662-3.52-.667-4.562a1.78 1.78 0 0 0-.373-1.094l-3.331-4.232q-.02.286-.079.567c-.11.524-.32 1.046-.558 1.561-.14.303-.302.626-.465.953q-.165.328-.322.652c-.539 1.113-1.04 2.32-1.18 3.74-.13 1.314.048 2.844.849 4.67a7 7 0 0 1 .402.045 6.63 6.63 0 0 1 3.465 1.569c.954.822 1.816 2.001 2.515 3.646"
+			/>
+		</svg>
 	</button>
 </footer>
 
@@ -346,6 +422,33 @@
 		gap: 8px;
 		padding: 10px 14px;
 		flex: 1;
+		min-height: 0;
+	}
+	.editor-wrap {
+		position: relative;
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.wrap-toggle {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		z-index: 5;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		color: var(--muted);
+		border-radius: 4px;
+		font-size: 13px;
+		padding: 2px 6px;
+		cursor: pointer;
+		opacity: 0.45;
+		transition: opacity 0.15s;
+	}
+	.wrap-toggle:hover {
+		opacity: 1;
+		color: var(--fg);
 	}
 	.meta {
 		display: flex;
@@ -381,14 +484,23 @@
 		border-top: 1px solid var(--border);
 	}
 	footer button {
-		flex: 1;
 		padding: 8px 10px;
 		border: 1px solid var(--border);
 		background: var(--surface);
 		color: var(--fg);
 		border-radius: 6px;
 		cursor: pointer;
-		font-weight: 500;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.btn-icon {
+		width: 16px;
+		height: 16px;
+	}
+	.obsidian-icon {
+		width: 13px;
+		height: 16px;
 	}
 	.export-group {
 		flex: 1;
