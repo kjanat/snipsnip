@@ -169,15 +169,6 @@
 			<code>&lt;strong&gt;</code> (Substack, Medium, custom CMSs). Slightly
 			slower on large pages.
 		</p>
-		<label class="inline">
-			<input type="checkbox" bind:checked={settings.formatOutput}>
-			Format output with dprint
-		</label>
-		<p class="muted small">
-			Runs the Markdown through <code>dprint-plugin-markdown</code> to normalize
-			headings, lists, spacing, and tables. Adds ~200 ms to first clip (WASM
-			load), instant after.
-		</p>
 	</section>
 
 	<section>

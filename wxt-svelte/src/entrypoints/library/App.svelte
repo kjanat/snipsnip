@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type ExportFormat, exportPayload } from '@/lib/export';
+	import { formatMarkdown } from '@/lib/format';
 	import { type ClipEntry, searchLibrary } from '@/lib/library';
 	import {
 		clearHistory,
@@ -20,6 +21,8 @@
 	let editable = $state('');
 	let format: ExportFormat = $state('md');
 	let wrap = $state(true);
+	let formatted = $state(false);
+	let preFormatSnapshot = $state('');
 
 	const filtered = $derived(searchLibrary(entries, query));
 	const pinned = $derived(filtered.filter((e) => e.pinned));
@@ -30,6 +33,8 @@
 	$effect(() => {
 		if (focused) {
 			editable = focused.markdown;
+			formatted = false;
+			preFormatSnapshot = '';
 		}
 	});
 
@@ -46,6 +51,17 @@
 
 	function formatDate(ts: number): string {
 		return new Date(ts).toLocaleString();
+	}
+
+	async function toggleFormat(): Promise<void> {
+		if (formatted) {
+			editable = preFormatSnapshot;
+			formatted = false;
+		} else {
+			preFormatSnapshot = editable;
+			editable = await formatMarkdown(editable);
+			formatted = true;
+		}
 	}
 
 	async function copyEntry(): Promise<void> {
@@ -217,6 +233,16 @@
 					</div>
 				</div>
 				<div class="editor-wrap">
+					<button
+						class="fmt-toggle"
+						class:active={formatted}
+						type="button"
+						onclick={toggleFormat}
+						title={formatted ? 'Show raw markdown' : 'Format with dprint'}
+						aria-label="Toggle formatting"
+					>
+						¶
+					</button>
 					<button
 						class="wrap-toggle"
 						type="button"
@@ -447,5 +473,29 @@
 	.wrap-toggle:hover {
 		opacity: 1;
 		color: var(--fg);
+	}
+	.fmt-toggle {
+		position: absolute;
+		top: 6px;
+		right: 36px;
+		z-index: 5;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		color: var(--muted);
+		border-radius: 4px;
+		font-size: 13px;
+		padding: 2px 6px;
+		cursor: pointer;
+		opacity: 0.45;
+		transition: opacity 0.15s;
+	}
+	.fmt-toggle:hover {
+		opacity: 1;
+		color: var(--fg);
+	}
+	.fmt-toggle.active {
+		opacity: 1;
+		color: var(--accent);
+		border-color: var(--accent);
 	}
 </style>

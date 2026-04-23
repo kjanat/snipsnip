@@ -42,7 +42,6 @@ export const ClipSettingsSchema = v.object({
 	siteRules: v.optional(v.array(SiteRuleSchema), []),
 	htmlTableFallback: v.optional(v.picklist(['auto', 'always', 'never']), 'auto'),
 	resolveStyles: v.optional(v.boolean(), true),
-	formatOutput: v.optional(v.boolean(), false),
 });
 
 export type ClipSettings = v.InferOutput<typeof ClipSettingsSchema>;
