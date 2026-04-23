@@ -1,8 +1,8 @@
 {
-	"name": "snipsnip-svelte",
+	"name": "snipsnip",
 	"version": "0.1.0",
 	"private": true,
-	"description": "SnipSnip — Markdown web clipper rebuilt natively on WXT + Svelte 5",
+	"description": "One-click Markdown web clipper.",
 	"repository": "kjanat/snipsnip",
 	"author": {
 		"name": "Kaj Kowalski",

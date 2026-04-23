@@ -1,4 +1,5 @@
 import type { AutoIconsOptions } from '@wxt-dev/auto-icons';
+import { env } from 'bun';
 import { defineConfig } from 'wxt';
 
 const autoIcons: AutoIconsOptions = {
@@ -16,9 +17,8 @@ export default defineConfig({
 	manifest: ({ browser }) => ({
 		name: 'SnipSnip',
 		short_name: 'Snip',
-		author: 'Kaj Kowalski',
-		description:
-			'One-click Markdown web clipper. Save articles, docs, code & tables as clean Markdown. Supports Obsidian & more.',
+		author: env.npm_package_author_name || env.npm_package_author || 'Unknown Author',
+		description: env.npm_package_description,
 		permissions: [
 			'activeTab',
 			'downloads',
