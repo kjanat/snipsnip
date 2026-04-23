@@ -11,5 +11,7 @@ export default defineConfig({
 		actionTimeout: 10000,
 		screenshot: 'only-on-failure',
 	},
-	projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+	projects: [
+		{ name: 'chromium', use: { browserName: 'chromium' } },
+	],
 });

@@ -2,32 +2,34 @@ import type { AutoIconsOptions } from '@wxt-dev/auto-icons';
 import { env } from 'bun';
 import { defineConfig } from 'wxt';
 
+const srcDir = 'src';
+
 const autoIcons: AutoIconsOptions = {
 	enabled: true,
 	baseIconPath: 'assets/alt-icon-square.svg',
 	developmentIndicator: 'overlay',
-	sizes: [16, 32, 48, 96, 128, 256, 512],
+	sizes: [128, 256, 512],
 };
 
 export default defineConfig({
-	srcDir: 'src',
 	modules: ['@wxt-dev/module-svelte', '@wxt-dev/auto-icons'],
+	srcDir,
 	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
-	manifest: ({ browser }) => ({
+	manifestVersion: 3,
+	manifest: {
 		name: 'SnipSnip',
 		short_name: 'Snip',
-		author: env.npm_package_author_name || env.npm_package_author || 'Unknown Author',
 		description: env.npm_package_description,
 		permissions: [
 			'activeTab',
-			'downloads',
-			'storage',
-			'contextMenus',
 			'clipboardWrite',
+			'contextMenus',
+			'downloads',
 			'notifications',
+			'offscreen',
 			'scripting',
-			...(browser === 'chrome' ? ['offscreen'] : []),
+			'storage',
 		],
 		optional_permissions: ['nativeMessaging'],
 		host_permissions: ['<all_urls>'],
@@ -54,28 +56,21 @@ export default defineConfig({
 				description: 'Copy current tab as Markdown to Obsidian',
 			},
 		},
-		...(browser === 'chrome'
-			? {
-				content_security_policy: {
-					extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
-				},
-			}
-			: {}),
-		...(browser === 'firefox'
-			? {
-				browser_specific_settings: {
-					gecko: {
-						id: 'snipsnip-svelte@kjanat.com',
-						strict_min_version: '128.0',
-					},
-				},
-			}
-			: {}),
-	}),
+		content_security_policy: {
+			extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+		},
+		browser_specific_settings: {
+			gecko: {
+				id: 'snipsnip-svelte@kjanat.com',
+				strict_min_version: '128.0',
+			},
+		},
+	},
 	vite: () => ({
 		build: {
-			sourcemap: 'inline',
-			minify: false,
+			sourcemap: import.meta.env.FIREFOX ? 'inline' : false,
+			minify: !import.meta.env.FIREFOX,
+			cssMinify: true,
 		},
 	}),
 });
