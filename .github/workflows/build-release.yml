@@ -21,18 +21,11 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+        with: { node-version: "${{ env.NODE_VERSION }}" }
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Show tool versions
-        run: |
-          node --version
-          bun --version
+        with: { bun-version: "${{ env.BUN_VERSION }}" }
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -58,18 +51,11 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+        with: { node-version: "${{ env.NODE_VERSION }}" }
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Show tool versions
-        run: |
-          node --version
-          bun --version
+        with: { bun-version: "${{ env.BUN_VERSION }}" }
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -84,8 +70,8 @@ jobs:
       - name: Get version from package.json
         id: get-version
         run: |
-          VERSION="$(node -p "require('./package.json').version")"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION="$(yq -r .version package.json)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Extension version: $VERSION"
 
       - name: Build Chrome WXT output
@@ -142,14 +128,18 @@ jobs:
 
       - name: Create Chrome package (.zip)
         working-directory: .output/chrome-mv3
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          zip -r ../../dist/snipsnip-chrome-${{ steps.get-version.outputs.version }}.zip . \
+          zip -r "../../dist/snipsnip-chrome-${VERSION}.zip" . \
             -x "*.DS_Store"
 
       - name: Create Firefox package (.xpi)
         working-directory: .output/firefox-mv3
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
         run: |
-          zip -r ../../dist/snipsnip-firefox-${{ steps.get-version.outputs.version }}.xpi . \
+          zip -r "../../dist/snipsnip-firefox-${VERSION}.xpi" . \
             -x "*.DS_Store"
 
       - name: Upload Chrome artifact
@@ -210,21 +200,25 @@ jobs:
 
       - name: Get tag name
         id: get-tag
+        env:
+          EVENT_VERSION: ${{ github.event.inputs.version }}
+          BUILD_VERSION: ${{ needs.build.outputs.version }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.version }}"
-            if [ -z "$TAG" ]; then
-              TAG="v${{ needs.build.outputs.version }}"
-            fi
-          else
+          if [ -n "$EVENT_VERSION" ]; then
+            TAG="$EVENT_VERSION"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v${BUILD_VERSION}"
           fi
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Extract changelog entry
         id: changelog
+        env:
+          TAG: ${{ steps.get-tag.outputs.tag }}
         run: |
-          VERSION="${{ steps.get-tag.outputs.tag }}"
+          VERSION="${TAG}"
           VERSION="${VERSION#v}"
 
           CHANGELOG_ENTRY="$(awk -v version="$VERSION" '
