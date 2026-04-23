@@ -90,7 +90,6 @@
 
 	async function downloadCurrent(): Promise<void> {
 		if (!result) return;
-		busy = true;
 		error = null;
 		try {
 			const settings = await getSettings();
@@ -129,8 +128,6 @@
 			setTimeout(() => (downloaded = false), 1500);
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
-		} finally {
-			busy = false;
 		}
 	}
 
