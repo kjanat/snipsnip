@@ -26,17 +26,9 @@ interface BridgeError {
 
 type BridgeResponse = BridgePong | BridgeClip | BridgeError;
 
-let port: ReturnType<typeof browser.runtime.connectNative> | undefined;
-
-export class NativeMessagingUnavailableError extends Error {
-	constructor() {
-		super('Native messaging is not available — grant the optional permission first.');
-		this.name = 'NativeMessagingUnavailableError';
-	}
-}
+let port: Browser.runtime.Port | undefined;
 
 export async function isAgentBridgeGranted(): Promise<boolean> {
-	if (typeof browser.runtime.connectNative !== 'function') return false;
 	if (!browser.permissions?.contains) return false;
 	try {
 		return await browser.permissions.contains({ permissions: ['nativeMessaging'] });
@@ -85,7 +77,12 @@ export async function startAgentBridge(): Promise<void> {
 	if (!settings.agentBridgeEnabled) return;
 	if (!(await isAgentBridgeGranted())) return;
 
-	port = browser.runtime.connectNative(settings.agentBridgeHost);
+	try {
+		port = browser.runtime.connectNative(settings.agentBridgeHost);
+	} catch (e) {
+		console.warn('[agent-bridge] connectNative unavailable:', e);
+		return;
+	}
 	port.onMessage.addListener(async (raw: unknown) => {
 		try {
 			const response = await handleRequest(raw as BridgeRequest);

@@ -1,11 +1,11 @@
-import { syncAgentBridge } from '@/lib/agent-bridge';
-import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename';
-import { ensureContentScript } from '@/lib/inject-content';
-import { recordClip } from '@/lib/library-store';
-import { sendMessage } from '@/lib/messaging';
-import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications';
-import { settingsItem } from '@/lib/storage';
-import { applyTemplate } from '@/lib/template';
+import { syncAgentBridge } from '@/lib/agent-bridge.ts';
+import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename.ts';
+import { ensureContentScript } from '@/lib/inject-content.ts';
+import { recordClip } from '@/lib/library-store.ts';
+import { sendMessage } from '@/lib/messaging.ts';
+import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications.ts';
+import { settingsItem } from '@/lib/storage.ts';
+import { applyTemplate } from '@/lib/template.ts';
 
 const CONTEXT_MENUS = [
 	{ id: 'clip-page', title: 'Save page as Markdown', contexts: ['page'] as const },
@@ -99,7 +99,13 @@ export default defineBackground(() => {
 	});
 
 	browser.storage.onChanged.addListener((changes, area) => {
-		if (area === 'sync' && 'settings' in changes) {
+		if (area !== 'sync' || !('settings' in changes)) return;
+		const prev = (changes.settings.oldValue ?? {}) as Record<string, unknown>;
+		const next = (changes.settings.newValue ?? {}) as Record<string, unknown>;
+		if (
+			prev.agentBridgeEnabled !== next.agentBridgeEnabled
+			|| prev.agentBridgeHost !== next.agentBridgeHost
+		) {
 			void syncAgentBridge();
 		}
 	});
