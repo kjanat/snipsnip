@@ -16,7 +16,7 @@
 	},
 	"scripts": {
 		"bd": "bun run build",
-		"build": "bun run build:chrome & bun run build:firefox & wait",
+		"build": "bun scripts/concurrent-build.ts",
 		"build:chrome": "bunx --bun wxt build -b chrome",
 		"build:firefox": "bunx --bun wxt build -b firefox",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
