@@ -7,6 +7,7 @@
 		rewriteImageRefs,
 	} from '@/lib/images';
 	import { ensureContentScript } from '@/lib/inject-content';
+	import { recordClip } from '@/lib/library-store';
 	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { sendMessage } from '@/lib/messaging';
 	import { getSettings } from '@/lib/storage';
@@ -70,6 +71,11 @@
 			const next = await sendMessage('performClip', { mode }, tabId);
 			result = next;
 			editable = next.markdown;
+			const settings = await getSettings();
+			const filename = sanitizeFilename(
+				applyTemplate(settings.title, next.article),
+			);
+			void recordClip(next, filename);
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 			result = null;
