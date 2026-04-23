@@ -17,9 +17,7 @@ function trackUrl(url: string, filename: string): void {
 function cleanupDownload(downloadId: number): void {
 	const url = downloadToUrl.get(downloadId);
 	downloadToUrl.delete(downloadId);
-	if (!url) return;
-	trackedUrls.delete(url);
-	if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+	if (url) trackedUrls.delete(url);
 }
 
 const CONTEXT_MENUS = [
