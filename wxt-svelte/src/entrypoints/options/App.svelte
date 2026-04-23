@@ -262,8 +262,17 @@
 			Show desktop notifications on clip save / failure
 		</label>
 		<label class="stacked">
-			History limit (number of clips kept in Library)
+			History limit (max unpinned clips)
 			<input type="number" min="1" max="500" bind:value={settings.historyLimit}>
+		</label>
+		<label class="stacked">
+			History retention (days before auto-delete)
+			<input
+				type="number"
+				min="1"
+				max="365"
+				bind:value={settings.historyRetentionDays}
+			>
 		</label>
 	</section>
 

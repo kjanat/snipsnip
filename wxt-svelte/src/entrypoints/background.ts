@@ -1,7 +1,7 @@
 import { syncAgentBridge } from '@/lib/agent-bridge.ts';
 import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename.ts';
 import { ensureContentScript } from '@/lib/inject-content.ts';
-import { recordClip } from '@/lib/library-store.ts';
+import { pruneExpiredHistory, recordClip } from '@/lib/library-store.ts';
 import { onMessage, sendMessage } from '@/lib/messaging.ts';
 import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications.ts';
 import { settingsItem } from '@/lib/storage.ts';
@@ -130,6 +130,7 @@ export default defineBackground(() => {
 
 	browser.runtime.onStartup.addListener(() => {
 		void syncAgentBridge();
+		void pruneExpiredHistory();
 	});
 
 	browser.storage.onChanged.addListener((changes, area) => {

@@ -12,6 +12,7 @@ const sample: ClipEntry[] = [
 		markdown: '# Intro\nFooBar baz',
 		mode: 'document',
 		savedAt: 1,
+		pinned: false,
 	},
 	{
 		id: '2',
@@ -23,6 +24,7 @@ const sample: ClipEntry[] = [
 		markdown: '# News\nBaz qux',
 		mode: 'document',
 		savedAt: 2,
+		pinned: false,
 	},
 ];
 

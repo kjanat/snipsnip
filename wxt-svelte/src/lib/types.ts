@@ -38,6 +38,7 @@ export const ClipSettingsSchema = v.object({
 	agentBridgeHost: v.optional(v.string(), 'com.snipsnip.bridge'),
 	notificationsEnabled: v.optional(v.boolean(), true),
 	historyLimit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 50),
+	historyRetentionDays: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 30),
 	siteRules: v.optional(v.array(SiteRuleSchema), []),
 	htmlTableFallback: v.optional(v.picklist(['auto', 'always', 'never']), 'auto'),
 	resolveStyles: v.optional(v.boolean(), true),

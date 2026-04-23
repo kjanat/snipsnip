@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { downloadMarkdown } from '@/lib/clipboard';
 	import { type ClipEntry, searchLibrary } from '@/lib/library';
-	import { clearLibrary, deleteClip, libraryItem } from '@/lib/library-store';
+	import {
+		clearHistory,
+		deleteClip,
+		libraryItem,
+		pinClip,
+		unpinClip,
+	} from '@/lib/library-store';
 	import { onMount } from 'svelte';
 
 	let entries = $state<ClipEntry[]>([]);
@@ -10,6 +16,8 @@
 	let selected = $state<string | null>(null);
 
 	const filtered = $derived(searchLibrary(entries, query));
+	const pinned = $derived(filtered.filter((e) => e.pinned));
+	const history = $derived(filtered.filter((e) => !e.pinned));
 	const focused = $derived(filtered.find((e) => e.id === selected) ?? null);
 
 	onMount(() => {
@@ -36,13 +44,25 @@
 	}
 
 	async function removeEntry(entry: ClipEntry): Promise<void> {
+		if (selected === entry.id) {
+			const idx = filtered.findIndex((e) => e.id === entry.id);
+			const next = filtered[idx + 1] ?? filtered[idx - 1];
+			selected = next?.id ?? null;
+		}
 		await deleteClip(entry.id);
-		if (selected === entry.id) selected = null;
 	}
 
-	async function clearAll(): Promise<void> {
-		await clearLibrary();
-		selected = null;
+	async function togglePin(entry: ClipEntry): Promise<void> {
+		if (entry.pinned) {
+			await unpinClip(entry.id);
+		} else {
+			await pinClip(entry.id);
+		}
+	}
+
+	async function clearAllHistory(): Promise<void> {
+		await clearHistory();
+		if (focused && !focused.pinned) selected = null;
 	}
 </script>
 
@@ -56,10 +76,10 @@
 	>
 	<button
 		type="button"
-		onclick={clearAll}
-		disabled={loading || entries.length === 0}
+		onclick={clearAllHistory}
+		disabled={loading || history.length === 0}
 	>
-		Clear all
+		Clear history
 	</button>
 </header>
 
@@ -70,28 +90,59 @@
 		No clips saved yet. Use the popup or hotkeys to clip a page.
 	</p>
 {:else if filtered.length === 0}
-	<p class="muted">No clips match “{query}”.</p>
+	<p class="muted">No clips match "{query}".</p>
 {:else}
 	<div class="layout">
-		<ul class="list">
-			{#each filtered as entry (entry.id)}
-				<li>
-					<button
-						type="button"
-						class="row"
-						class:active={selected === entry.id}
-						onclick={() => (selected = entry.id)}
-					>
-						<span class="title">{entry.title}</span>
-						<span class="meta">
-							<span>{entry.siteName ?? new URL(entry.url).hostname}</span>
-							<span>·</span>
-							<span>{formatDate(entry.savedAt)}</span>
-						</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
+		<div class="list-pane">
+			{#if pinned.length > 0}
+				<h2 class="section-label">Library</h2>
+				<ul class="list">
+					{#each pinned as entry (entry.id)}
+						<li>
+							<button
+								type="button"
+								class="row"
+								class:active={selected === entry.id}
+								onclick={() => (selected = entry.id)}
+							>
+								<span class="title">
+									<span class="pin-badge" title="Saved to library">★</span>
+									{entry.title}
+								</span>
+								<span class="meta">
+									<span>{entry.siteName ?? new URL(entry.url).hostname}</span>
+									<span>·</span>
+									<span>{formatDate(entry.savedAt)}</span>
+								</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+
+			{#if history.length > 0}
+				<h2 class="section-label">History</h2>
+				<ul class="list">
+					{#each history as entry (entry.id)}
+						<li>
+							<button
+								type="button"
+								class="row"
+								class:active={selected === entry.id}
+								onclick={() => (selected = entry.id)}
+							>
+								<span class="title">{entry.title}</span>
+								<span class="meta">
+									<span>{entry.siteName ?? new URL(entry.url).hostname}</span>
+									<span>·</span>
+									<span>{formatDate(entry.savedAt)}</span>
+								</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</div>
 		<aside class="preview">
 			{#if focused}
 				<div class="preview-head">
@@ -102,6 +153,15 @@
 						}</a>
 					</div>
 					<div class="preview-actions">
+						<button
+							type="button"
+							class="pin-btn"
+							class:pinned={focused.pinned}
+							onclick={() => togglePin(focused)}
+							title={focused.pinned ? 'Remove from library' : 'Save to library'}
+						>
+							{focused.pinned ? '★' : '☆'}
+						</button>
 						<button type="button" onclick={() => copyEntry(focused)}>
 							Copy
 						</button>
@@ -161,10 +221,28 @@
 	.muted {
 		color: var(--muted);
 	}
+
+	.section-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+		margin: 12px 0 6px;
+		padding: 0;
+	}
+	.section-label:first-child {
+		margin-top: 0;
+	}
+
 	.layout {
 		display: grid;
-		grid-template-columns: 320px 1fr;
+		grid-template-columns: 320px minmax(0, 1fr);
 		gap: 16px;
+	}
+	.list-pane {
+		max-height: 70vh;
+		overflow: auto;
 	}
 	.list {
 		list-style: none;
@@ -173,8 +251,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		max-height: 70vh;
-		overflow: auto;
 	}
 	.row {
 		width: 100%;
@@ -199,6 +275,14 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.pin-badge {
+		color: var(--accent);
+		font-size: 12px;
+		flex-shrink: 0;
 	}
 	.row .meta {
 		display: flex;
@@ -238,6 +322,7 @@
 		display: flex;
 		gap: 6px;
 		flex-shrink: 0;
+		align-items: center;
 	}
 	.preview-actions button {
 		padding: 6px 10px;
@@ -247,6 +332,18 @@
 		color: var(--fg);
 		cursor: pointer;
 		font-size: 12px;
+	}
+	.pin-btn {
+		font-size: 16px;
+		padding: 4px 8px;
+		border: none;
+		background: transparent;
+		color: var(--muted);
+		cursor: pointer;
+		transition: color 0.15s;
+	}
+	.pin-btn:hover, .pin-btn.pinned {
+		color: var(--accent);
 	}
 	.preview-actions .danger {
 		color: var(--danger);

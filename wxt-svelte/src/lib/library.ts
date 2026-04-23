@@ -10,6 +10,7 @@ export interface ClipEntry {
 	markdown: string;
 	mode: 'document' | 'selection';
 	savedAt: number;
+	pinned: boolean;
 }
 
 export function buildEntry(result: ClipResult, filename: string): ClipEntry {
@@ -23,11 +24,21 @@ export function buildEntry(result: ClipResult, filename: string): ClipEntry {
 		markdown: result.markdown,
 		mode: result.mode,
 		savedAt: Date.now(),
+		pinned: false,
 	};
 }
 
 export function trimHistory(entries: ClipEntry[], limit: number): ClipEntry[] {
-	return entries.slice(0, Math.max(1, limit));
+	const pinned = entries.filter((e) => e.pinned);
+	const unpinned = entries.filter((e) => !e.pinned).slice(0, Math.max(1, limit));
+	return [...pinned, ...unpinned];
+}
+
+const MS_PER_DAY = 86_400_000;
+
+export function pruneExpired(entries: ClipEntry[], retentionDays: number): ClipEntry[] {
+	const cutoff = Date.now() - retentionDays * MS_PER_DAY;
+	return entries.filter((e) => e.pinned || e.savedAt >= cutoff);
 }
 
 export function searchLibrary(entries: ClipEntry[], query: string): ClipEntry[] {
