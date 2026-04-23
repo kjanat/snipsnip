@@ -14,11 +14,11 @@ export default defineConfig({
 	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
 	manifest: ({ browser }) => ({
-		name: 'SnipSnip — Markdown Web Clipper',
-		short_name: 'SnipSnip',
+		name: 'SnipSnip',
+		short_name: 'Snip',
 		author: 'Kaj Kowalski',
 		description:
-			'One-click Markdown web clipper. Save articles, docs, code & tables as clean Markdown for AI agents & LLMs. Supports Obsidian & more.',
+			'One-click Markdown web clipper. Save articles, docs, code & tables as clean Markdown. Supports Obsidian & more.',
 		permissions: [
 			'activeTab',
 			'downloads',
