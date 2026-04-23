@@ -159,12 +159,88 @@ export function buildTurndown(settings: ClipSettings): TurndownService {
 
 const SHARE_LINK_RE = /^\[(?:Delen|Share|Teilen|Partager|Condividi|Compartir|Compartilhar)\]\([^)]*\)$/gm;
 
-function postProcess(markdown: string): string {
-	const stripped = markdown.replace(SHARE_LINK_RE, '');
-	return stripped.replace(/\n{3,}/g, '\n\n');
+const NAMED_ENTITIES: Record<string, string> = {
+	'&nbsp;': ' ',
+	'&ensp;': ' ',
+	'&emsp;': ' ',
+	'&thinsp;': ' ',
+	'&amp;': '&',
+	'&quot;': '"',
+	'&apos;': "'",
+	'&ndash;': '–',
+	'&mdash;': '—',
+	'&lsquo;': '‘',
+	'&rsquo;': '’',
+	'&ldquo;': '“',
+	'&rdquo;': '”',
+	'&hellip;': '…',
+	'&bull;': '•',
+	'&middot;': '·',
+	'&trade;': '™',
+	'&copy;': '©',
+	'&reg;': '®',
+	'&deg;': '°',
+	'&plusmn;': '±',
+	'&times;': '×',
+	'&divide;': '÷',
+	'&frac14;': '¼',
+	'&frac12;': '½',
+	'&frac34;': '¾',
+	'&laquo;': '«',
+	'&raquo;': '»',
+	'&euro;': '€',
+	'&pound;': '£',
+	'&yen;': '¥',
+	'&cent;': '¢',
+	'&sect;': '§',
+	'&micro;': 'µ',
+	'&para;': '¶',
+	'&iexcl;': '¡',
+	'&iquest;': '¿',
+};
+
+const NAMED_ENTITY_RE = new RegExp(
+	Object.keys(NAMED_ENTITIES).map((k) => k.replace(/[&;]/g, '\\$&')).join('|'),
+	'gi',
+);
+
+function decodeEntitiesInSegment(text: string): string {
+	let result = text.replace(NAMED_ENTITY_RE, (m) => NAMED_ENTITIES[m.toLowerCase()] ?? m);
+	result = result.replace(/&#(\d+);/g, (raw, n) => {
+		const cp = Number(n);
+		return cp === 60 || cp === 62 ? raw : String.fromCodePoint(cp);
+	});
+	result = result.replace(/&#x([0-9a-f]+);/gi, (raw, h) => {
+		const cp = parseInt(h, 16);
+		return cp === 0x3c || cp === 0x3e ? raw : String.fromCodePoint(cp);
+	});
+	return result.replaceAll(' ', ' ');
+}
+
+const CODE_REGION_RE = /^`{3,}[^\n]*\n[\s\S]*?^`{3,}$|^~{3,}[^\n]*\n[\s\S]*?^~{3,}$|`[^`\n]+`/gm;
+
+function decodeEntitiesOutsideCode(markdown: string): string {
+	let result = '';
+	let lastIndex = 0;
+	for (const match of markdown.matchAll(CODE_REGION_RE)) {
+		const idx = match.index;
+		result += decodeEntitiesInSegment(markdown.slice(lastIndex, idx));
+		result += match[0];
+		lastIndex = idx + match[0].length;
+	}
+	result += decodeEntitiesInSegment(markdown.slice(lastIndex));
+	return result;
+}
+
+function postProcess(markdown: string, settings: ClipSettings): string {
+	let result = markdown.replace(SHARE_LINK_RE, '');
+	if (settings.decodeEntities) {
+		result = decodeEntitiesOutsideCode(result);
+	}
+	return result.replace(/\n{3,}/g, '\n\n');
 }
 
 export function convertHtmlToMarkdown(html: string, settings: ClipSettings): string {
 	const turndown = buildTurndown(settings);
-	return postProcess(turndown.turndown(html));
+	return postProcess(turndown.turndown(html), settings);
 }

@@ -169,6 +169,16 @@
 			<code>&lt;strong&gt;</code> (Substack, Medium, custom CMSs). Slightly
 			slower on large pages.
 		</p>
+		<label class="inline">
+			<input type="checkbox" bind:checked={settings.decodeEntities}>
+			Decode HTML entities (<code>&amp;nbsp;</code>, <code>&amp;amp;</code>,
+			<code>&amp;ndash;</code>, …) to plain characters
+		</label>
+		<p class="muted small">
+			Replaces named and numeric HTML entities with their Unicode equivalents
+			outside code blocks. <code>&amp;lt;</code> and <code>&amp;gt;</code> are
+			kept to avoid breaking Markdown.
+		</p>
 	</section>
 
 	<section>

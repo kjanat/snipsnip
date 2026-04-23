@@ -41,6 +41,7 @@ export const ClipSettingsSchema = v.object({
 	historyRetentionDays: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 30),
 	siteRules: v.optional(v.array(SiteRuleSchema), []),
 	htmlTableFallback: v.optional(v.picklist(['auto', 'always', 'never']), 'auto'),
+	decodeEntities: v.optional(v.boolean(), false),
 	resolveStyles: v.optional(v.boolean(), true),
 });
 
