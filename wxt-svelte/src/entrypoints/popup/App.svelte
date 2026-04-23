@@ -187,10 +187,17 @@
 			type="button"
 			onclick={openLibrary}
 			aria-label="Library"
+			title="Library"
 		>
 			☰
 		</button>
-		<button class="ghost" type="button" onclick={openBatch} aria-label="Batch">
+		<button
+			class="ghost"
+			type="button"
+			onclick={openBatch}
+			aria-label="Batch clip"
+			title="Batch clip"
+		>
 			⇶
 		</button>
 		<button
@@ -198,6 +205,7 @@
 			type="button"
 			onclick={openOptions}
 			aria-label="Settings"
+			title="Settings"
 		>
 			⚙
 		</button>
@@ -289,14 +297,21 @@
 	.ghost {
 		background: transparent;
 		border: 1px solid transparent;
-		color: var(--fg);
+		color: var(--muted);
 		cursor: pointer;
 		font-size: 16px;
 		padding: 4px 8px;
 		border-radius: 6px;
+		transition: background 0.15s, color 0.15s, border-color 0.15s;
 	}
 	.ghost:hover {
+		background: var(--surface);
 		border-color: var(--border);
+		color: var(--fg);
+	}
+	.ghost:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
 	}
 
 	.tabs {

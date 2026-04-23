@@ -1,5 +1,5 @@
-import { onMessage } from '@/lib/messaging';
-import { runClipPipeline } from '@/lib/pipeline';
+import { onMessage } from '@/lib/messaging.ts';
+import { runClipPipeline } from '@/lib/pipeline.ts';
 
 function buildObsidianUri(payload: {
 	vault: string;

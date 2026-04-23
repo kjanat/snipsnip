@@ -12,22 +12,19 @@ declare module 'pdfmake/build/pdfmake' {
 		print(): void;
 	}
 
-	interface PdfMakeStatic {
-		vfs: Record<string, string>;
-		fonts?: Record<
-			string,
-			{ normal?: string; bold?: string; italics?: string; bolditalics?: string }
-		>;
+	interface PdfMakeInstance {
+		addVirtualFileSystem(vfs: Record<string, string>): void;
+		addFonts(fonts: Record<string, Record<string, string>>): void;
 		createPdf(definition: TDocumentDefinitions): CreatedPdf;
 	}
 
-	const pdfMake: PdfMakeStatic;
+	const pdfMake: PdfMakeInstance;
 	export default pdfMake;
 }
 
 declare module 'pdfmake/build/vfs_fonts' {
-	const fonts: { pdfMake: { vfs: Record<string, string> } };
-	export default fonts;
+	const vfs: Record<string, string>;
+	export default vfs;
 }
 
 declare module 'turndown-plugin-gfm' {

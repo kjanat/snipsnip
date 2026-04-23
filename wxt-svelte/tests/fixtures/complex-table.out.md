@@ -9,4 +9,4 @@ worker-8b1d-aa             CrashLoop 3h</code></pre><p>Mitigation tracked in <a 
 
 ## Appendix
 
-The above table mixes: **nested tables**, _nested ordered + unordered lists_, `inline code`, [links](https://example.test/x), images with `width`/`height` attrs, a `<figure>` with caption, a `<blockquote>`, a fenced code block, and a `colspan`'d footer.
+The above table mixes: **nested tables**, *nested ordered + unordered lists*, `inline code`, [links](https://example.test/x), images with `width`/`height` attrs, a `<figure>` with caption, a `<blockquote>`, a fenced code block, and a `colspan`'d footer.

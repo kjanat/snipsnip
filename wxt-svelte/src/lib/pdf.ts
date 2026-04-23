@@ -299,11 +299,11 @@ export async function generatePdfBlob(
 		embeds = bundleToEmbeds(bundle);
 	}
 
-	const [{ default: pdfMake }, { default: vfsFonts }] = await Promise.all([
+	const [{ default: pdfMake }, { default: vfs }] = await Promise.all([
 		import('pdfmake/build/pdfmake'),
 		import('pdfmake/build/vfs_fonts'),
 	]);
-	pdfMake.vfs = vfsFonts.pdfMake.vfs;
+	pdfMake.addVirtualFileSystem(vfs);
 	const doc = markdownToDocDefinition(markdown, title, embeds ? { embeds } : {});
 	return new Promise<Blob>((resolve) => {
 		pdfMake.createPdf(doc).getBlob((blob: Blob) => resolve(blob));
