@@ -128,6 +128,13 @@ export function buildTurndown(settings: ClipSettings): TurndownService {
 		replacement: (_content, node) => preCodeBlock(node as Element, settings),
 	});
 
+	service.addRule('unwrap-block-in-cell', {
+		filter: (node) =>
+			(node.nodeName === 'DIV' || node.nodeName === 'P')
+			&& isInsideTableCell(node),
+		replacement: (content) => content.trim(),
+	});
+
 	if (settings.imageStyle === 'noImage') {
 		service.addRule('drop-images', {
 			filter: 'img',
@@ -150,7 +157,14 @@ export function buildTurndown(settings: ClipSettings): TurndownService {
 	return service;
 }
 
+const SHARE_LINK_RE = /^\[(?:Delen|Share|Teilen|Partager|Condividi|Compartir|Compartilhar)\]\([^)]*\)$/gm;
+
+function postProcess(markdown: string): string {
+	const stripped = markdown.replace(SHARE_LINK_RE, '');
+	return stripped.replace(/\n{3,}/g, '\n\n');
+}
+
 export function convertHtmlToMarkdown(html: string, settings: ClipSettings): string {
 	const turndown = buildTurndown(settings);
-	return turndown.turndown(html);
+	return postProcess(turndown.turndown(html));
 }

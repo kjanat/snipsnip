@@ -3,15 +3,19 @@ import type { ExtractedArticle } from './types';
 
 const DATE_TOKEN = /\{date:([^}]+)\}/g;
 
+function flattenToLine(value: string): string {
+	return value.replace(/[\r\n]+/g, ' ').trim();
+}
+
 export function applyTemplate(template: string, article: ExtractedArticle): string {
 	const now = dayjs();
 	const tokens: Record<string, string> = {
-		'{pageTitle}': article.title,
+		'{pageTitle}': flattenToLine(article.title),
 		'{baseURI}': article.url,
-		'{byline}': article.byline ?? '',
-		'{publishedTime}': article.publishedTime ?? '',
-		'{excerpt}': article.excerpt ?? '',
-		'{siteName}': article.siteName ?? '',
+		'{byline}': flattenToLine(article.byline ?? ''),
+		'{publishedTime}': flattenToLine(article.publishedTime ?? ''),
+		'{excerpt}': flattenToLine(article.excerpt ?? ''),
+		'{siteName}': flattenToLine(article.siteName ?? ''),
 		'{hash}': article.hash,
 	};
 	let output = template;
