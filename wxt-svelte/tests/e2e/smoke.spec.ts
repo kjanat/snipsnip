@@ -1,9 +1,5 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { EXTENSION_PATH } from '#test/setup';
 import { type BrowserContext, chromium, expect, test } from 'playwright/test';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const EXTENSION_PATH = path.resolve(__dirname, '../../.output/chrome-mv3');
 
 test.describe('SnipSnip Svelte rebuild', () => {
 	let context: BrowserContext;

@@ -9,6 +9,11 @@
 		"url": "https://github.com/kjanat"
 	},
 	"type": "module",
+	"imports": {
+		"#tests/*": "./tests/*",
+		"#test/setup": "./tests/setup.ts",
+		"#pkg": "./package.json"
+	},
 	"scripts": {
 		"bd": "bun run build",
 		"build": "bun run build:chrome & bun run build:firefox & wait",
@@ -18,6 +23,7 @@
 		"dev": "bun dev:chrome",
 		"dev:chrome": "bunx --bun wxt -b chrome",
 		"dev:firefox": "bunx --bun wxt -b firefox",
+		"fmt": "dprint fmt",
 		"postinstall": "bunx --bun wxt prepare; bun check",
 		"lint": "eslint .",
 		"test": "bun test:unit",
@@ -58,6 +64,7 @@
 		"@types/turndown": "^5.0.6",
 		"@wxt-dev/auto-icons": "^1.1.1",
 		"@wxt-dev/module-svelte": "^2.0.4",
+		"dprint": "^0.54.0",
 		"eslint": "^10.2.0",
 		"eslint-plugin-svelte": "^3.17.0",
 		"globals": "^17.4.0",
