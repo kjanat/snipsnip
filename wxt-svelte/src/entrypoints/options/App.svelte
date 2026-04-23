@@ -20,7 +20,16 @@
 	let bridgeError = $state<string | null>(null);
 
 	onMount(async () => {
+		const raw = await settingsItem.getValue();
+		console.log(
+			'[SnipSnip] raw storage:',
+			JSON.stringify({ decodeEntities: raw?.decodeEntities }),
+		);
 		settings = await getSettings();
+		console.log(
+			'[SnipSnip] parsed settings:',
+			JSON.stringify({ decodeEntities: settings.decodeEntities }),
+		);
 		bridgeGranted = await isAgentBridgeGranted();
 		loading = false;
 	});
@@ -45,7 +54,12 @@
 	}
 
 	async function save(): Promise<void> {
-		await settingsItem.setValue(safeParseSettings($state.snapshot(settings)));
+		const snapshot = safeParseSettings($state.snapshot(settings));
+		console.log(
+			'[SnipSnip] saving:',
+			JSON.stringify({ decodeEntities: snapshot.decodeEntities }),
+		);
+		await settingsItem.setValue(snapshot);
 		saved = true;
 		setTimeout(() => (saved = false), 1500);
 	}
