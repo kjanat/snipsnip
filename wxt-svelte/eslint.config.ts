@@ -5,11 +5,13 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import path from 'node:path';
 import ts from 'typescript-eslint';
+import { default as autoImports } from './.wxt/eslint-auto-imports.mjs';
 // import svelteConfig from './svelte.config.js';
 
 const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
+	autoImports,
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
 	ts.configs.recommended,

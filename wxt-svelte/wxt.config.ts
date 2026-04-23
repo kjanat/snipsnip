@@ -17,7 +17,7 @@ export default defineConfig({
 	autoIcons,
 	targetBrowsers: ['chrome', 'firefox'],
 	manifestVersion: 3,
-	manifest: {
+	manifest: () => ({
 		name: 'SnipSnip',
 		short_name: 'Snip',
 		description: env.npm_package_description,
@@ -65,7 +65,7 @@ export default defineConfig({
 				strict_min_version: '128.0',
 			},
 		},
-	},
+	}),
 	vite: () => ({
 		build: {
 			sourcemap: import.meta.env.FIREFOX ? 'inline' : false,
@@ -73,4 +73,9 @@ export default defineConfig({
 			cssMinify: true,
 		},
 	}),
+	imports: {
+		eslintrc: {
+			enabled: 9,
+		},
+	},
 });
