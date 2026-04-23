@@ -58,10 +58,20 @@ function readHints(el: Element, view: Window): StyleHints {
 	};
 }
 
+function hasSemanticAncestor(el: Element): boolean {
+	let parent = el.parentElement;
+	while (parent) {
+		if (SEMANTIC_TAGS.has(parent.tagName)) return true;
+		parent = parent.parentElement;
+	}
+	return false;
+}
+
 function shouldVisit(el: Element): boolean {
 	if (SKIP_TAGS.has(el.tagName)) return false;
 	if (HEADING_TAGS.has(el.tagName)) return false;
 	if (SEMANTIC_TAGS.has(el.tagName)) return false;
+	if (hasSemanticAncestor(el)) return false;
 	const text = el.textContent ?? '';
 	return text.trim().length > 0;
 }
