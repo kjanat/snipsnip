@@ -13,25 +13,24 @@
 	import { onMount } from 'svelte';
 
 	let settings = $state<ClipSettings>({ ...DEFAULT_SETTINGS });
-	let saved = $state(false);
 	let loading = $state(true);
 	let importError = $state<string | null>(null);
 	let bridgeGranted = $state(false);
 	let bridgeError = $state<string | null>(null);
 
 	onMount(async () => {
-		const raw = await settingsItem.getValue();
-		console.log(
-			'[SnipSnip] raw storage:',
-			JSON.stringify({ decodeEntities: raw?.decodeEntities }),
-		);
 		settings = await getSettings();
-		console.log(
-			'[SnipSnip] parsed settings:',
-			JSON.stringify({ decodeEntities: settings.decodeEntities }),
-		);
 		bridgeGranted = await isAgentBridgeGranted();
 		loading = false;
+	});
+
+	$effect(() => {
+		const snapshot = safeParseSettings($state.snapshot(settings));
+		if (loading) return;
+		const timer = setTimeout(() => {
+			settingsItem.setValue(snapshot);
+		}, 300);
+		return () => clearTimeout(timer);
 	});
 
 	async function toggleAgentBridge(event: Event): Promise<void> {
@@ -53,20 +52,9 @@
 		settings.agentBridgeEnabled = true;
 	}
 
-	async function save(): Promise<void> {
-		const snapshot = safeParseSettings($state.snapshot(settings));
-		console.log(
-			'[SnipSnip] saving:',
-			JSON.stringify({ decodeEntities: snapshot.decodeEntities }),
-		);
-		await settingsItem.setValue(snapshot);
-		saved = true;
-		setTimeout(() => (saved = false), 1500);
-	}
-
-	async function reset(): Promise<void> {
+	function reset(): void {
+		if (!confirm('Reset all settings to defaults?')) return;
 		settings = { ...DEFAULT_SETTINGS };
-		await save();
 	}
 
 	function exportSettings(): void {
@@ -89,7 +77,6 @@
 		try {
 			settings = parseSettings(JSON.parse(await file.text()));
 			importError = null;
-			await save();
 		} catch (e) {
 			importError = e instanceof Error ? e.message : 'Invalid settings file.';
 		}
@@ -347,9 +334,6 @@
 	</section>
 
 	<footer>
-		<button type="button" class="primary" onclick={save}>
-			{saved ? 'Saved ✓' : 'Save'}
-		</button>
 		<button type="button" onclick={reset}>Reset to defaults</button>
 		<button type="button" onclick={exportSettings}>Export JSON</button>
 		<label class="file">
@@ -450,11 +434,6 @@
 		color: var(--fg);
 		cursor: pointer;
 		font-weight: 500;
-	}
-	footer .primary {
-		background: var(--accent);
-		color: var(--bg);
-		border-color: var(--accent);
 	}
 	.file {
 		display: inline-flex;
