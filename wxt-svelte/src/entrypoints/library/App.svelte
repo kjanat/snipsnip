@@ -53,14 +53,21 @@
 		return new Date(ts).toLocaleString();
 	}
 
+	let formatError = $state<string | null>(null);
+
 	async function toggleFormat(): Promise<void> {
-		if (formatted) {
-			editable = preFormatSnapshot;
-			formatted = false;
-		} else {
-			preFormatSnapshot = editable;
-			editable = await formatMarkdown(editable);
-			formatted = true;
+		formatError = null;
+		try {
+			if (formatted) {
+				editable = preFormatSnapshot;
+				formatted = false;
+			} else {
+				preFormatSnapshot = editable;
+				editable = await formatMarkdown(editable);
+				formatted = true;
+			}
+		} catch (e) {
+			formatError = e instanceof Error ? e.message : String(e);
 		}
 	}
 
@@ -232,6 +239,9 @@
 						</button>
 					</div>
 				</div>
+				{#if formatError}
+					<div class="format-error" role="alert">{formatError}</div>
+				{/if}
 				<div class="editor-wrap">
 					<button
 						class="fmt-toggle"
@@ -386,10 +396,17 @@
 		font-weight: 600;
 		font-size: 16px;
 	}
+	.preview-head > div:first-child {
+		min-width: 0;
+	}
 	.preview-head a {
 		color: var(--muted);
 		text-decoration: none;
 		font-size: 12px;
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.preview-head a:hover {
 		text-decoration: underline;
@@ -497,5 +514,13 @@
 		opacity: 1;
 		color: var(--accent);
 		border-color: var(--accent);
+	}
+	.format-error {
+		padding: 6px 10px;
+		border: 1px solid var(--danger);
+		color: var(--danger);
+		border-radius: 6px;
+		font-size: 12px;
+		background: color-mix(in srgb, var(--danger) 10%, transparent);
 	}
 </style>

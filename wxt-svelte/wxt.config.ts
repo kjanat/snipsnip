@@ -54,6 +54,13 @@ export default defineConfig({
 				description: 'Copy current tab as Markdown to Obsidian',
 			},
 		},
+		...(browser === 'chrome'
+			? {
+				content_security_policy: {
+					extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+				},
+			}
+			: {}),
 		...(browser === 'firefox'
 			? {
 				browser_specific_settings: {

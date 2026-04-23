@@ -91,13 +91,17 @@
 	}
 
 	async function toggleFormat(): Promise<void> {
-		if (formatted) {
-			editable = preFormatSnapshot;
-			formatted = false;
-		} else {
-			preFormatSnapshot = editable;
-			editable = await formatMarkdown(editable);
-			formatted = true;
+		try {
+			if (formatted) {
+				editable = preFormatSnapshot;
+				formatted = false;
+			} else {
+				preFormatSnapshot = editable;
+				editable = await formatMarkdown(editable);
+				formatted = true;
+			}
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
 		}
 	}
 
