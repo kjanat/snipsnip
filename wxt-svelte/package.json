@@ -10,6 +10,7 @@
 	},
 	"type": "module",
 	"scripts": {
+		"bd": "bun --bun run build",
 		"build": "bun run build:chrome && bun run build:firefox",
 		"build:chrome": "wxt build -b chrome --mv3",
 		"build:firefox": "wxt build -b firefox --mv3",
