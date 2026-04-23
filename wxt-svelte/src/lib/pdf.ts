@@ -320,7 +320,6 @@ export function markdownToDocDefinition(
 		if (
 			!skippedTitleHeading
 			&& token.type === 'heading'
-			&& (token as Tokens.Heading).depth === 1
 			&& plainText(token).trim() === title.trim()
 		) {
 			skippedTitleHeading = true;
