@@ -1,6 +1,7 @@
 import { Readability } from '@mozilla/readability';
 import { convertHtmlToMarkdown } from './convert';
 import { sanitizeFilename, withMarkdownExtension } from './filename';
+import { formatMarkdown } from './format';
 import { extractImageRefs, fetchImageBundle, type ImageBundleEntry, rewriteImageRefs } from './images';
 import { applyTemplate } from './template';
 import type { ClipSettings, ExtractedArticle } from './types';
@@ -82,7 +83,11 @@ export async function fetchAndConvert(
 	const backmatter = settings.includeTemplate
 		? applyTemplate(settings.backmatter, article)
 		: '';
-	let markdown = `${`${frontmatter}${body}${backmatter}`.trim()}\n`;
+	let assembled = `${frontmatter}${body}${backmatter}`.trim();
+	if (settings.formatOutput) {
+		assembled = await formatMarkdown(assembled);
+	}
+	let markdown = `${assembled}\n`;
 	let images: ImageBundleEntry[] = [];
 
 	if (settings.downloadImages) {

@@ -1,5 +1,6 @@
 import { convertHtmlToMarkdown } from './convert';
 import { extractArticle } from './extract';
+import { formatMarkdown } from './format';
 import { settingsItem } from './storage';
 import { applyTemplate } from './template';
 import type { ClipMode, ClipResult } from './types';
@@ -18,10 +19,15 @@ export async function runClipPipeline(mode: ClipMode): Promise<ClipResult> {
 		? applyTemplate(settings.backmatter, article)
 		: '';
 
+	let assembled = `${frontmatter}${body}${backmatter}`.trim();
+	if (settings.formatOutput) {
+		assembled = await formatMarkdown(assembled);
+	}
+
 	return {
 		article,
 		frontmatter,
 		mode,
-		markdown: `${`${frontmatter}${body}${backmatter}`.trim()}\n`,
+		markdown: `${assembled}\n`,
 	};
 }

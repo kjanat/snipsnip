@@ -31,6 +31,8 @@
 		"@codemirror/language": "^6.12.3",
 		"@codemirror/state": "^6.6.0",
 		"@codemirror/view": "^6.41.1",
+		"@dprint/formatter": "^0.5.1",
+		"@dprint/markdown": "^0.21.1",
 		"@mozilla/readability": "^0.6.0",
 		"@types/pdfmake": "^0.3.2",
 		"@webext-core/messaging": "^2.3.0",
