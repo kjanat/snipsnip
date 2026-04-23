@@ -10,6 +10,7 @@
 		updateClipMarkdown,
 	} from '@/lib/library-store';
 	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
+	import { sendMessage } from '@/lib/messaging';
 	import { onMount } from 'svelte';
 
 	let entries = $state<ClipEntry[]>([]);
@@ -58,11 +59,9 @@
 			? new Blob([payload.content], { type: payload.mime })
 			: await payload.content;
 		const url = URL.createObjectURL(blob);
-		await browser.downloads.download({
-			url,
-			filename: `${focused.filename}.${payload.ext}`,
-			saveAs: false,
-		});
+		const filename = `${focused.filename}.${payload.ext}`;
+		await sendMessage('trackDownloadUrl', { url, filename });
+		await browser.downloads.download({ url, filename, saveAs: false });
 	}
 
 	async function saveEdits(): Promise<void> {
