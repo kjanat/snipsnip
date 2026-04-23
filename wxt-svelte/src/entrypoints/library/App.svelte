@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { downloadMarkdown } from '@/lib/clipboard';
+	import { type ExportFormat, exportPayload } from '@/lib/export';
 	import { type ClipEntry, searchLibrary } from '@/lib/library';
 	import {
 		clearHistory,
@@ -7,18 +7,30 @@
 		libraryItem,
 		pinClip,
 		unpinClip,
+		updateClipMarkdown,
 	} from '@/lib/library-store';
+	import MarkdownEditor from '@/lib/MarkdownEditor.svelte';
 	import { onMount } from 'svelte';
 
 	let entries = $state<ClipEntry[]>([]);
 	let query = $state('');
 	let loading = $state(true);
 	let selected = $state<string | null>(null);
+	let editable = $state('');
+	let format: ExportFormat = $state('md');
+	let wrap = $state(true);
 
 	const filtered = $derived(searchLibrary(entries, query));
 	const pinned = $derived(filtered.filter((e) => e.pinned));
 	const history = $derived(filtered.filter((e) => !e.pinned));
 	const focused = $derived(filtered.find((e) => e.id === selected) ?? null);
+	const dirty = $derived(focused !== null && editable !== focused.markdown);
+
+	$effect(() => {
+		if (focused) {
+			editable = focused.markdown;
+		}
+	});
 
 	onMount(() => {
 		const unwatch = libraryItem.watch((next) => {
@@ -35,12 +47,27 @@
 		return new Date(ts).toLocaleString();
 	}
 
-	async function copyEntry(entry: ClipEntry): Promise<void> {
-		await navigator.clipboard.writeText(entry.markdown);
+	async function copyEntry(): Promise<void> {
+		await navigator.clipboard.writeText(editable);
 	}
 
-	async function downloadEntry(entry: ClipEntry): Promise<void> {
-		await downloadMarkdown(entry.markdown, entry.filename, false);
+	async function downloadEntry(): Promise<void> {
+		if (!focused) return;
+		const payload = exportPayload(editable, focused.title, format, {});
+		const blob = typeof payload.content === 'string'
+			? new Blob([payload.content], { type: payload.mime })
+			: await payload.content;
+		const url = URL.createObjectURL(blob);
+		await browser.downloads.download({
+			url,
+			filename: `${focused.filename}.${payload.ext}`,
+			saveAs: false,
+		});
+	}
+
+	async function saveEdits(): Promise<void> {
+		if (!focused || !dirty) return;
+		await updateClipMarkdown(focused.id, editable);
 	}
 
 	async function removeEntry(entry: ClipEntry): Promise<void> {
@@ -162,12 +189,25 @@
 						>
 							{focused.pinned ? '★' : '☆'}
 						</button>
-						<button type="button" onclick={() => copyEntry(focused)}>
-							Copy
-						</button>
-						<button type="button" onclick={() => downloadEntry(focused)}>
-							Download
-						</button>
+						<button type="button" onclick={copyEntry}>Copy</button>
+						<div class="export-group">
+							<button type="button" onclick={downloadEntry}>Download</button>
+							<select
+								bind:value={format}
+								name="format"
+								aria-label="Export format"
+							>
+								<option value="md">.md</option>
+								<option value="html">.html</option>
+								<option value="txt">.txt</option>
+								<option value="pdf">.pdf</option>
+							</select>
+						</div>
+						{#if dirty}
+							<button type="button" class="save-btn" onclick={saveEdits}>
+								Save
+							</button>
+						{/if}
 						<button
 							type="button"
 							class="danger"
@@ -177,7 +217,18 @@
 						</button>
 					</div>
 				</div>
-				<pre>{focused.markdown}</pre>
+				<div class="editor-wrap">
+					<button
+						class="wrap-toggle"
+						type="button"
+						onclick={() => (wrap = !wrap)}
+						title={wrap ? 'Disable word wrap' : 'Enable word wrap'}
+						aria-label="Toggle word wrap"
+					>
+						{wrap ? '↩' : '→'}
+					</button>
+					<MarkdownEditor bind:value={editable} {wrap} />
+				</div>
 			{:else}
 				<p class="muted">Select a clip to preview.</p>
 			{/if}
@@ -333,6 +384,24 @@
 		cursor: pointer;
 		font-size: 12px;
 	}
+	.export-group {
+		display: flex;
+		gap: 0;
+	}
+	.export-group button {
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		border-right: none;
+	}
+	.export-group select {
+		padding: 2px 6px;
+		border: 1px solid var(--border);
+		background: var(--bg);
+		color: var(--fg);
+		border-radius: 0 6px 6px 0;
+		cursor: pointer;
+		font-size: 12px;
+	}
 	.pin-btn {
 		font-size: 16px;
 		padding: 4px 8px;
@@ -345,22 +414,39 @@
 	.pin-btn:hover, .pin-btn.pinned {
 		color: var(--accent);
 	}
+	.save-btn {
+		background: var(--accent);
+		color: var(--accent-fg);
+		border-color: var(--accent);
+	}
 	.preview-actions .danger {
 		color: var(--danger);
 		border-color: var(--danger);
 	}
-	pre {
+	.editor-wrap {
+		position: relative;
 		flex: 1;
-		margin: 0;
-		padding: 12px;
-		background: var(--bg);
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.wrap-toggle {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		z-index: 5;
+		background: var(--surface);
 		border: 1px solid var(--border);
-		border-radius: 6px;
-		overflow: auto;
-		font-family:
-			"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-		font-size: 12px;
-		white-space: pre-wrap;
-		max-height: 60vh;
+		color: var(--muted);
+		border-radius: 4px;
+		font-size: 13px;
+		padding: 2px 6px;
+		cursor: pointer;
+		opacity: 0.45;
+		transition: opacity 0.15s;
+	}
+	.wrap-toggle:hover {
+		opacity: 1;
+		color: var(--fg);
 	}
 </style>

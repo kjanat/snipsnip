@@ -8,9 +8,19 @@ export interface ClipEntry {
 	siteName: string | null;
 	filename: string;
 	markdown: string;
+	contentHash: string;
 	mode: 'document' | 'selection';
 	savedAt: number;
 	pinned: boolean;
+}
+
+export function hashContent(text: string): string {
+	let a = 0x811c9dc5;
+	for (let i = 0; i < text.length; i++) {
+		a ^= text.charCodeAt(i);
+		a = Math.imul(a, 0x01000193);
+	}
+	return (a >>> 0).toString(36);
 }
 
 export function buildEntry(result: ClipResult, filename: string): ClipEntry {
@@ -22,6 +32,7 @@ export function buildEntry(result: ClipResult, filename: string): ClipEntry {
 		siteName: result.article.siteName,
 		filename,
 		markdown: result.markdown,
+		contentHash: hashContent(result.markdown),
 		mode: result.mode,
 		savedAt: Date.now(),
 		pinned: false,

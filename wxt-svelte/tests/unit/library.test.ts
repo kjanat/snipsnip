@@ -1,4 +1,4 @@
-import { type ClipEntry, searchLibrary } from '@/lib/library';
+import { type ClipEntry, hashContent, searchLibrary } from '@/lib/library';
 import { describe, expect, test } from 'bun:test';
 
 const sample: ClipEntry[] = [
@@ -10,6 +10,7 @@ const sample: ClipEntry[] = [
 		siteName: 'Example Docs',
 		filename: 'intro.md',
 		markdown: '# Intro\nFooBar baz',
+		contentHash: hashContent('# Intro\nFooBar baz'),
 		mode: 'document',
 		savedAt: 1,
 		pinned: false,
@@ -22,6 +23,7 @@ const sample: ClipEntry[] = [
 		siteName: 'Example Blog',
 		filename: 'news.md',
 		markdown: '# News\nBaz qux',
+		contentHash: hashContent('# News\nBaz qux'),
 		mode: 'document',
 		savedAt: 2,
 		pinned: false,
