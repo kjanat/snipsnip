@@ -3,12 +3,45 @@
 	import { markdown } from '@codemirror/lang-markdown';
 	import {
 		bracketMatching,
-		defaultHighlightStyle,
+		HighlightStyle,
 		syntaxHighlighting,
 	} from '@codemirror/language';
 	import { EditorState } from '@codemirror/state';
 	import { EditorView, keymap, lineNumbers } from '@codemirror/view';
+	import { tags } from '@lezer/highlight';
 	import { onDestroy } from 'svelte';
+
+	const editorTheme = EditorView.theme(
+		{
+			'&': { backgroundColor: 'var(--surface)', color: 'var(--fg)' },
+			'.cm-content': { caretColor: 'var(--accent)' },
+			'.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--accent)' },
+			'&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
+				backgroundColor: 'color-mix(in srgb, var(--accent) 25%, transparent)',
+			},
+			'.cm-gutters': {
+				backgroundColor: 'var(--surface)',
+				color: 'var(--muted)',
+				borderRight: '1px solid var(--border)',
+			},
+			'.cm-activeLineGutter': { backgroundColor: 'var(--bg)' },
+			'.cm-activeLine': {
+				backgroundColor: 'color-mix(in srgb, var(--accent) 6%, transparent)',
+			},
+		},
+	);
+
+	const highlightStyle = HighlightStyle.define([
+		{ tag: tags.heading, fontWeight: 'bold', color: 'var(--fg)' },
+		{ tag: tags.emphasis, fontStyle: 'italic' },
+		{ tag: tags.strong, fontWeight: 'bold' },
+		{ tag: tags.link, color: 'var(--accent)', textDecoration: 'underline' },
+		{ tag: tags.url, color: 'var(--accent)' },
+		{ tag: tags.monospace, color: 'var(--success)' },
+		{ tag: tags.meta, color: 'var(--muted)' },
+		{ tag: tags.comment, color: 'var(--muted)' },
+		{ tag: tags.processingInstruction, color: 'var(--muted)' },
+	]);
 
 	interface Props {
 		value: string;
@@ -28,7 +61,8 @@
 				lineNumbers(),
 				history(),
 				bracketMatching(),
-				syntaxHighlighting(defaultHighlightStyle),
+				editorTheme,
+				syntaxHighlighting(highlightStyle),
 				markdown(),
 				keymap.of([...defaultKeymap, ...historyKeymap]),
 				EditorView.lineWrapping,
