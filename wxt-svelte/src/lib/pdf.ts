@@ -11,6 +11,50 @@ import type {
 } from 'pdfmake/interfaces';
 import { bytesToDataUri, bytesToText, extractImageRefs, fetchImageBundle, type ImageBundleEntry } from './images';
 
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
+const YAML_LINE_RE = /^(\w+):\s*"?([^"]*)"?\s*$/;
+
+interface FrontmatterResult {
+	body: string;
+	meta: Map<string, string>;
+}
+
+function stripFrontmatter(markdown: string): FrontmatterResult {
+	const match = FRONTMATTER_RE.exec(markdown);
+	if (!match) return { body: markdown, meta: new Map() };
+	const meta = new Map<string, string>();
+	for (const line of (match[1] ?? '').split('\n')) {
+		const m = YAML_LINE_RE.exec(line.trim());
+		if (m) {
+			const key = m[1];
+			const val = m[2];
+			if (key && val) meta.set(key, val);
+		}
+	}
+	return { body: markdown.slice(match[0].length), meta };
+}
+
+function metaBlock(meta: Map<string, string>): Content | null {
+	const parts: ContentText[] = [];
+	const source = meta.get('source');
+	if (source) {
+		parts.push({ text: [{ text: 'Source: ', bold: true }, { text: source, link: source, style: 'link' }] });
+	}
+	const author = meta.get('author');
+	if (author) parts.push({ text: [{ text: 'Author: ', bold: true }, author] });
+	const published = meta.get('published');
+	if (published) parts.push({ text: [{ text: 'Published: ', bold: true }, published] });
+	const created = meta.get('created');
+	if (created) parts.push({ text: [{ text: 'Saved: ', bold: true }, created] });
+	if (parts.length === 0) return null;
+	return {
+		stack: parts,
+		fontSize: 9,
+		color: '#6b7280',
+		margin: [0, 0, 0, 12],
+	};
+}
+
 export type EmbeddedImage =
 	| { kind: 'raster'; dataUri: string }
 	| { kind: 'svg'; markup: string };
@@ -48,13 +92,13 @@ const STYLES: StyleDictionary = {
 	h5: { fontSize: 13, bold: true, margin: [0, 10, 0, 4] },
 	h6: { fontSize: 12, bold: true, italics: true, margin: [0, 10, 0, 4] },
 	codeblock: {
-		font: 'Courier',
 		fontSize: 10,
 		preserveLeadingSpaces: true,
 		margin: [0, 6, 0, 6],
+		background: '#f3f4f6',
 		color: '#1f2937',
 	},
-	codespan: { font: 'Courier', fontSize: 10, color: '#b91c1c' },
+	codespan: { fontSize: 10, color: '#b91c1c', background: '#f3f4f6' },
 	blockquote: { italics: true, color: '#6b7280', margin: [12, 6, 0, 6] },
 	tableHeader: { bold: true, fillColor: '#f3f4f6' },
 	link: { color: '#2563eb', decoration: 'underline' },
@@ -265,10 +309,23 @@ export function markdownToDocDefinition(
 	title: string,
 	options: DocDefinitionOptions = {},
 ): TDocumentDefinitions {
+	const { body: stripped, meta } = stripFrontmatter(markdown);
 	const walker = makeWalker(options.embeds ?? new Map());
-	const tokens = marked.lexer(markdown);
+	const tokens = marked.lexer(stripped);
 	const body: Content[] = [{ text: title, style: 'docTitle' }];
+	const info = metaBlock(meta);
+	if (info) body.push(info);
+	let skippedTitleHeading = false;
 	for (const token of tokens) {
+		if (
+			!skippedTitleHeading
+			&& token.type === 'heading'
+			&& (token as Tokens.Heading).depth === 1
+			&& plainText(token).trim() === title.trim()
+		) {
+			skippedTitleHeading = true;
+			continue;
+		}
 		const content = walker.block(token);
 		if (content !== null) body.push(content);
 	}
@@ -305,7 +362,5 @@ export async function generatePdfBlob(
 	]);
 	pdfMake.addVirtualFileSystem(vfs);
 	const doc = markdownToDocDefinition(markdown, title, embeds ? { embeds } : {});
-	return new Promise<Blob>((resolve) => {
-		pdfMake.createPdf(doc).getBlob((blob: Blob) => resolve(blob));
-	});
+	return pdfMake.createPdf(doc).getBlob();
 }

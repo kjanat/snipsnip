@@ -26,12 +26,18 @@ export interface ObsidianRequest {
 	markdown: string;
 }
 
+export interface TrackDownloadRequest {
+	url: string;
+	filename: string;
+}
+
 export interface ProtocolMap {
 	captureSnapshot(payload: ClipRequest): SnapshotPayload;
 	performClip(payload: ClipRequest): ClipResult;
 	downloadMarkdown(payload: DownloadRequest): { downloadId: number };
 	copyMarkdown(markdown: string): { ok: true };
 	sendToObsidian(payload: ObsidianRequest): { ok: true };
+	trackDownloadUrl(payload: TrackDownloadRequest): { ok: true };
 	ping(): { ok: true };
 	getSelectionState(): { hasSelection: boolean };
 }

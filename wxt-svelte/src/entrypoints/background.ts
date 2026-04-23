@@ -2,10 +2,25 @@ import { syncAgentBridge } from '@/lib/agent-bridge.ts';
 import { sanitizeFilename, withMarkdownExtension } from '@/lib/filename.ts';
 import { ensureContentScript } from '@/lib/inject-content.ts';
 import { recordClip } from '@/lib/library-store.ts';
-import { sendMessage } from '@/lib/messaging.ts';
+import { onMessage, sendMessage } from '@/lib/messaging.ts';
 import { notifyClipFailed, notifyClipSaved } from '@/lib/notifications.ts';
 import { settingsItem } from '@/lib/storage.ts';
 import { applyTemplate } from '@/lib/template.ts';
+
+const trackedUrls = new Map<string, string>();
+const downloadToUrl = new Map<number, string>();
+
+function trackUrl(url: string, filename: string): void {
+	trackedUrls.set(url, filename);
+}
+
+function cleanupDownload(downloadId: number): void {
+	const url = downloadToUrl.get(downloadId);
+	downloadToUrl.delete(downloadId);
+	if (!url) return;
+	trackedUrls.delete(url);
+	if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+}
 
 const CONTEXT_MENUS = [
 	{ id: 'clip-page', title: 'Save page as Markdown', contexts: ['page'] as const },
@@ -31,6 +46,7 @@ async function clipActiveTab(mode: 'document' | 'selection') {
 		);
 		const blob = new Blob([result.markdown], { type: 'text/markdown' });
 		const url = URL.createObjectURL(blob);
+		trackUrl(url, filename);
 		const downloadId = await browser.downloads.download({
 			url,
 			filename,
@@ -80,6 +96,26 @@ async function sendActiveTabToObsidian(): Promise<void> {
 }
 
 export default defineBackground(() => {
+	onMessage('trackDownloadUrl', ({ data }) => {
+		trackUrl(data.url, data.filename);
+		return { ok: true as const };
+	});
+
+	browser.downloads.onDeterminingFilename?.addListener((item, suggest) => {
+		const filename = trackedUrls.get(item.url);
+		if (!filename) return;
+		downloadToUrl.set(item.id, item.url);
+		suggest({ filename, conflictAction: 'uniquify' });
+	});
+
+	browser.downloads.onChanged.addListener((delta) => {
+		if (!delta.state) return;
+		const current = delta.state.current;
+		if (current === 'complete' || current === 'interrupted') {
+			cleanupDownload(delta.id);
+		}
+	});
+
 	browser.runtime.onInstalled.addListener(({ reason }) => {
 		for (const item of CONTEXT_MENUS) {
 			browser.contextMenus.create({

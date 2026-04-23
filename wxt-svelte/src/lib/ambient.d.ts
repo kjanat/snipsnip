@@ -4,12 +4,13 @@ declare module 'pdfmake/build/pdfmake' {
 	import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 
 	interface CreatedPdf {
-		getBlob(callback: (blob: Blob) => void): void;
-		getBuffer(callback: (buffer: Uint8Array) => void): void;
-		getBase64(callback: (base64: string) => void): void;
-		download(filename?: string, callback?: () => void): void;
-		open(): void;
-		print(): void;
+		getBlob(): Promise<Blob>;
+		getBuffer(): Promise<Uint8Array>;
+		getBase64(): Promise<string>;
+		getDataUrl(): Promise<string>;
+		download(filename?: string): Promise<void>;
+		open(win?: Window | null): Promise<void>;
+		print(): Promise<void>;
 	}
 
 	interface PdfMakeInstance {

@@ -15,6 +15,15 @@
 	import { buildZipBlob } from '@/lib/zip';
 	import { onMount } from 'svelte';
 
+	async function trackedDownload(
+		blobUrl: string,
+		filename: string,
+		saveAs: boolean,
+	): Promise<void> {
+		await sendMessage('trackDownloadUrl', { url: blobUrl, filename });
+		await browser.downloads.download({ url: blobUrl, filename, saveAs });
+	}
+
 	let mode: ClipMode = $state('document');
 	let busy = $state(false);
 	let error = $state<string | null>(null);
@@ -101,11 +110,7 @@
 					})),
 				]);
 				const url = URL.createObjectURL(blob);
-				await browser.downloads.download({
-					url,
-					filename: `${stem}.zip`,
-					saveAs: settings.saveAs,
-				});
+				await trackedDownload(url, `${stem}.zip`, settings.saveAs);
 				downloaded = true;
 				setTimeout(() => (downloaded = false), 1500);
 				return;
@@ -119,11 +124,7 @@
 				? new Blob([payload.content], { type: payload.mime })
 				: await payload.content;
 			const url = URL.createObjectURL(blob);
-			await browser.downloads.download({
-				url,
-				filename: `${stem}.${payload.ext}`,
-				saveAs: settings.saveAs,
-			});
+			await trackedDownload(url, `${stem}.${payload.ext}`, settings.saveAs);
 			downloaded = true;
 			setTimeout(() => (downloaded = false), 1500);
 		} catch (e) {
@@ -261,7 +262,12 @@
 		<button type="button" onclick={downloadCurrent} disabled={!result}>
 			{downloaded ? 'Saved ✓' : 'Download'}
 		</button>
-		<select bind:value={format} disabled={!result} aria-label="Export format">
+		<select
+			bind:value={format}
+			name="format"
+			disabled={!result}
+			aria-label="Export format"
+		>
 			<option value="md">.md</option>
 			<option value="html">.html</option>
 			<option value="txt">.txt</option>
