@@ -29,12 +29,13 @@ describe('extractArticle frameset handling', () => {
 		loadDocument(FRAMESET_HTML);
 
 		const article = await extractArticle('document');
+		const base = location.origin;
 
 		expect(article.title).toBe('Master PRO');
-		expect(article.content).toContain('href="https://example.test/masterheading.aspx"');
-		expect(article.content).toContain('href="https://example.test/masternavigation.aspx"');
-		expect(article.content).toContain('href="https://example.test/mastercontent.aspx"');
-		expect(article.content).toContain('href="https://example.test/MasterStatus.aspx"');
+		expect(article.content).toContain(`href="${base}/masterheading.aspx"`);
+		expect(article.content).toContain(`href="${base}/masternavigation.aspx"`);
+		expect(article.content).toContain(`href="${base}/mastercontent.aspx"`);
+		expect(article.content).toContain(`href="${base}/MasterStatus.aspx"`);
 		expect(article.content).not.toContain('<frameset');
 		expect(article.content).not.toContain('<frame ');
 	});
@@ -64,6 +65,19 @@ describe('extractArticle frameset handling', () => {
 		expect(article.content).toContain('Tonsillitis');
 		expect(article.content).toContain('viral infection');
 		expect(article.content).not.toContain('<frameset');
+	});
+
+	test('skips frames whose src is empty instead of leaving an empty section', async () => {
+		loadDocument(
+			'<html><head><title>T</title></head>'
+				+ '<frameset><frame name="empty" src=""><frame name="real" src="x.aspx"></frameset></html>',
+		);
+
+		const article = await extractArticle('document');
+		const base = location.origin;
+
+		expect(article.content).toContain(`href="${base}/x.aspx"`);
+		expect(article.content).not.toMatch(/<h\d>empty<\/h\d>\s*<\/section>/);
 	});
 
 	test('still extracts a normal article without a frameset', async () => {

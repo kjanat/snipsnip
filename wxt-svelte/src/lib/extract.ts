@@ -177,16 +177,16 @@ function isFramesetBody(body: HTMLElement | null): boolean {
 	return !!body && body.localName?.toLowerCase() === 'frameset';
 }
 
-/** Append a paragraph linking to the frame's `src`, used when the frame's body cannot be inlined. */
+/** Append a paragraph linking to the frame's `src`, used when the frame's body cannot be inlined. Returns true if a link was added. */
 function appendFrameLinkFallback(
 	section: HTMLElement,
 	frame: Element,
 	label: string,
 	baseHref: string,
 	targetDoc: Document,
-): void {
+): boolean {
 	const src = frame.getAttribute('src') ?? '';
-	if (!src) return;
+	if (!src) return false;
 	let href = src;
 	try {
 		href = new URL(src, baseHref).href;
@@ -199,6 +199,7 @@ function appendFrameLinkFallback(
 	link.textContent = label;
 	paragraph.appendChild(link);
 	section.appendChild(paragraph);
+	return true;
 }
 
 /**
@@ -264,11 +265,13 @@ function inlineLiveFramesInto(
 		}
 
 		if (!sectionHasContent) {
-			appendFrameLinkFallback(section, frame, label, baseHref, targetDoc);
+			sectionHasContent = appendFrameLinkFallback(section, frame, label, baseHref, targetDoc);
 		}
 
-		targetParent.appendChild(section);
-		inlined += 1;
+		if (sectionHasContent) {
+			targetParent.appendChild(section);
+			inlined += 1;
+		}
 	}
 	return inlined;
 }
