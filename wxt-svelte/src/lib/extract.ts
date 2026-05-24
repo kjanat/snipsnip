@@ -114,6 +114,158 @@ function flattenFramesetIntoBody(doc: Document, baseHref: string): HTMLElement |
 	return synthetic;
 }
 
+function frameLabel(frame: Element, index: number): string {
+	return (
+		frame.getAttribute('title')
+		|| frame.getAttribute('name')
+		|| frame.getAttribute('id')
+		|| frame.getAttribute('src')
+		|| `Frame ${index + 1}`
+	);
+}
+
+type FrameElement = HTMLFrameElement | HTMLIFrameElement;
+
+function safeContentWindow(frame: Element): Window | null {
+	try {
+		return (frame as FrameElement).contentWindow ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function safeContentDocument(frame: Element): Document | null {
+	try {
+		return (frame as FrameElement).contentDocument ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function safeOwnDocument(win: Window | null): Document | null {
+	if (!win) return null;
+	try {
+		return win.document ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function isFramesetBody(body: HTMLElement | null): boolean {
+	return !!body && body.localName?.toLowerCase() === 'frameset';
+}
+
+function appendFrameLinkFallback(
+	section: HTMLElement,
+	frame: Element,
+	label: string,
+	baseHref: string,
+	targetDoc: Document,
+): void {
+	const src = frame.getAttribute('src') ?? '';
+	if (!src) return;
+	let href = src;
+	try {
+		href = new URL(src, baseHref).href;
+	} catch {
+		// Keep the raw src when resolution fails (e.g. about:blank frames).
+	}
+	const paragraph = targetDoc.createElement('p');
+	const link = targetDoc.createElement('a');
+	link.setAttribute('href', href);
+	link.textContent = label;
+	paragraph.appendChild(link);
+	section.appendChild(paragraph);
+}
+
+function inlineLiveFramesInto(
+	targetParent: HTMLElement,
+	sourceDoc: Document,
+	targetDoc: Document,
+	depth: number,
+	baseHref: string,
+	visited: Set<Document>,
+): number {
+	if (visited.has(sourceDoc)) return 0;
+	visited.add(sourceDoc);
+
+	let inlined = 0;
+	let frames: Element[];
+	try {
+		frames = Array.from(sourceDoc.querySelectorAll('frame, iframe'));
+	} catch {
+		return inlined;
+	}
+	let index = 0;
+	for (const frame of frames) {
+		const label = frameLabel(frame, index);
+		index += 1;
+		const section = targetDoc.createElement('section');
+		const heading = targetDoc.createElement(`h${Math.min(depth + 1, 6)}`);
+		heading.textContent = label;
+		section.appendChild(heading);
+
+		const childDoc = safeContentDocument(frame);
+		const childWin = safeContentWindow(frame);
+		const effectiveDoc = childDoc ?? safeOwnDocument(childWin);
+
+		let sectionHasContent = false;
+		if (effectiveDoc) {
+			const childBody = effectiveDoc.body;
+			if (childBody && !isFramesetBody(childBody) && childBody.children.length > 0) {
+				const imported = targetDoc.importNode(childBody, true) as HTMLElement;
+				while (imported.firstChild) {
+					section.appendChild(imported.firstChild);
+				}
+				sectionHasContent = true;
+			}
+			const nestedBase = effectiveDoc.baseURI || baseHref;
+			const nestedCount = inlineLiveFramesInto(
+				section,
+				effectiveDoc,
+				targetDoc,
+				depth + 1,
+				nestedBase,
+				visited,
+			);
+			if (nestedCount > 0) sectionHasContent = true;
+		}
+
+		if (!sectionHasContent) {
+			appendFrameLinkFallback(section, frame, label, baseHref, targetDoc);
+		}
+
+		targetParent.appendChild(section);
+		inlined += 1;
+	}
+	return inlined;
+}
+
+function inlineFramesetContents(
+	prepared: Document,
+	liveDoc: Document,
+	url: string,
+): boolean {
+	const synthetic = prepared.createElement('body');
+	const heading = prepared.createElement('h1');
+	heading.textContent = prepared.title || liveDoc.title || 'Frameset document';
+	synthetic.appendChild(heading);
+
+	const visited = new Set<Document>();
+	const inlined = inlineLiveFramesInto(synthetic, liveDoc, prepared, 1, url, visited);
+
+	const existingBody = prepared.body;
+	if (existingBody) {
+		existingBody.replaceWith(synthetic);
+	} else {
+		prepared.documentElement.appendChild(synthetic);
+	}
+	for (const frameset of Array.from(prepared.getElementsByTagName('frameset'))) {
+		frameset.remove();
+	}
+	return inlined > 0;
+}
+
 async function digest(input: string): Promise<string> {
 	const buffer = new TextEncoder().encode(input);
 	const hashed = await crypto.subtle.digest('SHA-1', buffer);
@@ -145,14 +297,15 @@ export async function extractArticle(
 		const prepared = matched ? applyRule(cloned, matched) : cloned;
 		const wasFrameset = isFramesetDocument(prepared);
 		if (wasFrameset) {
-			flattenFramesetIntoBody(prepared, url);
+			const inlined = inlineFramesetContents(prepared, document, url);
+			if (!inlined) {
+				flattenFramesetIntoBody(prepared, url);
+			}
 		}
 		if (options.resolveStyles && !wasFrameset && document.body && prepared.body) {
 			resolveStylesOnLive(document.body, prepared.body, window);
 		}
-		parsed = wasFrameset
-			? null
-			: (new Readability(prepared).parse() as ReadabilityArticle | null);
+		parsed = new Readability(prepared).parse() as ReadabilityArticle | null;
 		html = parsed?.content ?? prepared.body?.innerHTML ?? '';
 	}
 

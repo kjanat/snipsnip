@@ -25,19 +25,45 @@ afterEach(() => {
 });
 
 describe('extractArticle frameset handling', () => {
-	test('flattens a frameset document into a link list', async () => {
+	test('falls back to a link list when frame contents are not accessible', async () => {
 		loadDocument(FRAMESET_HTML);
 
 		const article = await extractArticle('document');
 
 		expect(article.title).toBe('Master PRO');
-		expect(article.content).toContain('<h1>Master PRO</h1>');
 		expect(article.content).toContain('href="https://example.test/masterheading.aspx"');
 		expect(article.content).toContain('href="https://example.test/masternavigation.aspx"');
 		expect(article.content).toContain('href="https://example.test/mastercontent.aspx"');
 		expect(article.content).toContain('href="https://example.test/MasterStatus.aspx"');
 		expect(article.content).not.toContain('<frameset');
 		expect(article.content).not.toContain('<frame ');
+	});
+
+	test('inlines same-origin iframe bodies into a single document', async () => {
+		document.documentElement.innerHTML = '<head><title>Outer</title></head><body></body>';
+		// Build the final structure first; moving an iframe in the DOM detaches and
+		// re-creates its browsing context, which would discard any document.write below.
+		const frameset = document.createElement('frameset');
+		const iframe = document.createElement('iframe');
+		iframe.name = 'content';
+		iframe.src = 'about:blank';
+		frameset.appendChild(iframe);
+		document.body.appendChild(frameset);
+
+		const innerDoc = iframe.contentDocument!;
+		innerDoc.open();
+		innerDoc.write(
+			'<html><head><title>Inner</title></head><body><article><h1>Tonsillitis</h1>'
+				+ '<p>The most common cause of acute tonsillitis is a viral infection that resolves on its own without antibiotics in healthy adults under most circumstances.</p>'
+				+ '</article></body></html>',
+		);
+		innerDoc.close();
+
+		const article = await extractArticle('document');
+
+		expect(article.content).toContain('Tonsillitis');
+		expect(article.content).toContain('viral infection');
+		expect(article.content).not.toContain('<frameset');
 	});
 
 	test('still extracts a normal article without a frameset', async () => {
