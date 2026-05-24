@@ -45,6 +45,7 @@ function selectionAsHtml(selection: Selection): string {
 	return container.innerHTML;
 }
 
+/** Walk every element under `doc` and return the `<frame>`/`<iframe>` nodes that have a `src`. */
 function frameElements(doc: Document): Element[] {
 	const elements = doc.getElementsByTagName('*');
 	const frames: Element[] = [];
@@ -57,6 +58,14 @@ function frameElements(doc: Document): Element[] {
 	return frames;
 }
 
+/**
+ * Detect HTML 4 / XHTML 1.0 frameset documents that Readability cannot parse.
+ *
+ * Per HTML spec, `document.body` returns the first `<body>` *or* `<frameset>`
+ * child of `<html>`, so a frameset page can show up either as a frameset-typed
+ * body or, when the parser has dropped a stray `<body>`, as a body-less doc
+ * with one or more `<frame>` elements at the root.
+ */
 function isFramesetDocument(doc: Document): boolean {
 	const body = doc.body;
 	if (body && body.localName?.toLowerCase() === 'frameset') return true;
@@ -65,6 +74,13 @@ function isFramesetDocument(doc: Document): boolean {
 	return false;
 }
 
+/**
+ * Build a synthetic `<body>` listing each frame as a link.
+ *
+ * Used as the last-resort representation when the live frame documents are
+ * unreachable (cross-origin, not yet loaded) — at least the reader sees where
+ * the content lives instead of an empty clip.
+ */
 function synthesizeFramesetBody(doc: Document, baseHref: string): HTMLElement | null {
 	const frames = frameElements(doc);
 	if (frames.length === 0) return null;
@@ -99,6 +115,7 @@ function synthesizeFramesetBody(doc: Document, baseHref: string): HTMLElement | 
 	return body;
 }
 
+/** Replace any `<frameset>` in `doc` with the synthetic link-list body so Readability has something to work on. */
 function flattenFramesetIntoBody(doc: Document, baseHref: string): HTMLElement | null {
 	const synthetic = synthesizeFramesetBody(doc, baseHref);
 	if (!synthetic) return null;
@@ -114,6 +131,7 @@ function flattenFramesetIntoBody(doc: Document, baseHref: string): HTMLElement |
 	return synthetic;
 }
 
+/** Pick a human-readable label for a frame, preferring `title`/`name`/`id`/`src` in that order. */
 function frameLabel(frame: Element, index: number): string {
 	return (
 		frame.getAttribute('title')
@@ -126,6 +144,7 @@ function frameLabel(frame: Element, index: number): string {
 
 type FrameElement = HTMLFrameElement | HTMLIFrameElement;
 
+/** Read `frame.contentWindow` while swallowing the `SecurityError` cross-origin frames throw. */
 function safeContentWindow(frame: Element): Window | null {
 	try {
 		return (frame as FrameElement).contentWindow ?? null;
@@ -134,6 +153,7 @@ function safeContentWindow(frame: Element): Window | null {
 	}
 }
 
+/** Read `frame.contentDocument` while swallowing the `SecurityError` cross-origin frames throw. */
 function safeContentDocument(frame: Element): Document | null {
 	try {
 		return (frame as FrameElement).contentDocument ?? null;
@@ -142,6 +162,7 @@ function safeContentDocument(frame: Element): Document | null {
 	}
 }
 
+/** Read `win.document` safely — cross-origin windows throw on document access. */
 function safeOwnDocument(win: Window | null): Document | null {
 	if (!win) return null;
 	try {
@@ -151,10 +172,12 @@ function safeOwnDocument(win: Window | null): Document | null {
 	}
 }
 
+/** True when a `<body>` element is actually a frameset (per HTML's body/frameset duality). */
 function isFramesetBody(body: HTMLElement | null): boolean {
 	return !!body && body.localName?.toLowerCase() === 'frameset';
 }
 
+/** Append a paragraph linking to the frame's `src`, used when the frame's body cannot be inlined. */
 function appendFrameLinkFallback(
 	section: HTMLElement,
 	frame: Element,
@@ -178,6 +201,15 @@ function appendFrameLinkFallback(
 	section.appendChild(paragraph);
 }
 
+/**
+ * Walk every frame reachable from `sourceDoc`, importing each same-origin body
+ * into `targetParent` as a `<section>` headed by the frame label.
+ *
+ * Recurses through nested framesets and iframes. Cross-origin or empty frames
+ * degrade to a single link via {@link appendFrameLinkFallback}. The `visited`
+ * set guards against same-document cycles. Returns the number of sections
+ * appended so callers can detect when nothing was inlined.
+ */
 function inlineLiveFramesInto(
 	targetParent: HTMLElement,
 	sourceDoc: Document,
@@ -241,6 +273,13 @@ function inlineLiveFramesInto(
 	return inlined;
 }
 
+/**
+ * Replace `prepared`'s frameset with a synthetic body whose sections contain
+ * the inlined contents of every reachable frame in `liveDoc`.
+ *
+ * Returns true when at least one frame was inlined; false signals the caller
+ * to fall back to the link-list representation.
+ */
 function inlineFramesetContents(
 	prepared: Document,
 	liveDoc: Document,
