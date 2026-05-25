@@ -4,6 +4,8 @@ xcode/MarkDownload - Markdown Web Clipper/MarkDownload - Markdown Web Clipper.xc
 xcode/MarkDownload - Markdown Web Clipper/MarkDownload - Markdown Web Clipper.xcodeproj/xcuserdata
 .DS_Store
 node_modules
+.output/
+.wxt/
 things.md
 .claude/
 src/test-artifacts/
@@ -18,3 +20,6 @@ native/*.zip
 native/.tmp-builds
 tmp/
 capture-store-screenshots.js
+test-results/
+src/shared/release-highlights.json
+.playwright-mcp/

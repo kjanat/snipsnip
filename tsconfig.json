@@ -1,31 +1,22 @@
 {
+	"extends": "./.wxt/tsconfig.json",
 	"compilerOptions": {
-		// Environment setup & latest features
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"target": "ESNext",
-		"module": "Preserve",
-		"moduleDetection": "force",
-		"jsx": "react-jsx",
-		"checkJs": true,
-		// "types": ["bun"],
-
-		// Bundler mode
-		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
+		"module": "nodenext",
+		"moduleDetection": "force",
+		"moduleResolution": "nodenext", // don't change. I NEED YOU TO FUCKING USE MODULE SYNTAX!!!
 		"verbatimModuleSyntax": true,
-		"noEmit": true,
-
-		// Best practices
-		"strict": true,
-		"skipLibCheck": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
-
-		// Some stricter flags (disabled by default)
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noPropertyAccessFromIndexSignature": false
+		"types": ["bun"]
 	},
-	"include": ["src"]
+	"include": [
+		"src/entrypoints/**/*.ts",
+		"src/lib/**/*.ts",
+		"src/shared/**/*.ts",
+		"src/global.d.ts",
+		"src/**/*.ts",
+		"wxt.config.ts",
+		".wxt/types/**/*.d.ts",
+		".wxt/wxt.d.ts"
+	],
+	"exclude": [".output", "node_modules"]
 }

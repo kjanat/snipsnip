@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.0+dev
+
+### User Highlights
+
+- Stuff
+
 ## 4.5.0
 
 ### User Highlights
@@ -364,7 +370,7 @@
 - Added some basic error handling to the popup
 - Changes to how html inside code blocks is handled (thanks @mnaumov !)
 - Treat codehilite without specified language as plaintext (thanks @mnaoumov !)
-- Ensure sequential line breaks in <pre> are preserved in code blocks (thanks @mnaumov !)
+- Ensure sequential line breaks in `<pre>` are preserved in code blocks (thanks @mnaumov !)
 - Update user guide link in README to point to GitHub
 - Added keyboard shortcuts to copy selection / current tab to obsidian (user-definable in browsers that support that) (thanks @legolasdimir and @likeablob !)
 - Select multiple tabs (hold crtl/cmd) then copy all tab urls as a markdown link list via keyboard shortcut or context menu (thanks @romanPrignon !)
@@ -489,3 +495,5 @@
 
 - Fist change, forked from [enrico-kaack/markdown-clipper](https://github.com/enrico-kaack/markdown-clipper)
 - Added URL to markdown output ([#5](https://github.com/deathau/markdownload/issues/5))
+
+<!-- markdownlint-disable-file no-duplicate-heading no-inline-html -->

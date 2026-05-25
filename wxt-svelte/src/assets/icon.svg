@@ -1,0 +1,38 @@
+<svg width="944.2" viewBox="0 -170 944.2 944.2"
+     aria-label="SnipSnip logo" lang="nl-NL" role="img"
+     xmlns="http://www.w3.org/2000/svg">
+	<title>
+		SnipSnip
+	</title>
+	<desc lang="nl-NL">
+		Zwarte afgeronde rechthoek met een witte geometrische letter S en een witte pijl naar beneden,
+		in de stijl van de MarkDownload-extensie.
+	</desc>
+	<defs>
+		<filter id="halo" x="-0.038312429" y="-0.062569832" width="1.0766249" height="1.1251397">
+			<feGaussianBlur stdDeviation="14" />
+		</filter>
+	</defs>
+	<g>
+		<rect x="33.599998" y="33.600002" rx="62" ry="62" width="877" height="537"
+		      fill="#ffffff" opacity="0.18"
+		      filter="url(#halo)" />
+		<rect x="33.599998" y="33.600002" rx="62" ry="62" width="877" height="537"
+		      fill="#000000" />
+	</g>
+	<g>
+		<path d="m 329.40907,477.82001
+		         c 86.71,0 138.92,-37.49 138.92,-105.34 0,-51.98 -31.51,-88.78 -107.18,-104.88
+		         l -28.06,-5.98
+		         c -32.43,-6.9 -46,-16.33 -46,-32.66 0,-15.18 12.65,-26.22 41.4,-26.22 30.13,0 44.39,13.11 46,35.42
+		         h 89.24
+		         c -0.46,-67.16 -52.21,-111.78 -135.24,-111.78 -81.42,0 -138.46,43.93 -138.46,109.02 0,53.59 37.03,83.72 97.52,96.6
+		         l 34.5,7.36
+		         c 37.95,8.05 51.52,17.71 51.52,33.12 0,17.02 -15.87,28.98 -45.54,28.98 -35.88,0 -56.81,-16.79 -58.42,-48.3
+		         h -88.32 c 0.46,86.02 58.65,124.66 148.12,124.66 z"
+		      fill="#ffffff"
+		      stroke-width="0.23" />
+		<path d="m 632.21188,157.10001 h 84 v 142 h 84 l -125,148 -125,-148 h 82 z"
+		      fill="#ffffff" />
+	</g>
+</svg>

@@ -1,0 +1,52 @@
+{
+	"$schema": "https://biomejs.dev/schemas/latest/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "master"
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**", "!src/background/moment.min.js", "!**/*.min.js", "!**/*.svelte"]
+	},
+	"formatter": { "enabled": false },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		},
+		"domains": {
+			"playwright": "recommended",
+			"project": "recommended",
+			"test": "recommended",
+			"types": "recommended"
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single"
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"recommended": true,
+				"noDuplicateClasses": "on",
+				"organizeImports": "off",
+				"useSortedProperties": "on"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/offscreen/**"],
+			"linter": {
+				"rules": {
+					"a11y": { "recommended": false }
+				}
+			}
+		}
+	]
+}

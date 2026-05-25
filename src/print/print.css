@@ -6,28 +6,20 @@ html {
 }
 
 body {
-	margin: 0;
 	padding: 0;
-	background: #ffffff;
+	margin: 0;
 	color: #1f2328;
+	background: #ffffff;
 }
 
 .print-shell {
 	width: 100%;
-	margin: 0 auto;
 	padding-top: 0.22in;
 	padding-bottom: 0.08in;
+	margin: 0 auto;
 }
 
 .markdown-body {
-	box-sizing: border-box;
-	width: 100%;
-	max-width: 7in;
-	margin: 0 auto !important;
-	padding: 0 !important;
-	background: #ffffff !important;
-	color: #1f2328 !important;
-	color-scheme: light;
 	--fgColor-default: #1f2328;
 	--fgColor-muted: #656d76;
 	--fgColor-accent: #0969da;
@@ -36,14 +28,22 @@ body {
 	--bgColor-neutral-muted: rgba(175, 184, 193, 0.2);
 	--borderColor-default: #d0d7de;
 	--borderColor-muted: rgba(208, 215, 222, 1);
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 7in;
+	padding: 0;
+	margin: 0 auto;
+	color: #1f2328;
+	color-scheme: light;
+	background: #ffffff;
 }
 
 .markdown-body > :first-child {
-	margin-top: 0 !important;
+	margin-top: 0;
 }
 
 .markdown-body > :last-child {
-	margin-bottom: 0 !important;
+	margin-bottom: 0;
 }
 
 .markdown-body img,
@@ -54,8 +54,8 @@ body {
 	display: block;
 	max-width: 100%;
 	height: auto;
-	margin-left: auto;
 	margin-right: auto;
+	margin-left: auto;
 }
 
 .markdown-body table,
@@ -77,9 +77,9 @@ body {
 }
 
 .markdown-body pre {
-	white-space: pre-wrap;
-	overflow-wrap: anywhere;
 	word-break: break-word;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
 }
 
 .markdown-body code {
@@ -122,14 +122,14 @@ body {
 
 	.print-shell {
 		max-width: 8.5in;
-		margin: 0 auto;
 		padding-top: 0;
 		padding-bottom: 0;
+		margin: 0 auto;
 	}
 
 	.markdown-body {
 		max-width: none;
-		padding: 0.55in 0.65in !important;
+		padding: 0.55in 0.65in;
 		border-radius: 14px;
 		box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
 	}
@@ -155,7 +155,7 @@ body {
 		max-width: 7in;
 		font-size: 12pt;
 		line-height: 1.55;
-		box-shadow: none;
 		border-radius: 0;
+		box-shadow: none;
 	}
 }

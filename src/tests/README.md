@@ -1,15 +1,14 @@
 # SnipSnip Tests
 
-All test commands run from `src/`.
+All test commands run from repo root.
 
 ## Commands
 
-- `npm test` runs the Jest suite.
-- `npm run test:coverage -- --runInBand` collects coverage for runtime shells and shared helpers.
-- `npm run test:e2e -- tests/e2e/extension.spec.js` runs deterministic extension smoke coverage.
-- `npm run test:e2e -- tests/e2e/notifications.spec.js` runs notification behavior E2E.
-- `npm run test:e2e -- tests/e2e/batch-processing.spec.js` runs fixture-backed batch processing E2E.
-- `npm run benchmark:popup -- --current "<path-to-src>" --baseline "<path-to-baseline-src>" --iterations 6 --warmup 1` benchmarks popup startup timings against a baseline worktree.
+- `bun test` runs the Bun suite.
+- `bun run test:coverage` collects coverage for runtime shells and shared helpers.
+- `bun run test:e2e` runs the WXT smoke suite against the built `.output/chrome-mv3` extension.
+- `bun run test:e2e:legacy` runs the older deeper Playwright coverage for manual investigation.
+- `bun run benchmark:popup -- --current "<path-to-repo>" --baseline "<path-to-baseline-repo>" --iterations 6 --warmup 1` benchmarks popup startup timings against a baseline worktree.
 
 ## Architecture
 
@@ -41,7 +40,7 @@ When adding or updating E2E coverage, prefer local fixture HTML or explicit rout
 
 ## Live Public Coverage
 
-`npm run test:e2e` now includes `tests/e2e/live-public.spec.js` by default. That spec clips real public pages through the popup flow, covering:
+`bun run test:e2e:legacy` includes `src/tests/e2e/live-public.spec.js` and the older deep popup/background flows. That legacy suite still covers:
 
 - `https://example.com/`
 - `https://en.wikipedia.org/wiki/Markdown`
@@ -53,9 +52,9 @@ When adding or updating E2E coverage, prefer local fixture HTML or explicit rout
 
 If you only want a single live spec, you can still run it directly:
 
-- `npm run test:e2e -- tests/e2e/live-public.spec.js`
+- `bun run test:e2e:legacy -- src/tests/e2e/live-public.spec.js`
 
-Each live case also writes local triage artifacts to `src/test-artifacts/live-public/<case-id>/`:
+Each live case also writes local triage artifacts to `test-artifacts/live-public/<case-id>/`:
 
 - `latest-success/` stores the most recent passing HTML snapshot, clipped markdown, and summary.
 - `history/<timestamp>-passed|failed/` stores every captured run without overwriting the last successful baseline.
@@ -77,13 +76,13 @@ Recommended baseline setup:
 
 - From the repo root, create a detached baseline worktree from the revision you want to compare against:
   - `git worktree add --detach .bench-baseline HEAD`
-- Benchmark the extension roots under `src/`, not the repo root:
-  - current: `<repo>/src`
-  - baseline: `<repo>/.bench-baseline/src`
+- Benchmark the repo roots, not nested `src/` paths:
+  - current: `<repo>`
+  - baseline: `<repo>/.bench-baseline`
 
 Example command:
 
-- `npm run benchmark:popup -- --current "C:\\path\\to\\repo\\src" --baseline "C:\\path\\to\\repo\\.bench-baseline\\src" --iterations 6 --warmup 1`
+- `bun run benchmark:popup -- --current "C:\\path\\to\\repo" --baseline "C:\\path\\to\\repo\\.bench-baseline" --iterations 6 --warmup 1`
 
 Benchmark guidance:
 
